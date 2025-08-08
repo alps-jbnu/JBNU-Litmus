@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block media %}
+    <style>
+        .h-scrollable-table {
+            overflow: visible;
+        }
+        .table {
+            width: 100%;
+            border-radius: 10px 10px 0px 0px;
+            box-shadow: var(--standard-box-shadow);
+            text-align: center;
+            margin: 0 auto;
+        }
+        .table thead th {
+            height: 25px;
+            background-color: rgba(0, 0, 0, 0.03);
+            color:#17171B;
+            align-items: center;
+            text-align: center;
+            border: none;
+            padding: 7px 10px !important;
+            font-size: 14px;
+            font-weight: 400;
+        }
+        .table th:first-child {
+            border-top-left-radius: 10px !important; /* 테이블의 왼쪽 위 모서리 */
+        }
+        .table th:last-child {
+            border-top-right-radius: 10px !important; /* 테이블의 오른쪽 위 모서리 */
+        }
+        .table tbody tr {
+            height: 25px;
+            text-align: center;
+        }
+        .table tbody td {
+            border: none;
+            padding: 7px 10px !important;
+        }
+        .table td.language {
+            white-space: nowrap;
+        }
+
+        .table td.info {
+            width: 100%;
+        }
+        .table td.info .content-description {
+            margin: -1em 1em -1em 1em;
+        }
+
+        .table tbody tr:nth-child(odd) {
+            background-color: #ffffff; 
+        }
+        .table.striped tr:nth-child(even) {
+            background: none;
+        }
+
+    </style>
+{% endblock %}
+
+{% block title_ruler %}{% endblock %}
+
+{% block title_row %}
+    {% set tab = 'runtimes' %}
+    {% include "status/status-tabs.html" %}
+{% endblock %}
+
+{% block body %}
+    <br>
+    <div class="h-scrollable-table">
+        <table class="table striped">
+            <thead>
+            <tr>
+                <th>{{ _('ID') }}</th>
+                <th>{{ _('Name') }}</th>
+                <th>{{ _('Runtime Info') }}</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for language in languages %}
+                {# All online languages have runtime_versions, even if we're not going to display them #}
+                {% if language.runtime_versions %}
+                    <tr>
+                        <td>{{ language.short_display_name }}</td>
+                        <td class="language">{{ language.name }}</td>
+                        <td class="info">
+                            <code>{{ runtime_versions(language.runtime_versions()) }}</code>
+                            {% if language.description %}
+                                <div class="content-description">
+                                    {% cache 86400 'language_html' language.id %}
+                                        {{ language.description|markdown('language') }}
+                                    {% endcache %}
+                                </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endif %}
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

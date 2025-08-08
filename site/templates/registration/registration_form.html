@@ -1,0 +1,452 @@
+{% extends "base.html" %}
+
+{% block media %}
+    {% include "timezone/media-css.html" %}
+    {{ form.media.css }}
+    <style>
+        #page-container {
+            background: #FFF !important;
+        }
+        footer {
+            background: #FFF !important;
+        }
+        .title-box {
+            display: none;
+        }
+        #content {
+            margin: 50px auto 0;
+            width: 1040px;
+        }
+        .auth-flow-form {
+            max-width: 100%;
+            background-color: white;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .auth-flow-form h2 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            text-align: center;
+            font-weight: 400;
+        }
+
+        /* #edit-form {
+            border: unset;
+            background: unset;
+            width: 30%;
+        } */
+
+        .form-area {
+            width: 354px;
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+            border: none;
+            gap: 10px;
+            margin: 0 auto;
+        }
+        /* @media (max-width: 1200px) {
+            .form-area {
+                width: 350px;
+            }
+        } */
+        .fullwidth {
+            border-radius: 8px;
+            overflow: visible !important;
+        }
+
+        .form-area input,
+        .form-area input[type="text"],
+        .form-area input[type="password"],
+        .form-area input[type=email]
+        { 
+            padding: 10px 10px 10px 16px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            width: 100%;
+            height: 46px;
+            box-sizing: border-box;
+            font-family: "Pretendard";
+        }
+
+
+        /* 이메일 입력 전체 영역 스타일 */
+        .email-input-wrapper {
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+        .email-input-wrapper-error {
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+        /* 로컬 이메일 입력 필드 스타일 정의 */
+        input[type=text].email_local {
+            color: #000;
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-right: none;  /* 오른쪽 테두리 제거 */
+            border-radius: 8px 0 0 8px;  /* 왼쪽만 둥글게 */
+            padding: 10px 10px 10px 16px;
+            font-size: 14px;
+            box-sizing: border-box;
+            height: 46px;
+            width: 72%;  /* 이메일 로컬 부분의 너비 조정 */
+            font-family: "Pretendard";
+        }
+        /* 도메인 부분 스타일 정의 */
+        span.email_domain {
+        background: #f1f1f1;
+        border: 1px solid var(--border-color);
+        border-left: none;  /* 왼쪽 테두리 제거 */
+        border-radius: 0 8px 8px 0;  /* 오른쪽만 둥글게 */
+        padding: 10px;
+        height: 46px;  /* input 높이와 맞춤 */
+        display: flex;
+        align-items: center;
+        box-sizing: border-box;
+        width: 28%;  /* 도메인 부분의 너비 조정 */
+        }
+
+        .select2-hidden-accessible {
+            border: 1px solid var(--border-color)!important;
+            clip: rect(0 0 0 0) !important;
+            -webkit-clip-path: inset(50%) !important;
+            clip-path: inset(50%) !important;
+            height: 1px !important;
+            overflow: hidden !important;
+            padding: 10px !important;
+            position: absolute !important;
+            width: 1px !important;
+            white-space: nowrap !important; 
+        }
+
+        .form-area button,
+        .form-area .button {
+            color: #FFF;
+            background: none;
+            background-color: #5C95D9;
+            border-radius: 8px;
+            border: 1px solid #5C95D9;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1.5;
+            height: 40px;
+            font-family: "Pretendard";
+            transition: background-color 0.3s ease, color 0.3s ease;        
+        }
+
+        .form-area button:hover,
+        .form-area a.button:hover {
+            background-color: #5288C8;
+            color: #FAFAFA;
+        }
+
+        .fullwidth {
+            display: block;
+            overflow: hidden;
+        }
+
+        .fullwidth input {
+            width: 100%;
+        }
+
+        .fullwidth-error input {
+            width: 100%;
+            border-color: red;
+        }
+
+        .form-field-error {
+            color: red;
+        }
+
+        small {
+            font-size: 0.7em;
+            padding-left: 0.6em;
+        }
+
+        #content-body {
+            text-align: center;
+        }
+
+        #center-float {
+            display: inline-block;
+            text-align: initial;
+            width: 100%;
+            margin-top: 130px;
+        }
+
+        ul.errorlist {
+            margin: 0px;
+            text-align: right;
+            list-style: none;
+        }
+
+        .full-textfield {
+            padding-top: 0.5em;
+        }
+
+        .tos-section {
+            display: inline-block;
+            padding-right: 1em;
+        }
+
+        .pass-req {
+            padding: 0;
+        }
+        .form-area .password-rule {
+            border-radius: 8px;
+            border: 1px solid #5C95D9;
+            text-align: left;
+            cursor: pointer;
+        }
+        .form-area .password-rule p {
+            font-size: 15px;
+            font-weight: bold;
+            text-align: center;
+            padding-left: 10px;
+            color: #5C95D9;
+            margin: 0;
+            height: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .form-area .password-rule p:hover {
+            color: #5C95D9;
+        }
+        .form-area .password-rule ul {
+            margin-block-start: 5px;
+            margin-block-end: 5px;
+            padding-inline-start: 20px;
+            display: none;
+            list-style: circle;
+            margin-bottom: 10px;
+        }
+        .form-area .password-rule:hover ul {
+            display: block;
+        }
+        .form-area .password-rule ul li {
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .form-field-error {
+            display: flex;
+            text-align: left;
+        }
+        .form-field-error ul.errorlist {
+            padding: 0;
+        }
+
+        input[type=text], input[type=password], input[type=email], input[type=number] {
+            padding: 4px 8px;
+            color: #3b3b3b;
+            background: #fff none;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset;
+            transition: border-color 0.15s ease-in-out 0s, box-shadow 0.15s ease-in-out 0s;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        input[type=text]:hover, input[type=password]:hover, input[type=email]:hover, input[type=number]:hover {
+            box-shadow: none;
+            box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset;
+        }
+        input[type=text]:focus, input[type=password]:focus, input[type=email]:focus, input[type=number]:focus {
+            box-shadow: none;
+            border-color: #9FCDF2;
+            outline: 0;
+        }
+        input[type=number] {
+            padding: 2px 0 2px 5px;
+        }
+        input[type=checkbox] {
+            vertical-align: middle;
+        }
+    </style>
+{% endblock %}
+
+{% block js_media %}
+    {% include "timezone/media-js.html" %}
+    {{ form.media.js }}
+    <script type="text/javascript">
+        $(function () {
+            $('.pass-req-link').click(function () {
+                $('.pass-req').toggle('fast');
+                return false;
+            });
+            try {
+                var tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                if (typeof tz === 'string' && $('#id_timezone option[value="' + tz + '"]').length) {
+                    $('#id_timezone').val(tz).change();
+                }
+            } catch (e) {}
+        });
+    </script>
+    {% if form.captcha %}
+        {{ recaptcha_init(LANGUAGE_CODE) }}
+    {% endif %}
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var passwordField = document.querySelector('#id_password1');
+            var passwordErrorList = document.querySelector('#password-error-list');
+            var validatePasswordUrl = '{{ validate_password_url }}';  // 템플릿 변수로 URL 설정
+
+            passwordField.addEventListener('input', function() {
+                var password = passwordField.value;
+                var xhr = new XMLHttpRequest();
+                passwordErrorList.style.display = "block";
+                xhr.open('POST', validatePasswordUrl, true);
+                xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
+                xhr.setRequestHeader('X-CSRFToken', '{{ csrf_token }}');
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4) {
+                        console.log("AJAX 응답 상태 코드:", xhr.status);  // 로그 추가
+                        if (xhr.status === 200) {
+                            var response = JSON.parse(xhr.responseText);
+                            var errors = response.errors;
+                            passwordErrorList.innerHTML = '';
+                            if (errors.length > 0) {
+                                errors.forEach(function(error) {
+                                    var li = document.createElement('li');
+                                    li.textContent = error;
+                                    passwordErrorList.appendChild(li);
+                                });
+                            }
+                        } else {
+                            console.error("AJAX 요청 오류:", xhr.responseText);  // 오류 로그 추가
+                        }
+                    }
+                };
+                xhr.send(JSON.stringify({password: password}));
+            });
+        });
+    </script>
+    <script>
+        // 페이지 로드 후 실행
+        document.addEventListener('DOMContentLoaded', function() {
+            // Select2 드롭다운이 열릴 때마다 실행될 이벤트 핸들러
+            $(document).on('select2:open', function() {
+                // 약간의 지연 후 검색창에 maxlength 속성 추가
+                setTimeout(function() {
+                    $('.select2-search__field').attr('maxlength', '50');
+                }, 10);
+            });
+        });
+    </script>
+{% endblock %}
+
+{% block body %}
+    <div id="center-float" class="auth-flow-form">
+        <h2>회원가입</h2>
+        <form id="edit-form" action="" method="post" class="form-area">
+            {% csrf_token %}
+            <!-- 아이디 -->
+            <span class="fullwidth{% if form.username.errors %}-error{% endif %}">{{ form.username }}</span>
+            {% if form.username.errors %}
+                <div class="form-field-error">{{ form.username.errors }}</div>
+            {% endif %}
+            <!-- 비밀번호 -->
+            {#
+            <!-- <div style="display: none" class="pass-req alert alert-info">
+                <ul>
+                    {% for validator in password_validators %}
+                        <li>{{ validator.get_help_text() }}</li>
+                    {% endfor %}
+                </ul>
+            </div> -->
+            #}
+            <span class="fullwidth{% if form.password1.errors %}-error{% endif %}">
+                {{ form.password1 }}
+                <ul id="password-error-list" style="color: red ; display: none;"></ul>
+            </span>
+            {% if form.password1.errors %}
+                <div class="form-field-error">{{ form.password1.errors }}</div>
+            {% endif %}
+            <span class="fullwidth{% if form.password2.errors %}-error{% endif %}">{{ form.password2 }}</span>
+            {% if form.password2.errors %}
+                <div class="form-field-error">비밀번호가 일치하지 않습니다.</div>
+            {% endif %}
+            <!-- 이름 -->
+            <span class="fullwidth{% if form.first_name.errors %}-error{% endif %}">{{ form.first_name }}</span>
+            {% if form.first_name.errors %}
+                <div class="form-field-error">{{ form.first_name.errors }}</div>
+            {% endif %}
+            <!-- 이메일 -->
+            <span class="email-input-wrapper{% if form.email_local.errors %}-error{% endif %}">
+                {#
+                <!-- {{ form.email }} -->
+                #}
+                {{ form.email_local }}
+                {{ form.email_domain }}
+                <span class="email_domain">@jbnu.ac.kr</span>
+                {#
+                <!-- <input type="email" name="email_local" id="id_email_local" placeholder="이메일 입력" class="email-local" value="{{ form.email_local.value }}"> -->
+                <!-- <span class="email-domain" aria-readonly="true">@jbnu.ac.kr</span> -->
+                <!-- <input type="text" name="email_domain" id="id_email_domain" value="@jbnu.ac.kr" class="email-domain" readonly> -->
+                #}
+            </span>
+            {% if form.email_local.errors %}
+                <div class="form-field-error">{{ form.email_local.errors }}</div>
+            {% endif %}
+            {% if form.non_field_errors() %}
+                <div class="form-field-error">{{ form.non_field_errors() }}</div>
+            {% endif %}
+            <!-- 국가선택 -->
+            <!-- 언어선택 -->
+            <span class="fullwidth">{{ form.language }}</span>
+            <!-- 학과선택 -->
+            <span class="fullwidth">{{ form.department }}</span>
+            {% if form.department.errors %}
+                <div class="form-field-error">{{ form.department.errors }}</div>
+            {% endif %}
+            <!-- 조직선택 -->
+            {#
+            <!-- {% if form.organizations %}
+                {{ form.organizations }}
+                {% if form.organizations.errors %}
+                    <div class="form-field-error">{{ form.organizations.errors }}</div>
+                {% endif %}
+            {% endif %}
+            {% if form.newsletter %}
+                <div style="padding-top: 0.5em;">{{ form.newsletter }}
+                    <label for="id_newsletter" style="float: unset;"
+                           class="inline-header grayed">{{ _('Notify me about upcoming contests') }}</label>
+                </div>
+            {% endif %}
+            {% if form.captcha %}
+                <div style="margin-top: 0.5em">{{ form.captcha }}</div>
+                {% if form.captcha.errors %}
+                    <div class="form-field-error">{{ form.captcha.errors }}</div>
+                {% endif %}
+            {% endif %} -->
+            #}
+            <hr>
+            <!-- 비밀번호 규칙 -->
+            {#
+            <!-- <div class="password-rule">
+                <p>비밀번호 생성 규칙</p>
+                <ul>
+                    <li>비밀번호는 최소 8자 이상이어야 합니다.</li>
+                    <li>다른 개인 정보와 유사한 비밀번호는 사용할 수 없습니다.</li>
+                    <li>너무 흔한 비밀번호는 비밀번호로 사용할 수 없습니다.</li>
+                    <li>숫자로만 이루어진 비밀번호는 사용할 수 없습니다.</li>
+                </ul>
+            </div> -->
+            #}
+            <button style="float:right;" type="submit">{{ _('회원가입') }}</button>
+        </form>
+    </div>
+
+    <div class="map-wrap">
+        <div class="map-inset">
+            <div class="map-axis-x"></div>
+            <div class="map-axis-y"></div>
+        </div>
+    </div>
+{% endblock %}

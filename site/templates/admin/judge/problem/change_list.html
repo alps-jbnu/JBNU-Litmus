@@ -1,0 +1,63 @@
+{% extends "reversion/change_list.html" %}
+{% load i18n admin_urls %}
+
+{% block object-tools-items %}
+    <li>
+        <a href="#" class="delete-link" onclick="event.preventDefault(); document.getElementById('delete-form').submit();">
+            <span class="text">선택 삭제</span>
+        </a>
+        <form method="post" action="{% url opts|admin_urlname:'changelist' %}" id="delete-form" style="display: none;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="delete_selected">
+        </form>
+    </li>
+    {{ block.super }}
+{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+
+    <script type="text/javascript">
+        // 체크박스 클릭 시 선택된 항목만 폼에 추가하는 함수
+        function toggleSelectCheckbox(checkbox, pk) {
+            var form = document.getElementById('delete-form');
+            if (checkbox.checked) {
+                var input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = '_selected_action';
+                input.value = pk;
+                input.id = 'selected_' + pk;
+                form.appendChild(input);
+            } else {
+                var input = document.getElementById('selected_' + pk);
+                if (input) {
+                    form.removeChild(input);
+                }
+            }
+        }
+
+        // 전체 선택/해제 체크박스 기능
+        function toggleSelectAll(checkbox) {
+            var checkboxes = document.querySelectorAll('.action-select');
+            checkboxes.forEach(function(cb) {
+                cb.checked = checkbox.checked;
+                toggleSelectCheckbox(cb, cb.value);
+            });
+        }
+
+        // 초기화 및 이벤트 리스너 설정
+        window.onload = function() {
+            var toggleAll = document.getElementById('action-toggle');
+            toggleAll.addEventListener('change', function() {
+                toggleSelectAll(this);
+            });
+
+            var checkboxes = document.querySelectorAll('.action-select');
+            checkboxes.forEach(function(cb) {
+                cb.addEventListener('change', function() {
+                    toggleSelectCheckbox(this, this.value);
+                });
+            });
+        };
+    </script>
+{% endblock %}

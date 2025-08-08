@@ -1,0 +1,153 @@
+<style> 
+    .tabs {
+        margin: 0 auto;
+        border: none;
+        display: flex;
+        flex-direction: column;
+    }
+    .tabs-area {
+        background-color: #f9fafb;
+        display: block;
+        border: none;
+    }
+    .tabs-area > ul {
+        width: 1040px;
+        gap: 10px;
+        margin-top: 15px;
+        margin-left: auto;
+        margin-right: auto;
+        padding: 0;
+        list-style-type: none;
+        display: flex;
+        display: flex;
+    }
+    ul li.tab {
+        width: auto !important;
+        height: 35px;
+        border-radius: 20px;
+        transition: background-color 0.3s, box-shadow 0.3s;
+    }
+    ul li.tab a, ul li.tab span {
+        line-height: 2.3em;
+        font-size: 15px;
+        font-weight: 500;
+        margin-left: 15px;
+        margin-right: 15px;
+        color: #8391A1;
+    }
+    ul li.tab.active {
+        background: none;
+        background-color: #D9D9D936;
+    }
+    ul li.tab.active a, ul li.tab.active span {
+        color: #5C95D9;
+    }
+
+    ul li.tab:hover {
+        background-color: #D9D9D936;
+    }
+    .title {
+        display: flex;
+    }
+    .tabs h2 {
+        font-size: 2em;
+        font-weight: 700;
+        margin: 0;
+    }
+    .tabs .tab .tab-icon {
+        display: none;
+    }
+
+    .title-info {
+        width: 50%;
+        color: rgb(128, 128, 128);
+        font-size: 16px;
+        margin: 0;
+        margin-top: auto;
+    }
+    .admin-tab {
+        width: 100%;
+        margin-top: auto;
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+    .admin-tab li {
+        list-style-type: none;
+        width: 110px !important;
+        height: 35px;
+    }
+    .admin-tab li a {
+        display: inline-flex;
+        flex-direction: column;
+        width: 110px;
+        height: 35px;
+        background-color: #edf3fb;
+        color: #5285c4;
+        border-radius: 10px;
+        line-height: 2.3em;
+        font-size: 14px;
+        font-weight: 500;
+        text-align: center;
+        transition: background-color 0.3s ease;
+    }
+    .admin-tab li a:hover {
+        background-color: #e3eaf6; 
+        color: #6291d0; 
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const tabs = document.querySelectorAll('.tabs .tab');
+        tabs.forEach(tab => {
+            const link = tab.querySelector('a');
+            const textNode = link.lastChild;
+            const textWidth = getTextWidth(textNode.nodeValue, window.getComputedStyle(link).font);
+            
+            if (textWidth > 65) {
+                tab.style.width = (textWidth + 15) + 'px';
+            } else {
+                tab.style.width = '80px';
+            }
+        });
+
+        function getTextWidth(text, font) {
+            const canvas = document.createElement("canvas");
+            const context = canvas.getContext("2d");
+            context.font = font;
+            const metrics = context.measureText(text);
+            return metrics.width;
+        }
+    });
+</script>
+
+{% macro make_tab(name, fa, url, text) %}
+    <li class="tab{% if tab == name %} active{% endif %}">
+        {%- if url %}<a href="{{ url }}">{% else %}<span>{% endif -%}
+        <i class="tab-icon fa {{ fa }}"></i> {{ text }}
+        {%- if url %}</a>{% else %}</span>{% endif -%}
+    </li>
+{% endmacro %}
+
+<div class="tabs">
+    <div class="title-area">
+        <div class="title">
+            <h2>{{ content_title or title }}</h2>
+        </div>
+        <div style="height: 40px; display: flex;">
+            {% if title_info %}
+                <p class="title-info">{{ title_info }}</p>
+            {% endif %}
+            {% block admin_tab %}
+                <!-- Admin 탭을 넣는 블록 -->
+            {% endblock %}
+        </div>
+    </div>
+    <div class="tabs-area">
+        {% block post_tab_spacer %}{% endblock %}
+        <ul>
+            {% block tabs %}{% endblock %}
+        </ul>
+    </div>
+</div>

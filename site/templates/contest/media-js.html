@@ -1,0 +1,20 @@
+<script type="text/javascript">
+    $(function () {
+        $('.leaving-forever').click(function () {
+            return confirm('{{ _('Are you sure you want to leave?') }}\n' +
+                '{{ _('You cannot come back to a virtual participation. You will have to start a new one.') }}');
+        });
+
+        $('.first-join').click(function () {
+            return confirm('{{ _('Are you sure you want to join?') }}\n' +
+                '{{ _('Joining a contest starts your timer, after which it becomes unstoppable.') }}');
+        });
+
+        {% if request.in_contest %}
+            $('.contest-join').click(function () {
+                return confirm('{{ _('Are you sure you want to join?') }}\n' +
+                    '{{ _('Joining this contest will leave %(contest)s.', contest=request.participation.contest.name) }}');
+            });
+        {% endif %}
+    });
+</script>

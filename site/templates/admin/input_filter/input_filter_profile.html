@@ -1,0 +1,51 @@
+<head>
+  <link 
+    rel="stylesheet" 
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  >
+</head>
+<form method="get">
+  {% for key, value in request.GET.items %}
+    {% if key not in spec.filter_keys %}
+        <input type="hidden" name="{{ key }}" value="{{ value }}">
+    {% endif %}
+    {% endfor %}
+<label>
+  사용자 이름
+  <input type="text" name="username" value="{{ request.GET.username }}" placeholder="사용자 이름">
+</label>
+<label>
+  이메일
+  <input type="text" name="email" value="{{request.GET.email}}" placeholder="이메일">
+</label>
+<label>
+  학과
+  <select name="department">
+  <option value="">DEPARTMET</option>
+  {% for value, label in spec.department_lookups %}
+    <option value="{{ value }}" {% if request.GET.department == value %}selected{% endif %}>
+      {{ label }}
+    </option>
+  {% endfor %}
+</select>
+</label>
+<label>
+  시간대
+<select name="timezone">
+  <option value="">시간대</option>
+  {% for value, label in spec.timezone_lookups %}
+    <option value="{{ value }}" {% if request.GET.timezone == value %}selected{% endif %}>
+      {{ label }}
+    </option>
+  {% endfor %}
+</select>
+</label>
+<label>
+  IP 주소
+<input type="text" name="IP" value="{{ request.GET.IP }}" placeholder="IP 주소">
+</label>
+
+  <button type="submit">
+  <i class="fa-solid fa-filter"></i> 필터 적용
+</button>
+</form>

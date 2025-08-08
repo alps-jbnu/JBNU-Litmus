@@ -1,0 +1,84 @@
+@import "base-description";
+
+.content-description {
+    @include content-description;
+}
+
+.display-math {
+    display: block;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+@media (min-width: 700px) {
+    #common-content {
+        display: flex;
+        flex-direction: row-reverse;
+    }
+
+    #content-left {
+        flex: 5;
+        width: 100%;
+
+        &.split-common-content {
+            width: 70%;
+        }
+
+        .content-description {
+            width: 100%;
+        }
+    }
+
+    #content-right {
+        flex: 1;
+        max-width: 12.5em;
+        padding-left: 1.5em;
+        padding-top: 1em;
+
+        .info-float {
+            float: none;
+            padding: 0;
+            position: sticky;
+            top: 70px;
+            width: 100%;
+        }
+    }
+}
+
+@media not all and (min-width: 700px) {
+    #content-right .info-float {
+        float: none;
+        width: 100% !important;
+        position: static !important;
+        box-sizing: border-box;
+    }
+}
+
+a.view-pdf {
+    padding-top: 0.6em;
+    display: inline-block;
+}
+
+.problem-title {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+
+    .spacer {
+        display: inline-block;
+        flex: 1 1 1px;
+    }
+}
+
+.info-float .fa {
+    color: $color_primary100;
+    padding-right: 0.2em;
+}
+
+#problem-types, #allowed-langs {
+    .toggled {
+        margin-left: 1.3em;
+    }
+}

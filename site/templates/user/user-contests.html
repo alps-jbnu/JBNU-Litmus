@@ -1,0 +1,140 @@
+{% extends "user/user-base.html" %}
+
+{% block user_content %}
+    <div class="contest-list">
+        <h3>과제/대회 목록</h3>
+        
+        {% if participations %}
+            <div class="contest-table-wrapper">
+                <table class="contest-table table striped">
+                    <thead>
+                        <tr>
+                            <th>대회명</th>
+                            <th>시작일</th>
+                            <th>종료일</th>
+                            <th>참가 유형</th>
+                            {% if user.user == request.user or request.user.is_staff %}
+                                <th>점수</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for participation in participations %}
+                            <tr>
+                                <td><a href="{{ url('contest_view', contest=participation.contest.key) }}" class="contest-link">{{ participation.contest.name }}</a></td>
+                                <td>{{ participation.contest.start_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>
+                                    {% if participation.contest.end_time %}{{ participation.contest.end_time.strftime('%Y-%m-%d %H:%M') }}{% else %}진행 중{% endif %}
+                                </td>
+                                <td>{% if participation.virtual == 0 %}실제 참가{% else %}가상 참가{% endif %}</td>
+                                {% if user.user == request.user or request.user.is_staff %}
+                                    <td>{{ "%.2f"|format(participation.score) }}</td>
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="no-contests">
+                <p>참가한 대회/과제가 없습니다.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <style>
+        .contest-list {
+            padding: 20px 0;
+        }
+        
+        .contest-list h3 {
+            color: var(--font-basic-black);
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        
+        .contest-table-wrapper {
+            overflow-x: auto;
+            box-shadow: var(--standard-box-shadow);
+            border-radius: 10px;
+        }
+        
+        .contest-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 0;
+        }
+        
+        .contest-table th {
+            height: 40px;
+            background: rgba(0, 0, 0, 0.03);
+            text-align: center;
+            font-weight: 500;
+            color: var(--font-basic-black);
+            border: none;
+            vertical-align: middle;
+        }
+        
+        .contest-table th:first-child {
+            border-top-left-radius: 10px;
+        }
+        
+        .contest-table th:last-child {
+            border-top-right-radius: 10px;
+        }
+        
+        .contest-table td {
+            padding: 15px;
+            border: none;
+            vertical-align: middle;
+        }
+        
+        .contest-table.striped tr:nth-child(even) {
+            background: rgba(0, 0, 0, 0.02);
+        }
+        
+        .contest-table tbody tr:last-child td:first-child {
+            border-bottom-left-radius: 10px;
+        }
+        
+        .contest-table tbody tr:last-child td:last-child {
+            border-bottom-right-radius: 10px;
+        }
+        
+        .contest-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 15px;
+        }
+        
+        .contest-link:hover {
+            color: var(--primary-color);
+            text-decoration: underline;
+        }
+        
+        .no-contests {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--font-grey);
+            background: white;
+            border-radius: 10px;
+            box-shadow: var(--standard-box-shadow);
+        }
+        
+        .no-contests p {
+            font-size: 16px;
+            margin: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .contest-table th,
+            .contest-table td {
+                padding: 10px 8px;
+                font-size: 14px;
+            }
+        }
+    </style>
+{% endblock %} 

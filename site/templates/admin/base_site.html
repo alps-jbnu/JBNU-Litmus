@@ -1,0 +1,141 @@
+{% extends "admin/base.html" %}
+{% load i18n wpadmin_tags %}
+{% block extrahead %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<style>
+  html, body {
+    font-family: "Pretendard", "Segoe UI", "Lucida Grande", Arial, sans-serif;
+  }
+  
+  /* Pill 스타일 - 다양한 상태 표시용 */
+  .pill {
+    display: inline-block;
+    padding: 4px 0px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.3;
+    text-align: center;
+    min-width: 64px;
+  }
+  
+  /* 성공/활성/공개 상태 (연초록) */
+  .pill-success {
+    background: rgba(0, 152, 116, 0.14);
+    color: #009874;
+  }
+  body.model-judge .pill-success {
+    background: #CADDFC !important;
+    color: #3B82F6 !important;
+  }
+  body.model-contest .pill-success{
+    background-color: rgba(0, 152, 116, 0.14) !important;
+  }
+  
+  /* 위험/비활성/비공개 상태 (연빨강) */
+  .pill-danger {
+    background: rgba(221, 65, 36, 0.24);
+    color: #DD4124;
+  }
+  body.model-judge .pill-danger{
+    background: #E7E9EC;
+    color: #606165;
+  }
+  body.model-contest .pill-danger{
+    background: #E7E9EC;
+    color: #606165;
+  }
+
+  /* 정보/대회 상태 (연파랑) */
+  .pill-info {
+    background: #d6f0ff;
+    color: #2b73b6;
+  }
+  body.model-contest .pill-info{
+    background: #E3D8FD;
+    color: #8B5CF6;
+  }
+  
+  /* 경고/과제 상태 (연주황) */
+  .pill-warning {
+    background-color: rgba(0, 152, 116, 0.14); 
+    color: #009874;
+  }
+  body.model-contest .pill-warning{
+    background: #E7E9EC;
+    color: #606165;
+  }
+  body.model-comment .pill-warning{
+    background: rgba(221, 65, 36, 0.24);
+    color: #DD4124;
+  }
+  
+  /* 중성/기본 상태 (연회색) */
+  .pill-neutral {
+    background-color: rgba(221, 65, 36, 0.24);
+    color: #DD4124;
+  }
+  body.model-contest .pill-neutral{
+    background: #E7E9EC;
+    color: #606165;
+  }
+
+  #wrapper {
+    background-color: #FFF;
+  }
+  .column-public_status, .column-encryption_status,
+  .field-public_status, .field-encryption_status {
+    text-align: center;
+  }
+  .column-visibility_status, .column-practice_status, .column-rating_status,
+  .field-visibility_status, .field-practice_status, .field-rating_status {
+    text-align: center;
+  }
+  .column-staff_status, .column-active_status,
+  .field-staff_status, .field-active_status {
+    text-align: center;
+  }
+  .column-online_status, .column-disabled_status,
+  .field-online_status, .field-disabled_status {
+    text-align: center;
+  }
+  .column-hidden_status,
+  .field-hidden_status {
+    text-align: center;
+  }
+  /* .column-start_time_display, .column-end_time_display, .column-date_joined_display, .column-last_access_display, .column-time_display, .column-real_start_display,
+  .field-start_time_display, .field-end_time_display, .field-date_joined_display, .field-last_access_display, .field-time_display, .field-real_start_display {
+    text-align: center;
+  } */
+  /* .form-row.field-authors { 문제 제작자 필드
+      display: none !important;;
+  }
+  .form-row.field-allowed_languages{ 문제별 언어 제한 필드
+    display: none !important;
+  }
+  */
+  .form-row.field-common_name{
+    display: none !important; 
+  }
+  .form-row.field-short_name{
+    display: none !important;
+  }
+  .fieldBox.field-memory_limit{
+    display: none !important;
+  } 
+  #bottombar {
+    margin-left:20px;
+  }
+  .form-row.field-date{
+    overflow:auto;
+  }
+</style>
+{% endblock %}
+
+{% block title %}{{ title }} | {% wpadmin_render_custom_title %}{% endblock %}
+
+{% block branding %}
+  {# Django WP Admin: this is not rendered anyway #}
+{% endblock %}
+
+{% block nav-global %}{% endblock %}

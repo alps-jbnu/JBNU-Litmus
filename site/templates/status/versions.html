@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title_ruler %}{% endblock %}
+
+{% block media %}
+    <style>
+        #content-body {
+            padding-bottom: 0;
+            overflow-y: scroll;
+            margin-top: 16px !important;
+            box-shadow: var(--standard-box-shadow);
+        }
+        #judge-versions {
+            border-radius: 10px 10px 0px 0px;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            margin-bottom: 0;
+        }
+        #judge-versions tr:first-child {
+            top: 0;
+        }
+        #judge-versions tr {
+            border-radius: 0px;
+        }
+        #judge-versions tr th {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+        #judge-versions th {
+            color: #17171B;
+            font-weight: 400;
+            font-size: 14px;
+            background-color: #FFFFFF;
+            border: none;
+        }
+        #judge-versions .version-latest {
+            background-color: #FFFFFF;
+            color: #17171B;
+            border: none;
+        }
+        .table tbody:first-child {
+            border: none;
+        }
+        .table tbody tr:nth-child(even) th {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+    </style>
+{% endblock %}
+
+{% block title_row %}
+    {% set tab = 'matrix' %}
+    {% include "status/status-tabs.html" %}
+{% endblock %}
+
+{% block body %}
+    <table id="judge-versions" class="table">
+        <tr>
+            <th></th>
+            {% for judge in judges %}
+                <th>{{ judge }}</th>
+            {% endfor %}
+        </tr>
+        {% for language in languages %}
+            <tr>
+                <th>{{ language.name }}</th>
+                {% for judge in judges %}
+                    {% set versions = matrix[judge][language.id] %}
+                    <td class="version version-
+                        {%- if not versions -%}
+                            blank
+                        {%- elif versions.is_latest -%}
+                            latest
+                        {%- else -%}
+                            outdated
+                        {%- endif %}">
+                        {%- for version in versions -%}
+                            {{ version.name }}{% if version.version %}&nbsp;{{ version.version }}{% endif %}
+                            {% if not loop.last %}<br>{% endif %}
+                        {%- else -%}
+                            &mdash;
+                        {%- endfor -%}
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </table>
+{% endblock %}

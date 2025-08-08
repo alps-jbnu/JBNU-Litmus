@@ -1,0 +1,68 @@
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+
+{% block extrahead %}{{ block.super }}
+    <script type="text/javascript">
+        django.jQuery(function ($) {
+            $('.submissions-link').appendTo('div#bottombar').show();
+        });
+    </script>
+    {% if original and original.pk %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const heading = document.querySelector('#cases-group .module h2');
+            const button = document.createElement('button');
+            button.innerText = '테스트 케이스 미리보기';
+            button.className = 'title-button';
+            button.type = 'button';
+            heading.appendChild(button);
+
+            button.onclick = function() {
+                window.open("{% url 'admin:testcase_preview' original.pk %}", "Popup", "width=600,height=400");  
+            }
+        });
+    </script>
+    {% endif %}
+        
+    <style>
+        .datetime {
+            display: flex;
+            align-items: center;
+            width:100%;
+        }
+        /* .datetime br{
+            display:none !important;
+        } */
+        .datetime input.vDateField,
+        .datetime input.vTimeField {
+            margin-right: 10px;
+        }
+        
+        .datetime .datetimeshortcuts {
+            margin-right: 10px;
+        }
+        #content .inline-group {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .title-button {
+            margin-left: 15px; /* 제목과 버튼 사이의 간격 조정 */
+            padding: 5px 10px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+    </style>
+    
+{% endblock extrahead %}
+
+{% block after_field_sets %}{{ block.super }}
+    {% if original %}
+        <a style="display: none" title="{{ _('View submissions') }}" class="button submissions-link"
+           href="{% url 'admin:judge_submission_changelist' %}?problem__code={{ original.code }}">
+            <i class="fa fa-lg fa-search-plus"></i>
+            <span class="text">{{ _('View submissions') }}</span>
+        </a>
+    {% endif %}
+{% endblock %}
+
+

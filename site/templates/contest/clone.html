@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block media %}
+<style>
+    #page-container {
+        background: #FFF !important;
+    }
+    footer {
+        background: #FFF !important;
+    }
+    .title-box {
+        display: none;
+    }
+    #content {
+        margin: 50px auto 0;
+    }
+    #content-body {
+        display: flex;
+        justify-content: center;
+    }
+    #contest-clone-panel {
+        width: 350px;
+        display: flex;
+        flex-direction: column;
+        border: none;
+        gap: 10px;
+        margin: 0 auto;
+        background: none;
+    }
+    ul.errorlist {
+        list-style-type: none;
+        padding-left: 0;
+        text-align: center;
+    }
+    .key-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 10px 0;
+    }
+    .key-container .inline-header.grayed {
+        margin: 10px auto;
+        padding: 10px;
+        border-radius: 10px;
+        text-align: center;
+        margin-bottom: 0px;
+        font-size: 24px;
+        align-items: center;
+    }
+    #contest-clone-panel input[type="text"] {
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        width: 100%;
+        height: 40px;
+        box-sizing: border-box;
+    }
+    #contest-clone-panel button {
+        background: none;
+        background-color: #5C95D9;
+        display: block;
+        border-radius: 8px;
+        border: 1px solid #5C95D9;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        text-align: center;
+        text-decoration: none;
+        line-height: 1.5;
+        height: 40px;
+        box-sizing: border-box;
+    }
+    #contest-clone-panel button:hover,
+    #contest-clone-panel a.button:hover {
+        background-color: #9FCDF2;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+    <form id="contest-clone-panel" action="" method="post" class="form-area">
+        {% csrf_token %}
+        {% if form.errors %}
+            <div id="form-errors">
+                {{ form.name.errors }}
+            </div>
+        {% endif %}
+
+        <!-- <div>
+            <label class="inline-header grayed">{{ _('Enter a new key for the cloned contest:') }}</label>
+        </div> -->
+        <div class="key-container">
+            <label class="inline-header grayed">{{ _('새로운 대회 이름을 입력해주세요.') }}</label>
+        </div>
+        <div id="contest-key-container"><span class="fullwidth">{{ form.name }}</span></div>
+        <button style="float: right;" type="submit">{{ _('Clone!') }}</button>
+    </form>
+{% endblock %}

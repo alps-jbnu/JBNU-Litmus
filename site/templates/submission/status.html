@@ -1,0 +1,155 @@
+{% extends "submission/info-base.html" %}
+{% block media %}
+<style>
+    .tabs {
+        margin: 0 auto;
+        border: none;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .title-area {
+        width: 1040px;
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 35px;
+        margin-bottom: 30px;
+    }
+
+    .tabs-area {
+        background-color: #f9fafb;
+        display: block;
+        border: none;
+    }
+
+    #content .title {
+        color: #3b3b3b;
+    }
+
+    .tabs-area > ul {
+        width: 1040px;
+        gap: 10px;
+        margin-top: 15px;
+        margin-left: auto;
+        margin-right: auto;
+        padding: 0;
+        list-style-type: none;
+        display: flex;
+        display: flex;
+    }
+
+    input.button, input[type="submit"] {
+        background: none;
+        border: 1px solid #5C95D9;
+        background-color: #5C95D9;
+        color: #fff;
+        font-size: 14px;
+        border-radius: 10px;
+    }
+    .title-box{
+        padding-top: 0.2px;
+
+    }
+    .title-div h2{
+        margin-left:auto;
+        margin-right:auto;
+        width:1040px;
+        margin-top: 24px;
+    }
+    .submission-info{
+        display:none;
+    }
+    a:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+{% block js_media %}
+    <script type="text/javascript" src="{{ static('event.js') }}"></script>
+    {% if not submission.is_graded and last_msg %}
+        <script type="text/javascript">
+            $(function () {
+                var blocked = false, request = false;
+                var list = $('#test-cases');
+
+                function update() {
+                    if (blocked) {
+                        request = true;
+                        return;
+                    }
+                    request = false;
+                    blocked = true;
+                    $.ajax({
+                        url: '{{ url('submission_testcases_query') }}',
+                        data: {id: '{{ submission.id }}'}
+                    }).done(function (data) {
+                        list.empty().html(data).find('.toggle').each(function () {
+                            register_toggle($(this));
+                        });
+                        setTimeout(function () {
+                            blocked = false;
+                            if (request)
+                                update();
+                        }, 500);
+                    }).fail(function (data) {
+                        console.log('Failed to update testcases!');
+                    });
+
+                    if ($(window).scrollTop() + $(window).height() > $(document).height() - 100)
+                        $("html, body").animate({scrollTop: $(document).height()}, 0);
+                }
+
+                var receiver = new EventReceiver(
+                    "{{ EVENT_DAEMON_LOCATION }}", "{{ EVENT_DAEMON_POLL_LOCATION }}",
+                    ['sub_{{ submission.id_secret }}'], {{ last_msg }}, function (message) {
+                        switch (message.type) {
+                            case 'internal-error':
+                            case 'grading-end':
+                            case 'compile-error':
+                                $('#abort-button').remove();
+                                $('#grading-label').remove();
+                            case 'test-case':
+                            case 'grading-begin':
+                            case 'processing':
+                                update();
+                        }
+                    }
+                )
+            });
+        </script>
+    {% endif %}
+    {% if not submission.is_graded %}
+        <script type="text/javascript">
+            $(function () {
+                // 3초마다 페이지를 새로고침
+                setInterval(function() {
+                    location.reload();
+                }, 3000);
+            });
+            // 1000초 후에 폼을 자동 제출하도록 설정
+            setTimeout(function() {
+                $('#abort-button form').submit();
+            }, 1000000); 
+        </script>
+    {% endif %}
+{% endblock %}
+
+{% block body %}
+    <div id="test-cases">{% include "submission/status-testcases.html" %}</div>
+
+    {% if not submission.is_graded %}
+        {% if request.user == submission.user.user or perms.judge.abort_any_submission %}
+            <div id="abort-button">
+                <br>
+                <hr class="half-hr">
+                <br>
+                <form action="{{ url('submission_abort', submission.id) }}" method="post"
+                      title="{{ _('Press Ctrl-Enter or Command-Enter to abort.') }}">
+                    {% csrf_token %}
+                    <input style="float:left" type="submit" value="{{ _('Abort') }}" class="button">
+                    <br><br>
+                </form>
+            </div>
+        {% endif %}
+    {% endif %}
+{% endblock %}

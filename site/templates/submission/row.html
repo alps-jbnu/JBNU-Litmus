@@ -1,0 +1,226 @@
+{% set can_view, can_edit = submission_layout(submission, profile_id, request.user, completed_problem_ids, editable_problem_ids, tester_problem_ids) %}
+<style>
+    .problem-name {
+        color: black;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 200px;
+        display: inline-block;
+        vertical-align: middle;
+        transition: all 0.3s ease-in-out;
+    }
+
+    .submission-row {
+        height: auto;
+        border: none;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.01);
+    }
+
+    @media (max-width: 300px) {
+        .submission-row {
+            height: auto;
+            flex-direction: row;
+        }
+    }
+
+    .submission-row .sub-result .score {
+        font-size: 12px;
+        font-weight: 400;
+        color: #8391A1;
+    }
+
+    .submission-row .sub-result .state {
+        font-size: 15px;
+        font-weight: 400;
+        margin-bottom: 2px;
+    }
+
+    .submission-row .sub-main .sub-inf .name {
+        font-size: 16px;
+        font-weight: 600;
+    }
+
+    .submission-row .sub-main .sub-info .time {
+        font-size: 14px;
+        font-weight: 400;
+        color: #8391A1;
+    }
+
+    .sub-user {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 130px;
+    }
+
+    .sub-user span a {
+        color: #5C95D9 !important;
+        font-size: 16px;
+        font-weight: 400 !important;
+    }
+
+    .submission-row .sub-result {
+        width: 90px;
+        height: 55px;
+        border-right: 0;
+        border-bottom: none;
+        padding: 0;
+    }
+
+    .submission-row .sub-usage {
+        width: 90px;
+        border-left: 0;
+    }
+
+    .sub-usage .time {
+        text-align: center;
+        font-size: 14px;
+        color: #8391A1;
+        font-weight: 400 !important;
+        margin-right: 0px;
+    }
+
+    .sub-usage .memory {
+        text-align: center;
+        font-size: 14px;
+        color: #8391A1;
+        font-weight: 400 !important;
+        margin: 0 10px;
+    }
+
+    .name {
+        width: 214px;
+        font-size: 17px;
+        white-space: nowrap;      
+        overflow: hidden;         
+        text-overflow: ellipsis; 
+    }
+    .name a {
+        padding-left: 15px;
+    }
+
+    .language {
+        width: 90px;
+        text-align: center;
+    }
+
+    .sub-usage {
+        width: 100px !important;
+        text-align: center;
+    }
+
+    .sub-info {
+        width: 110px;
+        text-align: center;
+    }
+    .submission-row .sub-main .sub-info div {
+        width: 100px;
+        margin: auto;
+    }
+    .sub-testcase {
+        width: fit-content;
+        padding-right: 0;
+        margin: 0 auto;
+        margin-bottom: 3px;
+    }
+    .sub-prop {
+        width: 85px;
+        text-align: center;
+    }
+</style>
+
+
+<div class="sub-result {{ submission.result_class }}">
+    <div class="state">
+        <span title="{{ submission.long_status }}" class="status">{{ submission.long_status }}</span>
+    </div>
+    <div class="score">
+        {%- if submission.is_graded -%}
+            {%- if submission.status in ('IE', 'CE', 'AB') -%}
+                <!-- {{ submission.case_points|floatformat(0) }} / {{ submission.case_total|floatformat(0) }} -->
+            {%- endif -%}
+            {{ submission.short_status }} | {{ submission.case_points|floatformat(0) }} / {{ submission.case_total|floatformat(0) }}
+        {%- else -%}
+            <i class="fa fa-spinner fa-pulse grading-spinner"></i>
+        {%- endif -%}
+    </div>
+</div>
+
+<div class="sub-main">
+    <div class="name">
+        <a class="ploblem-name" href="{{ url('problem_detail', submission.problem.code) }}">{{ submission.problem }}</a>
+    </div>
+    <div class="sub-user">
+        {{ link_user(submission.user) }}
+    </div>
+    <div class="language">{{ submission.language.short_display_name }}</div>
+    <div class="sub-usage">
+        {% if submission.status in ('QU', 'P', 'G', 'CE', 'IE', 'AB') %}
+            <div class="time">---</div>
+            <div class="memory">---</div>
+        {% else %}
+            {% if "TLE" != submission.result %}
+                <div title="{{ submission.time or 0 }}s" class="time">
+                    {{ (submission.time or 0)|floatformat(2) }}s / {{ (submission.memory_bytes|filesizeformat(True)).replace('i', '') }}
+                </div>
+            {% else %}
+                <div class="time">---</div>
+            {% endif %}
+            {# No one actually likes IEC prefixes, Jinja2. #}
+            <div class="memory"></div>
+        {% endif %}
+    </div>
+    <div class="sub-info{% if submission.status == 'G' %} sub-info-grading{% endif %}">
+        <div>
+            <br class="xs-br">
+            <span class="time">{{ relative_time(submission.date) }}</span>
+            {% if not request.in_contest and submission.contest_object_id %}
+                <a href="{{ url('contest_view', submission.contest_object.key) }}"
+                   class="submission-contest">
+                    <i title="{{ submission.contest_object.name }}" class="fa fa-dot-circle-o"></i>
+                </a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div style="display: flex; flex-direction: column;">
+        {% if submission.status == 'G' %}
+            <div class="sub-testcase">
+                {%- if submission.current_testcase > 0 -%}
+                    {{ _('Case #%(case)s', case=submission.current_testcase) }}
+                {%- else -%}
+                    ...
+                {%- endif -%}
+            </div>
+        {% endif %}
+
+        {% if can_view %}
+            <div class="sub-prop"><div>
+                <a href="{{ url('submission_status', submission.id) }}">
+                    <i class="fa fa-eye fa-fw"></i><span class="label">{{ _('view') }}</span>
+                </a>
+                <!-- {% if perms.judge.rejudge_submission and can_edit %} ·
+                    {% if not submission.is_locked %}
+                        <a href="#" onclick="rejudge_submission({{ submission.id }}, event);return false">
+                            <i class="fa fa-refresh fa-fw"></i><span class="label">{{ _('rejudge') }}</span>
+                        </a>
+                    {% else %}
+                        <i class="fa fa-refresh fa-fw grey-icon"></i>
+                        <span class="label grey-label"
+                            title="{{ _('This submission has been locked, and cannot be rejudged.') }}">
+                            {{ _('locked') }}
+                        </span>
+                    {% endif %}
+                {% endif %} -->
+                {% if can_edit %} ·
+                    <a href="{{ url('admin:judge_submission_change', submission.id) }}">
+                        <i class="fa fa-cog fa-fw"></i><span class="label">{{ _('admin') }}</span>
+                    </a>
+                {% endif %}
+            </div></div>
+        {% endif %}
+    </div>
+</div>
+
+

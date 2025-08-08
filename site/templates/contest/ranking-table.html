@@ -1,0 +1,122 @@
+{% extends "user/base-users-table.html" %}
+{% block container %}
+<!-- 아무것도 안 넣어서 기본 container 블럭 무시 -->
+{% endblock %}
+<style>
+/* contest ranking에서만 테이블 레이아웃 고정 */
+.contest-ranking .users-table,
+#users-table {
+    table-layout: fixed;
+}
+
+</style>
+
+{% block after_rank_head %}
+    {% if has_rating %}
+        <th class="rating-column">{{ _('Rating') }}</th>
+    {% endif %}
+    <!-- <th class="organization-column">{{ _('Organization') }}</th> -->
+{% endblock %}
+
+{% block after_rank %}
+    {% if has_rating %}
+        <td class="rating-column">{% if user.participation_rating %}{{ rating_number(user.participation_rating) }}{% endif %}</td>
+    {% endif %}
+{% endblock %}
+
+{% block user_data %}
+    {% if not contest.ended %}
+        {% if not user.participation.ended %}
+            <div class="start-time active">
+                {% with abs=_('Started on {time}'), rel=_('Started {time}') %}
+                    {{ relative_time(user.participation.start, abs=abs, rel=rel) }}
+                {% endwith %}
+            </div>
+        {% else %}
+            <div class="start-time">{{ _('Participation ended.') }}</div>
+        {% endif %}
+    {% endif %}
+
+    {% if can_edit %}
+        <!-- <span class="contest-participation-operation">
+            <form action="{{ url('contest_participation_disqualify', contest.key) }}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="participation" value="{{ user.participation.id }}">
+                {% if user.participation.is_disqualified %}
+                    <a href="#" title="{{ _('Un-Disqualify') }}"
+                       class="un-disqualify-participation"><i class="fa fa-undo fa-fw"></i></a>
+                {% else %}
+                    <a href="#" title="{{ _('Disqualify') }}"
+                       class="disqualify-participation"><i class="fa fa-trash fa-fw"></i></a>
+                {% endif %}
+            </form>
+            {% if perms.judge.change_contestparticipation %}
+                <a href="{{ url('admin:judge_contestparticipation_change', user.participation.id) }}"
+                   title="{{ _('Admin') }}" class="edit-participation"><i class="fa fa-cog fa-fw"></i></a>
+            {% endif %}
+        </span> -->
+    {% endif %}
+{% endblock %}
+
+{% block before_point_head %}
+    <th class="balloon-header"></th>
+    {% for problem in problems %}
+        <th class="points header">
+            {# <!-- <a href="{{ url('contest_ranked_submissions', contest.key, problem.problem.code) }}"> --> #}
+            <a href="{{ url('problem_detail', problem.problem.code) }}">
+            {{- contest.get_label_for_problem(loop.index0) }}
+            <div class="point-denominator">{{ problem.points }}</div>
+        </a></th>
+    {% endfor %}
+{% endblock %}
+
+{% block after_point_head %}
+{% endblock %}
+
+{% block before_point %}
+    <td class="balloon-cell">
+        {% set balloon_colors = ['#74b9ff', '#ff7675', '#55efc4', '#fdcb6e', '#6c5ce7', '#fab1a0', '#ffeaa7', '#fd79a8', '#a29bfe', '#00b894', '#e17055', '#00cec9', '#636e72', '#0984e3', '#00cec9', '#81ecec', '#fab1a0'] %}
+        
+        {# 해결한 문제 개수 세기 #}
+        {% set solved_problems = [] %}
+        {% for i in range(problems|length) %}
+            {% set cell = user.problem_cells[i] %}
+            {% if 'full-score' in cell %}
+                {% set _ = solved_problems.append(i) %}
+            {% endif %}
+        {% endfor %}
+        
+        {% if solved_problems|length >= 10 %}
+            {# 10개 이상이면 풍선 하나 + 개수 표시 #}
+            <svg width="24" height="38" viewBox="0 0 24 38" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block; vertical-align:middle;">
+              <ellipse cx="12" cy="14" rx="11" ry="14" fill="#74b9ff"/>
+              <path d="M12 28 C12 34, 8 34, 12 38" stroke="#888" stroke-width="2" fill="none"/>
+              <ellipse cx="8" cy="9" rx="2.5" ry="4" fill="#fff" fill-opacity="0.3"/>
+            </svg>
+            <span style="font-size: 14px; font-weight: bold; margin-left: 4px;">× {{ solved_problems|length }}</span>
+        {% else %}
+            {# 10개 미만이면 개별 풍선 표시 #}
+            {% for i in range(problems|length) %}
+                {% set cell = user.problem_cells[i] %}
+                {% if 'full-score' in cell %}
+                    {% set color = balloon_colors[i % balloon_colors|length] %}
+                    <svg width="24" height="38" viewBox="0 0 24 38" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-left:-12px; display:inline-block; vertical-align:middle;">
+                      <ellipse cx="12" cy="14" rx="11" ry="14" fill="{{ color }}"/>
+                      <path d="M12 28 C12 34, 8 34, 12 38" stroke="#888" stroke-width="2" fill="none"/>
+                      <ellipse cx="8" cy="9" rx="2.5" ry="4" fill="#fff" fill-opacity="0.3"/>
+                    </svg>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </td>
+    {% for cell in user.problem_cells %}
+        {{ cell }}
+    {% endfor %}
+{% endblock %}
+
+{% block after_point %}
+{% endblock %}
+
+{% block point %}
+    {{ user.result_cell }}
+{% endblock %}

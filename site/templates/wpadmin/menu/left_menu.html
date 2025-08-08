@@ -1,0 +1,441 @@
+<head>
+  <link 
+    rel="stylesheet" 
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  >
+</head>
+{% load wpadmin_menu_tags i18n %}
+{% block extrastyle %}
+<style>
+    #adminmenuwrap {
+        background-color: #FFFFFF;
+        width: 180px;
+        margin-top: 10px
+    }
+    #adminmenuwrap::after{
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 3px;
+        height: 100%;
+        background: linear-gradient(to right, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0));
+        pointer-events: none;
+    }
+    #adminmenu {
+        background-color: #FFFFFF;
+        width: 180px;
+    }
+    #adminmenu li {
+        background-color: #FFFFFF;
+        margin-bottom: 5px;
+    }
+    #adminmenu .wp-menu-top > a,
+    #adminmenu .wp-menu-top > .wp-menu-image > a{
+        color: #717171 !important;  
+        background-color:transparent;
+        transition: background-color 0.3s ease, color 0.3s ease;
+        border-radius:12px;
+        margin-right:3px;
+    }
+    #adminmenu .wp-menu-top:hover > a{
+        background-color: #CCDAF4;
+        color: #167CAF !important; 
+    }
+    #adminmenu .wp-menu-top:hover > a.wp-add-url {
+        background-color: transparent;
+    }
+    #adminmenu .wp-menu-top:hover > .wp-menu-image > a{
+        color: #167CAF !important;
+    }
+    #adminmenu .wp-submenu-wrap ul,
+    #adminmenu .wp-submenu-wrap ul li {
+        background-color: #3A5C7E;
+        width: 180px;
+    }
+    #adminmenu li.wp-menu-open {
+        background-color: #CCDAF4 !important;
+        margin-right: 3px;
+        border-radius: 8px;
+    }
+    #adminmenu li.wp-menu-open a, #adminmenu li.wp-menu-open .wp-menu-image > a{
+        
+        color: #167CAF !important;
+    }
+    #adminmenu li.wp-menu-top.wp-menu-open a {
+        color: #5C95D9;
+    }
+    #adminmenu .wp-menu-top > a {
+        padding-top: 12px;
+        padding-bottom: 12px;
+    }
+    #adminmenu .wp-menu-top > a.wp-add-url {
+        padding-right: 15px;
+    }
+    #adminmenu .wp-menu-top.wp-menu-open > a.wp-add-url {
+        padding-right: 7px;
+    }
+    .wp-menu .wp-menu-top .wp-menu-image a {
+        padding-left: 5px;
+        padding-top: 4px;
+        padding-bottom: 4px;
+    }
+    .wp-menu .wp-menu-top.wp-menu-open>a, .wp-menu .wp-menu-top.wp-menu-open .wp-menu-image a {
+        background: none;
+        color: #5C95D9;
+    }
+    .wp-menu .wp-submenu .wp-submenu-wrap ul li.wp-has-add-url > a:first-child {
+        width: 85p;
+        color: #FFFFFF;
+    }
+    .wp-menu .wp-submenu .wp-submenu-wrap ul li.wp-has-add-url > a.wp-add-url {
+        padding-right: 25px;
+        color: #FFFFFF;
+    }
+    #adminmenu .wp-menu-top.wp-menu-open>a:after, #adminmenu .wp-menu-top.wp-menu-open .wp-menu-image a:after {
+        border: none;
+    }
+    #adminmenu .wp-menu-top > a {
+        color: #FFFFFF;
+    }
+    #adminmenu .wp-submenu-wrap{
+        background-color : #EFF5FC;
+        width:177px;
+        border-radius: 0 0 8px 8px;
+        overflow:hidden;
+        box-shadow: none !important;
+        border:none !important;
+    }
+    #adminmenu .wp-menu-not-open .wp-submenu-wrap{
+        background-color : #EFF5FC;
+        width:177px;
+        border-radius: 8px;
+        overflow:hidden;
+        box-shadow: none !important;
+        border:none !important;
+    }
+    #adminmenu .wp-submenu-wrap ul li a {
+        background-color:transparent !important;
+        color: #717171 !important;
+    }
+    #adminmenu .wp-submenu-wrap ul, #adminmenu .wp-submenu-wrap ul li {
+        background-color:#EFF5FC;
+    }
+    #adminbarwrap .wp-menu  .wp-menu-top .wp-menu-image a {
+        padding: 0;
+    }
+    #adminbarwrap .wp-menu  .wp-menu-top .wp-menu-image a .wp-small-gravatar {
+        width: 22px;
+        height: auto;
+        border-radius: 50%;
+        margin-bottom: 2px;
+    }
+    #adminbarwrap #adminbar .wp-menu-top > a {
+        color: white;
+    }
+    #adminbarwrap #adminbar .wp-menu-top {
+        margin-right: 10px;
+    }
+    #adminbar  .wp-menu-top:hover > a,
+    #adminbar  .wp-menu-top:hover > .wp-menu-image > a{
+        background-color: transparent !important;
+    }
+    
+    
+    .wp-submenu .wp-submenu-wrap ul {
+        padding: 7px 5px 8px;
+        margin: 0;
+        list-style: none;
+    }
+</style>
+<style>
+        li{
+            margin-left:5px;
+        }
+        .deletelink{
+            background-color: rgba(0,0,0,0.05) !important;
+            color: #0074a2 !important;
+            margin-left: 5px;
+        }
+        #content-main #changelist-form .actions-and-paginator .actions .button{
+            background-color : #E6E7EA;
+            box-shadow : none;
+            border: 1px solid var(--border-color);
+            position:relative;
+            left:10px;
+            top:2.5px;
+            width:43px;
+            height:28px;
+        }
+        #content-main #changelist-form .actions-and-paginator .paginator span.this-page{
+            background-color: #2E5DA8 !important;
+            color: white;
+            border-radius: 6px;
+            display: inline-block;
+        }
+        #content-main #changelist-form .actions-and-paginator .paginator a{
+            background-color: #CDD6E4 !important;
+            color: black !important;
+            border-radius: 6px;
+            display: inline-block;
+        }
+        #content-main #changelist-form .actions-and-paginator .paginator a:hover{
+            background-color: #A9B9D5!important;
+            color: black !important;
+            border-radius: 6px;
+            display: inline-block;
+        }
+        #content-main #changelist-form .actions-and-paginator .paginator .showall{
+            background-color: #E6E7EA !important;
+            border: 1px solid var(--border-color);
+        }
+        #container #content {
+            position: relative;
+        }
+        #container #content .list-tools {
+            position: absolute;
+            right: 36px; 
+            top: 20px;
+            display: flex;
+        }
+        #container #content .list-tools {
+            display: flex;
+            justify-content: flex-end;
+            margin-left:auto;
+        }
+        #container #content .list-tools li {
+            list-style: none;
+        }
+        #container #content .list-tools li a{
+            color: white;
+            margin: 0px;
+            background: transparent;
+        }
+        #container #content .list-tools li:has(a.add-new){
+            background-color: #3A6FD9;
+            border-radius: 8px;
+            margin-right: 8px;
+        }
+        #container #content .list-tools li:has(a.delete-link){
+            background-color: #E53935;
+            border-radius: 8px;
+            margin-right: 8px;
+        }
+        #container #content .list-tools li:has(a.recoverlink){
+            background-color: #2BAE66;
+            border-radius: 8px;
+        }
+        #content #content-main #changelist{
+            position: relative;
+        }
+        #content #content-main #changelist #changelist-filter{
+
+        }
+        #content #content-main #changelist .xfull {
+            position: absolute;
+            top: 0;   
+            left: 30px;
+        }
+        #content #content-main #changelist .xfull li{
+            border : 0.5px solid var(--border-color);
+            background-color : #E6E7EA;
+            border-radius : 8px;
+            padding: 4px 15px;
+        }
+        #content #content-main #changelist .xfull li:hover{
+            border : 0.5px solid var(--border-color);
+            background-color : #4C79B6;
+            border-radius : 8px;
+            padding: 4px 15px;
+        }
+        #content #content-main #changelist .xfull li a{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            color: #2E5DA8;
+            font-size:13px;
+            font-weight:500;
+        }
+        #content #content-main #changelist .xfull li:hover a{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            color: #FFFFFF;
+            font-size:13px;
+            font-weight:500;
+        }
+        #content #content-main #changelist #changelist-filter form {
+            display: flex; 
+            gap: 25px; 
+            margin-top: 30px;
+            border: 0.5px, solid, var(--border-color);
+            border-radius:8px;
+            background-color:#E6E7EA;
+            align-items: center;
+            padding-left:15px;
+        }
+        #content #content-main #changelist #changelist-filter form label {
+            display: flex;
+            flex-direction: column;
+            width:259px; 
+            margin-bottom: 8px;
+            margin-top:14px;
+            font-size:14px;
+            font-weight:500;
+        }
+        #content #content-main #changelist #changelist-filter form button:not(label input){
+            background-color: #4C79B6;
+            border-radius:8px;
+            color: white;
+            margin-left : auto;
+            margin-right : 12px;
+            align-self: center;
+            height: 30px;
+            box-shadow:none;
+            border:none;
+        }
+        #content #content-main #changelist #changelist-filter form label select,
+        #content #content-main #changelist #changelist-filter form label input {
+            display: block;
+            margin-top: 5px;
+            width: 100%;
+            font-size:14px;
+            height: 30px;
+        }
+
+        #content #content-main #changelist #changelist-form .results #result_list thead th{
+            background-color: #E6E7EA;
+        }
+        #content #content-main #changelist #changelist-form .results #result_list tbody tr{
+            background-color: white;
+        }
+        #content #content-main #changelist #changelist-form .results #result_list {
+            border-collapse: collapse;
+            width: 100%;
+            border : 1px solid var(--border-color);
+            border-radius: 8px;
+            border-collapse: separate;
+            overflow: hidden;
+        }
+        #content #content-main #changelist #changelist-form .results #result_list th,
+        #content #content-main #changelist #changelist-form .results #result_list td {
+
+            border-bottom: 1px solid var(--border-color);
+            border-color: var(--border-color);
+        }
+        #content #changelist .actions-and-paginator .actions select {
+            border : 1px solid var(--border-color);
+            width: 259px;
+            height: 30px;
+            border-radius: 7px;
+            border-bottom: 1px solid #C4C4C4;
+        }
+
+    </style>
+{% endblock %}
+{% if is_user_allowed and menu.children %}
+	<div id="adminmenuback"></div>
+	<div id="adminmenuwrap">
+		<ul id="adminmenu" class="wp-menu" role="navigation">
+			<br/>
+			{% for item in menu.children %}
+				{% if item.is_user_tools %}
+					{% wpadmin_render_user_tools item forloop.first forloop.last %}
+				{% else %}
+					{% wpadmin_render_menu_top_item item forloop.first forloop.last %}
+				{% endif %}
+			{% endfor %}
+			<li class="hide-if-no-js wp-menu-top wp-has-submenu wp-menu-not-open wp-no-url wp-menu-tools">
+				<div class="wp-menu-image"><a aria-label="{% trans 'Menu options' %}" title="{% trans 'Menu options' %}" href="javascript:;"><i class="fa fa-fw fa-cog"></i></a></div>
+				<a href="javascript:;" title="{% trans 'Menu options' %}">{% trans 'Menu options' %}</a>
+				<div class="wp-submenu">
+					<div class="wp-submenu-wrap">
+						<div class="wp-submenu-head">{% trans 'Menu options' %}</div>
+						<ul>
+							<li class="wp-menu-tool" id="collapse-menu" data-text-collapsed="{% trans "Expand menu" %}" data-text-expanded="{% trans "Collapse menu" %}">
+								<a href="javascript:;">{% trans "Collapse menu" %}</a>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</li>
+		</ul>
+	</div>
+{% endif %}
+
+<script>
+// document.addEventListener("DOMContentLoaded", function () {
+//     setTimeout(function () {
+//         const links = document.querySelectorAll(".add-new");
+//         links.forEach(link => {
+//             if (link.textContent.includes("추가")) {
+//                 link.innerHTML = `<i class="fa fa-plus" ></i> ${text}`;
+//             }
+//         });
+//     }, 100);  // 0.1초 후 실행
+//     });
+//         document.addEventListener("DOMContentLoaded", function () {
+//     setTimeout(function () {
+//         const links = document.querySelectorAll(".delete-link");
+//         links.forEach(link => {
+//             if (link.textContent.includes("선택 삭제")) {
+//                 link.innerHTML = `<i class="fa-regular fa-trash-can"></i>  ${text}`;
+//             }
+//         });
+//     }, 100);  // 0.1초 후 실행
+//     });
+document.addEventListener("DOMContentLoaded", function () {
+        const links = document.querySelectorAll(".add-new");
+        links.forEach(link => {
+            const text = link.textContent.trim();
+            if (text.startsWith("추가")) {
+                link.innerHTML = `<i class="fa fa-plus" ></i> ${text}`;
+            }
+        });
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+        const links = document.querySelectorAll(".delete-link");
+        links.forEach(link => {
+            const text = link.textContent.trim();
+            if (text.startsWith("선택 삭제") ) {
+                link.innerHTML = `<i class="fa-regular fa-trash-can"></i> ${text}`;
+            }
+        });
+});
+document.addEventListener("DOMContentLoaded", function () {
+        const links = document.querySelectorAll(".recoverlink");
+        links.forEach(link => {
+            const text = link.textContent.trim();
+            if (text.startsWith("삭제된") ) {
+                link.innerHTML = `<i class="fa-solid fa-trash-can-arrow-up"></i> ${text}`;
+            }
+        });
+});
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll('select[name="action"] option').forEach(option => {
+        if (option.textContent.trim() === "---------") {
+            option.textContent = "작업을 선택하세요";
+        }
+    });
+}); 
+/*셀렉트 카운터 숨기기 */ 
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".actions span.all, .actions span.action-counter").forEach(el => {
+        el.style.display = "none";
+    });
+
+    const toggle = document.getElementById("action-toggle");
+    if (toggle && toggle.nextElementSibling && toggle.nextElementSibling.tagName === "SPAN") {
+        toggle.nextElementSibling.style.display = "none";
+    }
+
+    document.querySelectorAll('select[name="action"] option').forEach(option => {
+        if (option.textContent.trim() === "---------") {
+            option.textContent = "작업을 선택하세요";
+        }
+    });
+});
+</script>

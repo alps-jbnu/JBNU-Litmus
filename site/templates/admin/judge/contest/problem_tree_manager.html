@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>문제 관리</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f9fafb;
+            color: #17171B;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: #FFFFFF;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 10px 20px;
+            margin-bottom: 10px;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #17171B;
+        }
+        
+        .header p {
+            color: #8391A1;
+            font-size: 14px;
+        }
+        
+        .content-card {
+            background: #FFFFFF;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .problem-list {
+            width: 100%;
+        }
+        
+        .category-header {
+            background: rgba(0, 0, 0, 0.03);
+            border-bottom: 1px solid #E5E7EB;
+            padding: 10px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background-color 0.2s ease;
+            user-select: none;
+        }
+        
+        .category-header:hover {
+            background: rgba(92, 149, 217, 0.05);
+        }
+        
+        .category-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .category-toggle {
+            font-size: 12px;
+            width: 12px;
+            height: 12px;
+            color: #8391A1;
+            transition: transform 0.2s ease;
+            display: inline-block;
+        }
+        
+        .category-toggle.css-arrow {
+            width: 0;
+            height: 0;
+            border-left: 6px solid #8391A1;
+            border-top: 4px solid transparent;
+            border-bottom: 4px solid transparent;
+            font-size: 0;
+        }
+        
+        .category-toggle.expanded {
+            transform: rotate(90deg);
+        }
+        
+        .category-name {
+            font-weight: 600;
+            color: #17171B;
+            font-size: 15px;
+        }
+        
+        .category-count {
+            color: #8391A1;
+            font-size: 13px;
+            background: #E5E7EB;
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+        
+        .category-content {
+            display: none;
+            border-bottom: 1px solid #E5E7EB;
+        }
+        
+        .category-content.expanded {
+            display: block;
+        }
+        
+        .problem-item {
+            display: flex;
+            align-items: center;
+            padding: 5px 20px 5px 60px;
+            border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+            transition: background-color 0.2s ease;
+        }
+        
+        .problem-item:hover {
+            background-color: rgba(92, 149, 217, 0.05);
+        }
+        
+        .problem-item:last-child {
+            border-bottom: none;
+        }
+        
+        .problem-checkbox-container {
+            margin-right: 15px;
+        }
+        
+        .problem-details {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        
+        .problem-name {
+            font-weight: 500;
+            color: #17171B;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .problem-id {
+            color: #8391A1;
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+        
+        .custom-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #5C95D9;
+        }
+        
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 10px 20px;
+            background: rgba(92, 149, 217, 0.05);
+        }
+        
+        .select-all-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .select-all-label {
+            font-size: 14px;
+            color: #17171B;
+            font-weight: 500;
+        }
+        
+        .actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #FFFFFF;
+            padding: 10px 20px;
+            border-top: 1px solid #E5E7EB;
+        }
+        
+        .select-info {
+            color: #8391A1;
+            font-size: 14px;
+        }
+        
+        .btn {
+            padding: 7px 15px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary {
+            background-color: #5C95D9;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #4A7BC8;
+        }
+        
+        .btn-secondary {
+            background-color: #E5E7EB;
+            color: #17171B;
+            margin-right: 10px;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #D1D5DB;
+        }
+        
+        .no-problems {
+            text-align: center;
+            padding: 60px 20px;
+            color: #8391A1;
+        }
+        
+        .no-problems h3 {
+            margin-bottom: 10px;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .stat-item {
+            color: #8391A1;
+            font-size: 13px;
+        }
+        
+        .stat-number {
+            color: #5C95D9;
+            font-weight: 600;
+        }
+        
+        .category-section {
+            border-bottom: 1px solid #E5E7EB;
+        }
+        
+        .category-section:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>문제 관리</h1>
+            <p>대회에 포함할 문제를 선택하세요</p>
+            <div class="stats">
+                <div class="stat-item">전체 문제: <span class="stat-number" id="total-count">0</span>개</div>
+                <div class="stat-item">선택된 문제: <span class="stat-number" id="selected-count">0</span>개</div>
+            </div>
+        </div>
+        
+        <div class="content-card">
+            <div class="header-controls">
+                <div class="select-all-container">
+                    <input type="checkbox" id="select-all" class="custom-checkbox">
+                    <label for="select-all" class="select-all-label">전체 선택</label>
+                </div>
+            </div>
+            
+            <div class="problem-list" id="problem-list">
+                <!-- 카테고리별 문제 목록이 여기에 동적으로 추가됩니다 -->
+            </div>
+            
+            <div class="actions">
+                <div class="select-info">
+                    <span id="selection-info">문제를 선택하세요</span>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-secondary" onclick="window.close()">취소</button>
+                    <button type="button" class="btn btn-primary" id="save-btn">선택한 문제 적용</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script type="text/javascript">
+        // Django에서 전달된 문제 데이터
+        const problemData = JSON.parse('{{ problems|escapejs }}');
+        let problemSelectionDict = {};
+        
+        // 문제 데이터를 카테고리별로 그룹화
+        function groupProblemsByCategory(node, categoryPath = []) {
+            const categories = {};
+            
+            function processNode(currentNode, path) {
+                if (!currentNode.children) {
+                    // 문제 파일인 경우
+                    const categoryName = path.length > 0 ? path.join(' > ') : '기타';
+                    if (!categories[categoryName]) {
+                        categories[categoryName] = [];
+                    }
+                    categories[categoryName].push({
+                        id: currentNode.id,
+                        name: currentNode.name,
+                        selected: currentNode.selected
+                    });
+                } else {
+                    // 디렉토리인 경우
+                    const newPath = currentNode.name === 'root' ? path : [...path, currentNode.name];
+                    currentNode.children.forEach(child => {
+                        processNode(child, newPath);
+                    });
+                }
+            }
+            
+            processNode(node, categoryPath);
+            return categories;
+        }
+        
+        // 카테고리별 문제 목록 렌더링
+        function renderProblems() {
+            const container = document.getElementById('problem-list');
+            const categories = groupProblemsByCategory(problemData);
+            
+            // 데이터가 없는 경우
+            if (Object.keys(categories).length === 0) {
+                container.innerHTML = `
+                    <div class="no-problems">
+                        <h3>사용 가능한 문제가 없습니다</h3>
+                        <p>문제를 먼저 등록하세요</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            // 카테고리별로 렌더링
+            Object.entries(categories).forEach(([categoryName, problems], index) => {
+                const categoryId = `category-${index}`;
+                
+                // 카테고리 헤더 생성
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'category-section';
+                categoryDiv.innerHTML = `
+                    <div class="category-header" data-category="${categoryId}">
+                        <div class="category-left">
+                            <span class="category-toggle css-arrow"></span>
+                            <input type="checkbox" class="custom-checkbox category-checkbox" data-category="${categoryId}">
+                            <span class="category-name">${categoryName}</span>
+                        </div>
+                        <span class="category-count">${problems.length}개</span>
+                    </div>
+                    <div class="category-content" id="${categoryId}-content">
+                        ${problems.map(problem => {
+                            problemSelectionDict[problem.id] = problem.selected;
+                            return `
+                                <div class="problem-item">
+                                    <div class="problem-checkbox-container">
+                                        <input type="checkbox" 
+                                               class="custom-checkbox problem-checkbox" 
+                                               data-problem-id="${problem.id}"
+                                               data-category="${categoryId}"
+                                               ${problem.selected ? 'checked' : ''}>
+                                    </div>
+                                    <div class="problem-details">
+                                        <span class="problem-name">${problem.name}</span>
+                                        <span class="problem-id">ID: ${problem.id}</span>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+                
+                container.appendChild(categoryDiv);
+            });
+            
+            updateStats();
+        }
+        
+        // 통계 정보 업데이트
+        function updateStats() {
+            const totalCount = Object.keys(problemSelectionDict).length;
+            const selectedCount = Object.values(problemSelectionDict).filter(selected => selected).length;
+            
+            document.getElementById('total-count').textContent = totalCount;
+            document.getElementById('selected-count').textContent = selectedCount;
+            
+            const selectionInfo = document.getElementById('selection-info');
+            if (selectedCount === 0) {
+                selectionInfo.textContent = '문제를 선택하세요';
+            } else {
+                selectionInfo.textContent = `${selectedCount}개 문제가 선택되었습니다`;
+            }
+        }
+        
+        // 이벤트 리스너 설정
+        function setupEventListeners() {
+            // 전체 선택/해제 체크박스
+            const selectAllCheckbox = document.getElementById('select-all');
+            selectAllCheckbox.addEventListener('change', function() {
+                const isChecked = this.checked;
+                document.querySelectorAll('.problem-checkbox').forEach(checkbox => {
+                    checkbox.checked = isChecked;
+                    const problemId = checkbox.getAttribute('data-problem-id');
+                    problemSelectionDict[problemId] = isChecked;
+                });
+                
+                // 카테고리 체크박스도 업데이트
+                document.querySelectorAll('.category-checkbox').forEach(categoryCheckbox => {
+                    categoryCheckbox.checked = isChecked;
+                    categoryCheckbox.indeterminate = false;
+                });
+                
+                updateStats();
+            });
+            
+            // 카테고리 헤더 클릭 (펼치기/접기)
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.category-header')) {
+                    const header = e.target.closest('.category-header');
+                    const categoryId = header.getAttribute('data-category');
+                    const content = document.getElementById(categoryId + '-content');
+                    const toggle = header.querySelector('.category-toggle');
+                    
+                    // 체크박스 클릭 시에는 펼치기/접기 동작 방지
+                    if (e.target.type === 'checkbox') {
+                        return;
+                    }
+                    
+                    if (content.classList.contains('expanded')) {
+                        content.classList.remove('expanded');
+                        toggle.classList.remove('expanded');
+                    } else {
+                        content.classList.add('expanded');
+                        toggle.classList.add('expanded');
+                    }
+                }
+            });
+            
+            // 카테고리 체크박스 (카테고리 전체 선택/해제)
+            document.addEventListener('change', function(e) {
+                if (e.target.classList.contains('category-checkbox')) {
+                    const categoryId = e.target.getAttribute('data-category');
+                    const isChecked = e.target.checked;
+                    
+                    // 해당 카테고리의 모든 문제 체크박스 업데이트
+                    const categoryProblems = document.querySelectorAll(`.problem-checkbox[data-category="${categoryId}"]`);
+                    categoryProblems.forEach(checkbox => {
+                        checkbox.checked = isChecked;
+                        const problemId = checkbox.getAttribute('data-problem-id');
+                        problemSelectionDict[problemId] = isChecked;
+                    });
+                    
+                    updateCategoryCheckboxStates();
+                    updateGlobalCheckboxState();
+                    updateStats();
+                }
+            });
+            
+            // 개별 문제 체크박스
+            document.addEventListener('change', function(e) {
+                if (e.target.classList.contains('problem-checkbox')) {
+                    const problemId = e.target.getAttribute('data-problem-id');
+                    problemSelectionDict[problemId] = e.target.checked;
+                    
+                    updateCategoryCheckboxStates();
+                    updateGlobalCheckboxState();
+                    updateStats();
+                }
+            });
+            
+            // 저장 버튼
+            document.getElementById('save-btn').addEventListener('click', function() {
+                $.ajax({
+                    url: "{% url 'admin:update_contest_inline' contest_id %}",
+                    method: 'POST',
+                    data: {
+                        'selected_items': JSON.stringify(problemSelectionDict),
+                        'csrfmiddlewaretoken': '{{ csrf_token }}',
+                    },
+                    success: function(response) {
+                        window.close();
+                    },
+                    error: function(xhr, status, error) {
+                        alert('오류: ' + error);
+                    }
+                });
+            });
+        }
+        
+        // 카테고리 체크박스 상태 업데이트
+        function updateCategoryCheckboxStates() {
+            document.querySelectorAll('.category-checkbox').forEach(categoryCheckbox => {
+                const categoryId = categoryCheckbox.getAttribute('data-category');
+                const categoryProblems = document.querySelectorAll(`.problem-checkbox[data-category="${categoryId}"]`);
+                const checkedProblems = document.querySelectorAll(`.problem-checkbox[data-category="${categoryId}"]:checked`);
+                
+                if (checkedProblems.length === 0) {
+                    categoryCheckbox.checked = false;
+                    categoryCheckbox.indeterminate = false;
+                } else if (checkedProblems.length === categoryProblems.length) {
+                    categoryCheckbox.checked = true;
+                    categoryCheckbox.indeterminate = false;
+                } else {
+                    categoryCheckbox.checked = false;
+                    categoryCheckbox.indeterminate = true;
+                }
+            });
+        }
+        
+        // 전체 선택 체크박스 상태 업데이트
+        function updateGlobalCheckboxState() {
+            const selectAllCheckbox = document.getElementById('select-all');
+            const allProblems = document.querySelectorAll('.problem-checkbox');
+            const checkedProblems = document.querySelectorAll('.problem-checkbox:checked');
+            
+            if (checkedProblems.length === 0) {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
+            } else if (checkedProblems.length === allProblems.length) {
+                selectAllCheckbox.checked = true;
+                selectAllCheckbox.indeterminate = false;
+            } else {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = true;
+            }
+        }
+        
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            renderProblems();
+            setupEventListeners();
+            
+            // 초기 체크박스 상태 설정
+            updateCategoryCheckboxStates();
+            updateGlobalCheckboxState();
+        });
+    </script>
+</body>
+</html>

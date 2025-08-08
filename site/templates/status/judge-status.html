@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block js_media %}
+    {% include "status/media-js.html" %}
+{% endblock %}
+
+{% block media %}
+    {% include "status/media-css.html" %}
+    {% block content_media %}{% endblock %}
+    <style>
+        .h-scrollable-table {
+            overflow: visible;
+        }
+        #judge-status {
+            border-radius: 10px 10px 0px 0px;
+            box-shadow: var(--standard-box-shadow);
+        }
+        #judge-status thead th {
+            height: 25px;
+            background-color: rgba(0, 0, 0, 0.03);
+            color: #17171B;
+            border: none;
+            padding: 7px 10px;
+            font-size: 14px;
+            font-weight: 400;
+            
+        }
+        #judge-status tbody tr, td {
+            height: 25px;
+            background-color: #D9D9D908;
+            border: none !important;
+            border-top: 1px solid var(--border-color);
+        }
+        #judge-status tbody td:first-child a {
+            color: var(--primary-color);
+        }
+        #judge-status tbody tr:nth-child(even) {
+            background: none;
+        }
+
+        #judge-status tbody tr:nth-child(odd) {
+            background-color: #ffffff;
+        }
+        #judge-status th:first-child {
+            border-top-left-radius: 10px;
+        }
+
+        #judge-status th:last-child {
+            border-top-right-radius: 10px; /* 테이블의 오른쪽 위 모서리 */
+        }
+    </style>
+{% endblock %}
+
+{% block title_ruler %}{% endblock %}
+
+{% block title_row %}
+    {% set tab = 'judges' %}
+    {% include "status/status-tabs.html" %}
+{% endblock %}
+
+{% block body %}
+    <div class="h-scrollable-table">
+        <br>
+        <table id="judge-status" class="table striped">
+            {% include "status/judge-status-table.html" %}
+        </table>
+    </div>
+{% endblock %}

@@ -1,0 +1,323 @@
+{% load wpadmin_tags wpadmin_menu_tags %}{% load static %}<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE|default:"en-us" }}"{% if LANGUAGE_BIDI %} dir="rtl"{% endif %}>
+<head>
+{# WP Admin start #}
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+{# WP Admin end #}
+<title>{% block title %}{% endblock %}</title>
+<link rel="stylesheet" type="text/css" href="{% block stylesheet %}{% static "admin/css/base.css" %}{% endblock %}" />
+{% block extrastyle %}{% endblock %}
+{% if LANGUAGE_BIDI %}<link rel="stylesheet" type="text/css" href="{% block stylesheet_rtl %}{% static "admin/css/rtl.css" %}{% endblock %}" />{% endif %}
+{# WP Admin start #}
+{% if INLINE_FONTAWESOME %}
+<link rel="stylesheet" type="text/css" href="{% static "libs/fontawesome/font-awesome.css" %}" />
+{% elif FONTAWESOME_CSS %}
+<link rel="stylesheet" type="text/css" href="{{ FONTAWESOME_CSS }}" />
+{% else %}
+<link rel="stylesheet" type="text/css" href="{% static "wpadmin/css/font-awesome.min.css" %}" />
+{% endif %}
+{% with WPADMIN_DEV=0 %}{% if WPADMIN_DEV %}
+<link rel="stylesheet/less" type="text/css" href="{% static "wpadmin/less/wpadmin.less" %}" />
+<link rel="stylesheet/less" type="text/css" href="{% static "wpadmin/less/themes/default/theme.less" %}" />
+<script type="text/javascript">less = {env: "development"};</script>
+<script type="text/javascript" src="{% static "wpadmin/js/lib/less.min.js" %}"></script>
+{% else %}
+<link rel="stylesheet" type="text/css" href="{% static "wpadmin/css/wpadmin.css" %}" />
+<link rel="stylesheet" type="text/css" href="{% static "wpadmin/css/themes/default.css" %}" />
+{% endif %}{% endwith %}
+{# WP Admin end #}
+<script type="text/javascript">window.__admin_media_prefix__ = "{% filter escapejs %}{% static "admin/" %}{% endfilter %}";</script>
+<script type="text/javascript">window.__admin_utc_offset__ = "{% filter escapejs %}{% now "Z" %}{% endfilter %}";</script>
+{% block extrahead %}{% endblock %}
+{% wpadmin_render_custom_style %}
+{% block wpadmin_extrastyle %}{% endblock %}
+{% block wpadmin_extrahead %}{% endblock %}
+{# WP Admin start #}
+<script type="text/javascript">
+	// needed for setting cookie path
+	window.__admin_url = '{% url 'admin:index' %}';
+	// cookie name
+	window.__wpadmin_cookie_name = 'djangoWpAdminSettings';
+
+	// we need jQuery in default namespace (not django.jQuery) because we use some external jQuery plugins
+	if (typeof jQuery == 'undefined') {
+		// we can get jQuery object from django object but there are some admin templates where jQuery is not loaded
+		if (typeof django == 'undefined' || typeof django.jQuery == 'undefined') {
+			// so lets load our jQuery synchronously
+			document.write(decodeURI("%3Cscript src='{% static "wpadmin/js/lib/jquery.min.js" %}' type='text/javascript'%3E%3C/script%3E"));
+		} else {
+			// lest copy jQuery from django object to default namespace
+			window.jQuery = django.jQuery;
+		}
+	}
+</script>
+<script type="text/javascript" src="{% static "wpadmin/js/lib/jquery.cookie.min.js" %}"></script>
+<script type="text/javascript" src="{% static "wpadmin/js/menus.js" %}"></script>
+<script type="text/javascript" src="{% static "wpadmin/js/content.js" %}"></script>
+<link rel="stylesheet" type="text/css" href="{% static "wpadmin/css/wpadmin.site.css" %}" />
+{# WP Admin end #}
+{% block blockbots %}<meta name="robots" content="NONE,NOARCHIVE" />{% endblock %}
+<style>
+	:root {
+		background-color: #FFF;
+		--border-color: rgba(0, 0, 0, 0.07);
+		--border-secondary: #e5e5e5;
+		--checkbox-color: #1D7FB4;
+	}
+	/* hover, focus, active 상태에서 효과 제거 */
+	input:hover,input:focus,input:active,
+	select:hover,select:focus,select:active,
+	textarea:hover,textarea:focus,textarea:active {
+		outline: none !important;
+		box-shadow: none !important;
+		background: inherit;
+		transition: none !important;
+	}
+	#wrapper {
+		margin-top: 48px;
+	}
+	#adminbarwrap #adminbar {
+		background-color: #1C3B60;
+		box-shadow: 0px 7px 29px 0px rgba(100, 100, 111, 0.1);
+	}
+	#content {
+		height: 100%;
+		background-color: #F2F2F2;
+		margin: 0;
+		padding: 10px 50px;
+	}
+  	.breadcrumbs {
+      	background-color:#FFFFFF !important;
+		border: 1px solid;
+		color: #5C95D9 !important;
+	}
+	.breadcrumbs a {
+		margin: 10px;
+		color: #8391A1 !important;
+	}
+	.breadcrumbs a:hover {
+		color: #5C95D9 !important;
+	}
+	#content .module {
+		border-radius: 10px;
+		border: 1px solid var(--border-secondary);
+		overflow: hidden;
+	}
+	#content .module h2, #content .module caption, #content .inline-group h2 {
+		border-top-left-radius: 10px;
+		border-top-right-radius: 10px;
+		border: none;
+		background-color: #F8F8F8;
+	}
+	#content .form-row.errors {
+		border-top: 1px solid #ccc;
+	}
+	#content .form-row {
+		border: none;
+		border-top: 1px solid #ccc;
+		padding: 10px 20px;
+		overflow: auto;
+	}
+	#content textarea, #content input[type="text"], #content input[type="password"], #content input[type="email"], #content input[type="number"], #content input[type="search"], #content input[type="tel"], #content input[type="url"], #content input[type="file"], #content select {
+		border-radius: 7px;
+	}
+	#content .form-row > div {
+		margin: 0;
+	}
+	#content label {
+		width: auto;
+		font-weight: bold;
+		color: black;
+	}
+	.select2-container--default.select2-container--focus .select2-selection--multiple {
+		border: 1px solid var(--border-secondary);
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.07) inset
+	}
+	.select2-container--default .select2-selection--multiple {
+		border: 1px solid var(--border-secondary);
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.07) inset
+	}
+	#adminbar >.wp-menu-top.wp-menu-open{
+		display:none;
+	}
+	.calendarbox .calendarnav-previous, .calendarbox .calendarnav-next {
+    padding: 0;
+    padding-top: 0px;
+    padding-right: 0px;
+    padding-bottom: 0px;
+    padding-left: 0px;
+    text-align: center;
+    width: 19px;
+    height: 15px;
+    line-height: 19px;
+    font-size: 18px;
+}
+		#content #content-main #problem_form .module h2{
+			background-color: #E6E7EA;
+		}
+		#content #content-main .module #change-history{
+			border-collapse: collapse;
+            border : 1px solid var(--border-color);
+            border-radius: 8px;
+		}
+		#content #content-main .module #change-history thead tr{
+			background-color: #E6E7EA !important;
+		}
+		#content #content-main .module #change-history tbody tr{
+			border-bottom: 1px solid var(--border-color);
+            border-color: var(--border-color);
+		}
+		#content #content-main #problem_form .module .form-row .help{
+  			position: relative;
+			z-index:0;
+			width:fit-content;
+			color: black !important;
+		}
+		#content #content-main #problem_form .module .form-row .help::after{
+			content: "";
+  			position: absolute;
+  			top: 1px;
+  			left: 18px;
+  			right: 0;
+  			bottom: 0;
+  			background-color: #E3E8F1;
+  			border-radius: 8px;
+  			z-index: -1;
+		}
+		#content #content-main #problem_form #bottombar{
+			background-color: transparent;
+		}
+		#content #content-main #problem_form #bottombar button{
+			border-radius :8px;
+			background-color: #4C79B6;
+		}
+		#content #content-main #problem_form #bottombar a{
+			border-radius :8px;
+			background-color: #4C79B6 !important;
+		}
+		#content #content-main #problem_form #bottombar .deletelink{
+			background-color : #E05252 !important;
+			color:white !important;
+		}
+		#content #content-main #problem_form .module .field-date .datetime{
+			position: relative;
+			vertical-align: middle;
+			align-items: center;
+		}
+		#content #content-main #problem_form .module .field-date .datetime input{
+			padding-right: 80px;
+			margin-right: -60px;
+		}
+		
+		#content #content-main #problem_form .module .field-date .datetime span{
+			text-align: left;
+			direction: ltr;
+			right:0;
+		}
+		#content{
+			color: #333333;
+		}
+		#content #content-main #problem_form .module .help{
+			font-size:10px !important;
+		}
+
+		#content #content-main #problem_form .module .field-is_encrypted #id_is_encrypted{
+			accent-color: var(--checkbox-color);
+		}
+		#content #content-main #problem_form .module .field-is_public #id_is_public{
+			accent-color: var(--checkbox-color);
+		}
+		#content #content-main #problem_form .module .field-allowed_languages .related-widget-wrapper{
+			accent-color: var(--checkbox-color);
+		}
+		#content #content-main #problem_form .module .field-date .datetimeshortcuts > a,
+		#content #content-main #problem_form .module .field-date .datetimeshortcuts > a > span{
+			filter: invert(60%) sepia(0%) saturate(1%) hue-rotate(163deg) brightness(95%) contrast(86%);
+		}
+		#content #content-main #problem_form #language_limits-group .module tbody .add-row a,
+		#content #content-main #problem_form #cases-group .module tbody .add-row a,
+		#content #content-main #problem_form #solution-group .module .add-row a,
+		#content #content-main #problem_form #clarifications-group .module .add-row a{
+			border: 1.5px solid #3A6FD9;
+			border-radius :8px;
+			padding: 5px 5px 5px 5px;
+			color: black;
+			font-size:13px;
+			display:inline-block;
+			margin-top:3px;
+		}
+		#content #content-main #problem_form #language_limits-group .module tbody .add-row td,
+		#content #content-main #problem_form #cases-group .module tbody .add-row td,
+		#content #content-main #problem_form #solution-group .module .add-row td,
+		#content #content-main #problem_form #clarifications-group .module .add-row td{
+			height:30px;
+		}
+		#content #content-main #problem_form #language_limits-group .module tbody .add-row a::before,
+		#content #content-main #problem_form #cases-group .module tbody .add-row a::before,
+		#content #content-main #problem_form #solution-group .module .add-row a::before,
+		#content #content-main #problem_form #clarifications-group .module .add-row a::before{
+			color: #3A6FD9;
+		}
+</style>
+</head>
+{% load i18n %}
+
+{% wpadmin_are_breadcrumbs_enabled %}{% wpadmin_is_left_menu_enabled %}
+<body class="{% if is_popup %}popup {% endif %}{% if not wpadmin_are_breadcrumbs_enabled %}wp-no-breadcrumbs {% endif %}{% if wpadmin_is_left_menu_enabled %}wp-with-left-menu {% endif %}{% block bodyclass %}{% endblock %} wp-pinned">
+
+<!-- Wrapper -->
+<div id="wrapper">
+	{% if not is_popup %}
+		{% block adminmenu %}
+			{% wpadmin_render_left_menu %}
+		{% endblock%}
+	{% endif %}
+
+	<!-- Container -->
+	<div id="container">
+
+		{% if not is_popup %}
+			{% block adminbar %}
+				{% wpadmin_render_top_menu %}
+			{% endblock %}
+			{% block breadcrumbs %}
+				<div class="breadcrumbs">
+					<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+					{% if title %} &rsaquo; {{ title }}{% endif %}
+				</div>
+			{% endblock %}
+		{% endif %}
+
+		{% block messages %}
+			{% if messages %}
+				<ul class="messagelist">
+					{% for message in messages %}
+						<li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message|capfirst }}</li>
+					{% endfor %}
+				</ul>
+			{% endif %}
+		{% endblock messages %}
+
+		<!-- Content -->
+		<div id="content" class="{% block coltype %}colM{% endblock %}">
+			{% block pretitle %}{% endblock %}
+			{% block content_title %}{% if title %}<h1>{{ title }}</h1>{% endif %}{% endblock %}
+			{% block content %}
+			{% block object-tools %}{% endblock %}
+			{{ content }}
+			{% endblock %}
+			{% block sidebar %}{% endblock %}
+			<br class="clear" />
+		</div>
+		<!-- END Content -->
+
+		{% block footer %}<div id="footer"></div>{% endblock %}
+	</div>
+	<!-- END Container -->
+
+</div>
+<!-- END Wrapper -->
+
+</body>
+</html>

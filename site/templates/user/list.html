@@ -1,0 +1,186 @@
+{% extends "user/base-users.html" %}
+
+{% block title_ruler %}{% endblock %}
+
+{% block js_media %}
+    <script>
+        $(function () {
+            $('#search-handle').replaceWith($('<select>').attr({
+                id: 'search-handle',
+                name: 'handle',
+                onchange: 'form.submit()'
+            }));
+            var in_user_redirect = false;
+            $('#search-handle').select2({
+                theme: '{{ DMOJ_SELECT2_THEME }}',
+                placeholder: '{{ _('사용자 검색') }}',
+                ajax: {
+                    url: '{{ url('user_search_select2_ajax') }}'
+                },
+                minimumInputLength: 1,
+                templateResult: function (data, container) {
+                    return $('<span>')
+                        .append($('<img>', {
+                            'class': 'user-search-image', src: data.gravatar_url,
+                            width: 24, height: 24
+                        }))
+                        .append($('<span>', {'class': data.display_rank + ' user-search-name'}).text(data.text));
+                }
+            }).on('select2:selecting', function () {
+                return !in_user_redirect;
+            });
+        
+            $(window).on('hashchange', function () {
+                var hash = window.location.hash;
+                if (hash.startsWith('#!')) {
+                    // 해시 값을 디코딩하여 유효한 CSS 선택자로 변환
+                    var decodedHash = decodeURIComponent(hash.substring(2));
+                    var $users = $('[id^="user-' + decodedHash + '"]'); // ID가 해시와 일치하는 모든 요소 선택
+                    
+                    // 이전 강조 요소들의 배경색 초기화
+                    if ($users.length > 0) {
+                        $users.each(function() {
+                            $(this).css('background-color', 'lightblue'); // 일치하는 모든 요소에 배경색 강조
+                            $(this).addClass('highlight'); // 'highlight' 클래스 추가 (필요한 경우)
+                        });
+        
+                        // 첫 번째 일치하는 요소로 스크롤
+                        $(document).scrollTop($users.first().position().top - 50);
+                    }
+        
+                    $last = $users; // 현재 강조된 요소들을 저장
+                }
+            }).trigger('hashchange');
+        });
+    </script>
+    <style>
+        #content-body {
+            background: var(--background-second);
+        }
+        /* 네비게이션 바 */
+        .top-pagination-bar {
+            margin: 0;
+            margin-bottom: 10px;
+            margin-left: auto;
+            justify-content: right;
+            position: relative;
+
+        }
+        .top-pagination-bar .select2 {
+            display: none;
+            flex-direction: row;
+            justify-content: right;
+        }
+        .select2-selection__placeholder {
+            color: var(--font-grey);
+        }
+        .top-pagination-bar .select2-selection {
+            width: 250px !important;
+            height: 35px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: none;
+            border-radius: 8px;
+            padding-left: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            background-color: #fff !important;
+            transition: box-shadow 0.2s ease;
+        }
+        .top-pagination-bar .select2-selection:hover {
+            transition: box-shadow 0.2s ease;
+            box-shadow: 0 4px 6px rgba(82, 168, 236, 0.15);
+        }
+        .select2-container .select2-selection--single .select2-selection__rendered {
+            padding-left: 0;
+        }
+        .top-pagination-bar input[type="text"] {
+            background-color: #fff !important;
+            color: #8391A1;
+            font-family: Pretendard, sans-serif;
+            font-size: 14px;
+            font-weight: 500 !important;
+            text-align: left !important;
+            border-radius: 8px;
+            border: 1px solid #DADADA;
+            box-sizing: border-box;
+            box-shadow:  1px 1px rgba(0, 0, 0, 0.075) inset;
+            transition: border-color 0.15s ease-in-out 0s, box-shadow 0.15s ease-in-out 0s;
+
+        }
+
+        .top-pagination-bar .select2-selection__rendered {
+            color: #8391A1;
+            background: #fff;
+            font-size: 14px;
+            font-weight: 500;
+            border-color: #DADADA;
+
+            
+        }
+
+        .top-pagination-bar .fa-search {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%); /* Center icon vertically */
+            right: 10px; /* Adjust right spacing */
+            color: #5C95D9;
+            pointer-events: none; /* Prevent icon from being clickable */
+        }
+        .select2-search--dropdown .select2-search__field {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+        .select2-search--dropdown {
+            left: 1040px;
+        }
+        .select2-dropdown {
+            width: 250px !important;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-left: -50px;
+            color: var(--font-dark-grey);
+        }
+        ul.select2-results__options {
+            color: var(--font-dark-grey);
+        }
+        .select2-search--dropdown .select2-search__field:focus-visible {
+            outline: 1px solid var(--border-color);
+        }
+        .select2-results__option--highlighted {
+            background-color: #d9d9d956 !important;
+        }
+        #selection {
+            background-color: #fff !important;
+
+        }
+        #search-form {
+            display: inline-block;
+            vertical-align: top;
+            width : 200px !important;
+            position: relative;
+        }
+    </style>
+{% endblock %}
+
+{#  {% block body %} 
+    <div class="top-pagination-bar">
+        <form id="search-form" name="form" action="{{ url('user_ranking_redirect') }}" method="get">
+            <input id="search-handle" type="text" name="search" placeholder="{{ _('Search by handle...') }}">
+            <i class="fa fa-search"></i>
+        </form>
+    </div>
+
+    {{ super() }}
+{% endblock %} #}
+
+{% block users_table %}
+    {% include "user/users-table.html" %}
+{% endblock %}
+
+{% block title_row %}
+    {% set tab = 'list' %}
+    {% include "user/user-list-tabs.html" %}
+{% endblock %}
+

@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block media %}
+<style>
+    footer {
+        background: #FFF !important;
+    }
+    .title-div {
+        visibility: hidden;
+    }
+    #page-container {
+        display: flex;
+        background: #fff !important;
+    }
+    #content {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 90vh !important;
+        margin-top: 0px !important;
+        margin: auto;
+        width: 1040px;
+    }
+    .content-body-box {
+        min-height: 100% !important;
+        margin-bottom: 50px;
+    }
+    #content-body {
+        padding-bottom: 0px;
+    }
+    .title-box {
+        display: none;
+    }
+    .auth-flow-form {
+        max-width: 100%;
+        margin: 50px auto;
+        padding: 20px;
+        background-color: white;
+        border-radius: 10px;
+        text-align: center;
+    }
+
+    .auth-flow-form h2 {
+        margin-bottom: 20px;
+        font-size: 24px;
+        font-weight: 400;
+    }
+
+    .form-area {
+        width: 354px;
+        display: flex;
+        flex-direction: column;
+        background-color: white;
+        border: none;
+        gap: 10px;
+        margin: 0 auto;
+    }
+
+    .form-area .button {
+        height: 40px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: bold;
+        font-family: "Pretendard";
+        cursor: pointer;
+        background: none;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .form-area button[type="submit"] {
+        color: #FFF;
+        background-color: #5C95D9;
+        border: 1px solid #5C95D9;
+    }
+
+    .form-area a.button {
+        color: #5C95D9 !important;
+        background-color: #FFF;
+        border: 1px solid #D9D9D9;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 0;
+    }
+
+    .form-area button:hover {
+        background-color: #5288C8;
+        color: #FAFAFA;
+    }
+
+    .form-area a.button:hover {
+        background-color: #F7F7F7;
+        color: #5487C5;
+    }
+
+
+    .form-links {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-bottom: 10px;
+        color: #8391A1;
+    }
+
+    .form-links a {
+        text-decoration: none;
+        color: #8391A1;
+    }
+
+    .form-links a:hover {
+        text-decoration: underline;
+    }
+
+    footer {
+        margin-top: 30px;
+    }
+
+    .footer-content {
+        text-align: center;
+        color: #808080;
+    }
+
+    .form-area input[type="text"],
+    .form-area input[type="password"] {
+        height: 46px;
+        padding: 10px 10px 10px 16px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: "Pretendard";
+        transition: border-color 0.15s ease-in-out 0s, box-shadow 0.15s ease-in-out 0s;
+        box-sizing: border-box;
+    }
+
+    input[type=text]:hover, input[type=password]:hover, input[type=email]:hover, input[type=number]:hover {
+        box-shadow: none;
+        box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset;
+    }
+    input[type=text]:focus, input[type=password]:focus, input[type=email]:focus, input[type=number]:focus {
+        box-shadow: none;
+        border-color: #9FCDF2;
+        outline: 0;
+    }
+    input[type=number] {
+        padding: 2px 0 2px 5px;
+    }
+    input[type=checkbox] {
+        vertical-align: middle;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="auth-flow-form">
+    <h2>관리자 로그인</h2>
+    <form action="" method="post" class="form-area">
+        {% csrf_token %}
+        {% if form.errors %}
+            {% for field, errors in form.errors.items() %}
+                {% for error in errors %}
+                    {% if error == form.error_messages.invalid_login %}
+                        <div id="form-errors" class="invalid_login">
+                            <p class="error">{{ error }}</p>
+                        </div>
+                    {% elif error == form.error_messages.inactive %}
+                        <div id="form-errors" class="inactive">
+                            <p class="error">{{ error }}</p>
+                            <p>도움이 필요하신가요?</p>
+                            <p>
+                                <a href="{{ url('email_change') }}">이메일 변경</a> |
+                                <a href="{{ url('resend_activation_email') }}">활성화 메일 재전송</a>
+                            </p>
+                        </div>
+                    {% else %}
+                        <div id="form-errors">
+                            <p class="error">{{ error }}</p>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+        {% endif %}
+        {{ form.username }}
+        {{ form.password }}
+        <div class="form-links">
+            <a href="{{ url('id_find') }}">{{ _('아이디 찾기') }}</a> |
+            <a href="{{ url('password_reset') }}">{{ _('비밀번호 초기화') }}</a>
+        </div>
+        <button type="submit" class="button">{{ _('로그인') }}</button>
+        
+    </form>
+</div>
+
+
+{% endblock %}

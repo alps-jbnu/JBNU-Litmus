@@ -1,0 +1,764 @@
+
+<style>
+    .container {
+        display: flex;
+        flex-direction: row !important;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+    }
+    .h3-title {
+        min-width: 25px;
+        font-family: Pretendard;
+        font-size: 14px;
+        font-weight: 500;
+        text-align: left;
+        color: #495057;
+        margin-right: 10px;
+    }
+    
+    .sort-container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 5px;
+        margin: 0px;
+    }
+    .sort-dropdown {
+        display: flex;
+        position: relative;
+        display: inline-block;
+        color: #e0b8b8;
+        width: 95%;
+    }
+    .sort-dropdown .button, button, input[type=submit] {
+        background: none !important;
+    }
+
+    .sort-btn, .sort-btn2 {
+        background-color: #FFFFFF08 !important;
+        color: #495057;
+        padding: 6px 8px 5px 13px;
+        gap: 8px;
+        border-radius: 10px;
+        border: 1px solid #5C95D95C;
+        cursor: pointer;
+
+    }
+    .sort-btn .arrow, .sort-btn2 .arrow {
+        font-size: 12px;
+        margin-left: 8px;
+        display: inline-block;
+        width: 12px; /* 아이콘의 너비와 높이를 동일하게 설정 */
+        height: 12px;
+        text-align: center; /* 아이콘을 가운데 정렬 */
+    }
+    .sort-content{
+        display: none;
+        flex-direction: column;
+        position: absolute;
+        top: 35px;
+        background-color: #f9f9f9;
+        min-width: 100%;
+        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+        z-index: 1000 !important;
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+    }
+
+    .sort-content2 {
+        display: none;
+        flex-direction: column;
+        position: absolute;
+        top: 35px;
+        background-color: #f9f9f9;
+        min-width: 100%;
+        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+        z-index: 1000 !important;
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+    }
+
+    .sort-content a {
+        display: block;
+        color: black;
+        padding: 12px 16px;
+        text-decoration: none;
+        width: 100%; /* 가로 너비를 부모 요소에 맞춤 */
+        box-sizing: border-box; /* 패딩 포함한 크기 설정 */
+        border-bottom: 1px solid #ddd; /* 항목 사이에 구분선 추가 */
+    }
+
+    .sort-content a:hover {
+        background-color: #f1f1f1;
+    }
+
+    .sort-content2 a {
+        display: block;
+        color: black;
+        padding: 12px 16px;
+        text-decoration: none;
+        width: 100%; /* 가로 너비를 부모 요소에 맞춤 */
+        box-sizing: border-box; /* 패딩 포함한 크기 설정 */
+        border-bottom: 1px solid #ddd; /* 항목 사이에 구분선 추가 */
+    }
+
+    .sort-content2 a:hover {
+        background-color: #f1f1f1;
+    }
+
+    #filter-form {
+        display: flex;
+        min-width: 500px;
+        width: 100%;
+        margin: 0;
+    }
+
+    .apply-btn {
+        height: 100%;
+        border-radius: 10px;
+        background-color: #D9D9D94D;
+        font-family: Pretendard;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 17.5px;
+        text-align: left;
+        color: #8391A1;
+
+    }
+    .apply-btn.active {
+        height: 100%;
+        border-radius: 10px;
+        background-color: #5C95D9 !important;
+        font-family: Pretendard;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 17.5px;
+        text-align: left;
+        color: #FFFFFF;
+    }
+    
+    #filter-form input {
+        margin-bottom: 0;
+    }
+
+    .h-scrollable-table {
+        overflow: visible;
+    }
+    
+    .div-table {
+        width: 100%;
+        border: 1px solid var(--border-color);
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+        overflow: hidden; 
+        margin: 0 auto;
+        background: #FFFFFF;
+    }
+
+    .users-table {
+        width: 100%; 
+        margin: auto; 
+        font-size: 14px;
+        font-weight: normal;
+        border-radius: 10px 10px 0 0;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        background: #FFFFFF;
+    }
+    .table.striped tr:nth-child(even) {
+        background: rgba(0, 0, 0, 0.02);
+    }
+
+    .users-table th, 
+    .users-table td {
+        padding: 3px 20px; 
+    }
+    .users-table thead th {
+        height: 40px;
+        border: 1px #D9D9D9;
+        background: rgba(0, 0, 0, 0.03);
+    }
+
+    .users-table thead tr th {
+        border: none;
+        font-size: 15px;
+    }
+
+    .users-table thead tr th a {
+        font-size: 14px;
+        font-weight: 400;
+        color: var(--font-basic-black);
+    }
+    .header.points {
+        position: relative; /* 기준점 설정 */
+        padding: 5px 7px; /* 기존보다 줄인 패딩 적용 */
+    }
+
+    .header.points ::after {
+        content: "";
+        position: absolute;
+        bottom: 33px;
+        left: 0;
+        width: 100%;
+        height: 1px;
+        line-height: 1px;
+        background-color: rgba(217, 217, 217, 0.58);
+    }
+
+    .point-denominator {
+        font-size: 16px;
+        font-weight: 600;
+        color: #78C0B9;
+        margin-top: 5px;
+        align-items: center;
+    }
+    .users-table tbody tr {
+        transition: background-color linear 0.2s;
+        height: 45px;
+    }
+    .users-table tbody tr:hover{
+        background: rgba(0, 0, 0, 0.05) !important;
+    }
+    .users-table tbody td {
+        border: none;
+        padding: 0;
+    }
+    .users-table th {
+        background-color: #FFFFFF;
+        color: black;
+        border: 1px solid var(--border-color);
+        font-size: 14px;;
+        font-style: normal;
+        border-left: none;
+        border-right: none; 
+        height: 25px;
+    }
+    .users-table .header{
+        font-weight: normal;
+    }
+    .users-table .header.rank {
+        width: 10%;
+    }
+    .users-table .header.username {
+        display: none; /* 학번(사번) 안보이게 수정 */
+        width: 10%; 
+        text-align: center;
+    }
+    /* USERS에 이름 컬럼 추가 */
+    .users-table .header.first_name {
+        width: 15%; 
+        text-align: center;
+        padding-right: 30px;
+    }
+    .users-table .header.information {
+        width: 58%;
+        text-align: left;
+        padding-left: 20px;
+    }
+    .users-table .header.department {
+        width: 15%;
+    }
+    .users-table .user-department {
+        width: 65%;
+    }
+    .users-table .user-first_name {
+        text-align: left;
+        padding: 10px;
+    }
+    .users-table .user-first_name a {
+        color: var(--font-basic-black);
+    }
+    .users-table .user-name {
+        display: none; /* 학번(사번) 안보이게 수정 */
+        text-align: left;
+    }
+    .users-table .user-information {
+        padding: 10px;
+        text-align: left;
+    }
+    .users-table .user-information div {
+        width: 720px;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        padding-left: 20px;
+    }
+    .search-container {
+        position: relative;
+        display: flex;
+        border-radius: 8px;
+        background: #FFFFFF;
+        margin-left: auto;
+        width: 250px;
+        height: 35px;
+    }
+    .search-container input[type="text"] {
+        border: 1px solid #DADADA;
+        border-radius: 8px;
+        color: #8391A1;
+        font-family: Pretendard;
+        font-size: 14px;
+        font-weight: 500;
+        text-align: left;
+    }
+
+    .search-container .fa-search {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%); /* Center icon vertically */
+        right: 10px; /* Adjust right spacing */
+        color: #5C95D9;
+        pointer-events: none; /* Prevent icon from being clickable */
+    }
+    
+    #filter-form {
+        display: flex;
+        min-width: 500px;
+        width: 100%;
+        margin: 0;
+        margin-bottom: 10px;
+    }
+
+    #filter-form input {
+        height: 35px;
+        margin-bottom: 0;
+        padding: 0;
+        padding-left: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        border: none;
+        transition: box-shadow 0.2s ease;
+    }
+    #filter-form input:hover {
+        transition: box-shadow 0.2s ease;
+        box-shadow: 0 4px 6px rgba(82, 168, 236, 0.15);
+    }
+    #filter-form input::placeholder {
+        color: var(--font-grey);
+        font-size: 14px;
+    }
+    
+</style>
+
+
+{% block container %}
+<!-- /* 드롭다운 추가  -->
+<div class="container">
+    <form id="filter-form" name="form" action="" method="get">
+        {# <!-- <div class="sort-container">
+            <h3 class="h3-title">{{ _('정렬') }}</h3>
+            
+            <div class="sort-dropdown">
+                <input type="hidden" name="object" id="object" value="">
+                <button type="button" id="object-btn" class="sort-btn">정렬 대상<span class="arrow down">&#9660;</span></button>
+                <div class="sort-content">
+                    <a href="{{ sort_links.performance_points }}" data-sort="user-points">{{ _('Points') }}
+                        {{ sort_order.performance_points }}</a>
+                    <a href="{{ sort_links.problem_count }}" data-sort="problem-count">{{ _('Problems') }}
+                        {{ sort_order.problem_count }}</a>
+                </div>
+            </div>
+
+            <div class="sort-dropdown">
+                <input type="hidden" name="order" id="order" value="">
+                <button type="button" id="order-btn" class="sort-btn2">정렬 순서<span class="arrow down">&#9660;</span></button>
+                <div class="sort-content2">
+                    <a href="#" data-sort="asc">오름차순</a>
+                    <a href="#" data-sort="desc">내림차순</a>
+                </div>
+            </div>
+
+            <div class="submit-content">
+                <button type="submit" id="go" class="apply-btn">적용</button>
+            </div>
+        </div> --> #}
+        {# <div class="top-pagination-bar">
+            <form id="search-form" name="form" action="{{ url('user_ranking_redirect') }}" method="get">
+                <input id="search-handle" type="text" name="search" placeholder="{{ _('Search by handle...') }}">
+                
+            </form>
+        </div> #}
+    </form>
+
+    <form id="filter-form" name="form" action="" method="get"> 
+        <div class="search-container">
+            <input id="search" type="text" name="search" value="{{ search_query or '' }}"placeholder="사용자 검색"> 
+            <i class="fa fa-search"></i>
+        </div>
+    </form>
+
+</div>
+{% endblock %}
+
+<!-- */ -->
+<div class="h-scrollable-table">
+    <table {% if table_id %}id="{{ table_id }}"{% endif %} class="users-table table striped">
+        <thead>
+        <tr>
+            <th class="header rank">{{ _('번호') }}</h>
+            {#
+            <!-- {% block after_rank_head %}{% endblock %} -->
+             #}
+            
+            <th class="header first_name">{{ _('사용자') }}</th>
+            {% block department_field scoped %}{% endblock %}
+            {% block information_field %}{% endblock %}
+            
+            {% block point_field scoped %}
+            <th class="header points">
+                {% if sort_links %}<a href="{{ sort_links.performance_points }}">{% endif %}
+                {{ _('Points') }}
+                {%- if sort_links %}{{ sort_order.performance_points }}</a>{% endif %}
+            </th>
+            {% endblock %}
+            {% block before_point_head %}{% endblock %}
+    
+            
+            {% block after_point_head %}{% endblock %}
+        </tr>
+        </thead>
+    
+        <tbody>
+        {% for rank, user in users %}
+            <tr id="user-{{ user.user.username }}" {% block row_extra scoped %}{% endblock %}>
+                <td>{{ rank }}</td>
+                {#
+                <!-- {% block after_rank scoped %}{% endblock %} -->
+                 #}
+                <td class="user-name">{{ link_user(user) }} {% block user_data scoped %}{% endblock %}</td>
+                <td class="user-first_name">
+                    {% if user.user.is_staff or user.user.is_superuser %}
+                        {{ link_user_name(user) }}  <!-- 관리자 또는 교수일 경우 -->
+                    {% else %}
+                        {{ link_user(user) }}
+                    {% endif %}
+                </td>
+                {% block after_department scoped%}{% endblock %}
+                <td class="user-information">
+                    <div>
+                        {% if user.about %}
+                            {% cache 86400 'user_about_text' user.id MATH_ENGINE %}
+                                {{ user.about|markdown_text_only('self-description', MATH_ENGINE) }}
+                            {% endcache %}
+                        {% endif %}
+                    </div>
+                </td>
+                
+                
+                {% block after_information %}{% endblock %}
+
+                {% block point scoped %}
+                    <td title="{{ user.performance_points|floatformat(2) }}" class="user-points">
+                        {{ user.performance_points|floatformat(0) }}
+                    </td>
+                {% endblock %}
+
+                {% block before_point scoped %}{% endblock %}
+                
+                {% block after_point scoped %}{% endblock %}
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{# {% block js_media %}
+    {% block users_js_media %}{% endblock %}
+    <script>
+        $(function () {
+            $('#search-handle').replaceWith($('<select>').attr({
+                id: 'search-handle',
+                name: 'handle',
+                onchange: 'form.submit()'
+            }));
+            var in_user_redirect = false;
+            $('#search-handle').select2({
+                theme: '{{ DMOJ_SELECT2_THEME }}',
+                placeholder: '{{ _('사용자 검색') }}',
+                ajax: {
+                    url: '{{ url('user_search_select2_ajax') }}'
+                },
+                minimumInputLength: 1,
+                templateResult: function (data, container) {
+                    return $('<span>')
+                        .append($('<img>', {
+                            'class': 'user-search-image', src: data.gravatar_url,
+                            width: 24, height: 24
+                        }))
+                        .append($('<span>', {'class': data.display_rank + ' user-search-name'}).text(data.text));
+                }
+            }).on('select2:selecting', function () {
+                return !in_user_redirect;
+            });
+
+            var $last = null;
+            $(window).on('hashchange', function () {
+                var hash = window.location.hash;
+                if (hash.startsWith('#!')) {
+                    // 해시 값을 디코딩하여 유효한 CSS 선택자로 변환
+                    var decodedHash = decodeURIComponent(hash.substring(2));
+                    var $user = $('#user-' + decodedHash);
+                    if ($user) {
+                        // 이전 강조 요소의 배경색 초기화
+                        if ($last !== null) $last.css('background-color', '');
+                        
+                        // 현재 요소의 배경색 강조, 하이라이팅 색은 알아서 수정해주세요.
+                        $user.css('background-color', 'lightblue');
+                        $(document).scrollTop($user.position().top - 50);
+                        if ($last !== null) $last.removeClass('highlight');
+                        $last = $user;
+                    }
+                }
+            }).trigger('hashchange');
+        });
+    </script>
+{% endblock %}
+#}
+
+{# {% block extra_js %}
+{% compress js %}
+    <script src="{{ static('libs/nouislider.min.js') }}" type="text/javascript"></script>
+    <script>
+
+    $(function () {
+        var $form = $('form#filter-form');
+        var $sortObject = $('#object');
+        var $sortOrder = $('#order');
+
+        function clean_submit() {
+            $form.submit();
+        }
+
+        // 드롭다운 토글 및 다른 드롭다운 닫기
+        if ($('.sort-btn').on('click', function (event) {
+            event.stopPropagation();
+            var $this = $(this);
+            var $dropdown = $this.closest('.sort-dropdown'); 
+            
+            // 현재 클릭된 드롭다운 그룹
+            var $sortContent = $dropdown.find('.sort-content');
+            $sortContent.css('display') === 'flex';
+            var $arrowIcon = $this.find('.arrow');
+
+            // 다른 드롭다운 닫기
+            $('.sort-content2').not($sortContent).hide();
+            $('.arrow').not($arrowIcon).html('&#9660;');
+
+            // 현재 드롭다운 목록 표시 또는 숨김
+            if ($sortContent.is(':hidden')) {
+                $sortContent.show();
+                $arrowIcon.html('&#9650;'); // 위로 향하는 화살표
+            } else {
+                $sortContent.hide();
+                $arrowIcon.html('&#9660;'); // 아래로 향하는 화살표
+            }
+        }));
+
+        // 드롭다운 토글 및 다른 드롭다운 닫기
+        if ($('.sort-btn2').on('click', function (event) {
+            event.stopPropagation();
+            var $this = $(this);
+            var $dropdown = $this.closest('.sort-dropdown');  // 현재 클릭된 드롭다운 그룹
+            var $sortContent = $dropdown.find('.sort-content2');
+            $sortContent.css('display') === 'flex';
+            var $arrowIcon = $this.find('.arrow');
+
+            // 다른 드롭다운 닫기
+            $('.sort-content').not($sortContent).hide();
+            $('.arrow').not($arrowIcon).html('&#9660;');
+
+            // 현재 드롭다운 목록 표시 또는 숨김
+            if ($sortContent.is(':hidden')) {
+                $sortContent.show();
+                $arrowIcon.html('&#9650;'); // 위로 향하는 화살표
+            } else {
+                $sortContent.hide();
+                $arrowIcon.html('&#9660;'); // 아래로 향하는 화살표
+            }
+
+        }));
+
+        // 정렬 대상과 순서 선택
+        $('.sort-content a').on('click', function (event) {
+
+            event.preventDefault();
+            var $this = $(this);
+            var sortValue = $this.data('sort');
+            var $parentDropdown = $this.closest('.sort-dropdown');
+            var $sortBtn = $parentDropdown.find('.sort-btn, .sort-btn2');
+            var $sortContent = $parentDropdown.find('.sort-content');
+                
+            // object와 order 필드를 구분하여 저장
+            if ($sortBtn.attr('id') === 'object-btn') {
+                $sortObject.val(sortValue);  // 선택된 정렬 대상을 숨겨진 필드에 저장
+                $sortBtn.html($this.text() + ' <span class="arrow down">&#9650;</span>');  // 선택된 값을 버튼에 표시
+            }
+            else if ($sortBtn.attr('id') === 'order-btn') {
+                $sortOrder.val(sortValue);  // 선택된 정렬 순서를 숨겨진 필드에 저장
+                $sortBtn.html($this.text() + ' <span class="arrow down">&#9660;</span>');  // 선택된 값을 버튼에 표시
+            }
+
+            $sortContent.hide();
+            $sortBtn.find('.arrow').html('&#9660;');
+
+        });
+
+        $('.sort-content2 a').on('click', function (event) {
+            event.preventDefault();
+            var $this = $(this);
+            var sortValue = $this.data('sort');
+            var $parentDropdown = $this.closest('.sort-dropdown');
+            var $sortBtn = $parentDropdown.find('.sort-btn, .sort-btn2');
+            var $sortContent = $parentDropdown.find('.sort-content2');
+                
+            // object와 order 필드를 구분하여 저장
+            if ($sortBtn.attr('id') === 'object-btn') {
+                $sortObject.val(sortValue);  // 선택된 정렬 대상을 숨겨진 필드에 저장
+                $sortBtn.html($this.text() + ' <span class="arrow down">&#9650;</span>');  // 선택된 값을 버튼에 표시
+            }
+            if ($sortBtn.attr('id') === 'order-btn') {
+                $sortOrder.val(sortValue);  // 선택된 정렬 순서를 숨겨진 필드에 저장
+                $sortBtn.html($this.text() + ' <span class="arrow down">&#9660;</span>');  // 선택된 값을 버튼에 표시
+            }
+
+            $sortContent.hide();
+            $sortBtn.find('.arrow').html('&#9660;');
+
+        });
+
+        // 클릭 외부 영역 클릭 시 드롭다운 닫기
+        $(document).click(function (event) {
+            if (!$(event.target).closest('.sort-dropdown').length) {
+                $('.sort-content').hide();
+                $('.arrow').html('&#9660;');
+            }
+        });
+
+        // 페이지 로드 시, 이전에 선택된 값이 있으면 버튼에 표시
+        if ($sortObject.val()) {
+            var selectedObjectText = $('[data-sort=' + $sortObject.val() + ']').text();
+            $('#object-btn').html(selectedObjectText + ' <span class="arrow down">&#9660;</span>');
+        }
+        if ($sortOrder.val()) {
+            var selectedOrderText = $('[data-sort=' + $sortOrder.val() + ']').text();
+            $('#order-btn').html(selectedOrderText + ' <span class="arrow down">&#9660;</span>');
+        }
+
+        // 적용 버튼 클릭 시 폼 제출 및 색상 변경
+        $('#go').click(function (event) {
+            // event.preventDefault();
+            clean_submit();
+            $(this).addClass('active');
+        });
+
+        var intFormatter = {
+            to: function (value) {
+                return value;
+            },
+            from: function (value) {
+                return +value;
+            }
+        };    
+        // $('.sort-btn').click(function (event) {
+        //     event.stopPropagation(); // 이벤트 버블링 중지
+        //     var sortContent = $(this).next('.sort-content');
+        //     var arrowIcon = $(this).find('.arrow');
+        //     if (sortContent.is(':visible')) {
+        //         sortContent.hide();
+        //         arrowIcon.html('&#9660;'); // 아래로 향하는 화살표
+        //     } else {
+        //         sortContent.show();
+        //         arrowIcon.html('&#9650;'); // 위로 향하는 화살표
+        //     }
+        // });
+
+        // $('.sort-btn2').click(function (event) {
+        //     event.stopPropagation(); // 이벤트 버블링 중지
+        //     var sortContent = $(this).next('.sort-content');
+        //     var arrowIcon = $(this).find('.arrow');
+        //     if (sortContent.is(':visible')) {
+        //         sortContent.hide();
+        //         arrowIcon.html('&#9660;'); // 아래로 향하는 화살표
+        //     } else {
+        //         sortContent.show();
+        //         arrowIcon.html('&#9650;'); // 위로 향하는 화살표
+        //     }
+        // });
+        // // 클릭 외부 영역 클릭 시 드롭다운 닫기
+        // $(document).click(function (event) {
+        //     if (!$(event.target).closest('.sort-dropdown').length) {
+        //         $('.sort-content').hide();
+        //         $('.arrow').html('&#9660;'); // 모든 아이콘을 아래로 향하도록 설정
+        //     }
+        // });
+
+    });
+</script>
+{% endcompress %}
+{% if request.in_contest %}
+    {% compress js %}
+    <script src="{{ static('libs/tablesorter.js') }}" type="text/javascript"></script>
+    <script type="text/javascript">
+        $(function () {
+            $.tablesorter.addParser({
+                id: 'solvedsort',
+                is: function (s) {
+                    return false;
+                },
+                format: function (s, table, cell, cellIndex) {
+                    return $(cell).attr('solved');
+                },
+                type: 'numeric'
+            });
+
+            $('#problem-table').tablesorter({
+                headers: {
+                    0: {
+                        sorter: 'solvedsort'
+                    }
+                },
+                textExtraction: function (node) {
+                    node = $(node);
+                    var text = node.text().replace(/^\s+|\s+$/g, '');
+                    return (node.hasClass('p') ? text.replace(/p$/, '') : text);
+                },
+                sortList: [], // 초기 정렬 상태를 비워둠 (기본 상태)
+                initialized: function (table) {
+                    var headers = $(table).find('thead th');
+
+                    // 아이콘 클릭 이벤트 처리
+                    headers.on('click', '.sort-icon', function (e) {
+                        e.preventDefault(); // 기본 동작 방지
+
+                        var $header = $(this).closest('th');
+                        var direction = $(this).data('sort');
+                        headers.removeClass('sorted-asc sorted-desc');
+                        headers.find('.sort-icon').css('color', '#17171B');
+                        headers.find('a').removeClass('sorted');
+
+                        if (direction === 'asc') {
+                            $header.addClass('sorted-asc');
+                            $header.find('.sort-asc').html('&#9650;').css('color', '#5C95D9');
+                        } else if (direction === 'desc') {
+                            $header.addClass('sorted-desc');
+                            $header.find('.sort-desc').html('&#9660;').css('color', '#5C95D9');
+                        }
+
+                    $header.find('a').addClass('sorted');
+
+
+                    // 정렬 수행
+                    var columnIndex = $header.index();
+                    var sortDirection = direction === 'asc' ? 0 : 1;
+                    $('#problem-table').trigger('sorton', [[[columnIndex, sortDirection]]]);
+                });
+            }
+        });
+    });
+</script>
+{% endcompress %}
+{% endif %}
+{% endblock %}
+#}
+
+{% block title_ruler %}{% endblock %}

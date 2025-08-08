@@ -1,0 +1,167 @@
+from django.db.models import TextField
+from django.forms import ModelForm, TextInput
+from django.http import HttpResponseRedirect
+from django.shortcuts import get_object_or_404
+from django.urls import path, reverse
+from django.utils.html import format_html
+from django.utils.safestring import mark_safe
+from django.utils.translation import gettext_lazy as _
+from reversion.admin import VersionAdmin
+
+from django_ace import AceWidget
+from judge.models import Judge, Language
+from judge.widgets import AdminMartorWidget
+
+
+class LanguageForm(ModelForm):
+    class Meta:
+        model = Language
+        fields = '__all__'
+        widgets = {'description': AdminMartorWidget}
+        
+from django import forms
+
+class CustomActionForm(forms.Form):
+    action = forms.ChoiceField(
+        label="작업",   
+        choices=[],           
+        required=False,
+    )
+    select_across = forms.CharField(
+        required=False,
+        widget=forms.HiddenInput(),   
+        label=''
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['action'].choices.insert(0, ("", "작업을 선택하세요."))
+
+class LanguageAdmin(VersionAdmin):
+    fields = ('key', 'name', 'short_name', 'common_name', 'ace', 'pygments', 'info', 'extension', 'description', 'template')
+    list_display = ('key', 'name', 'common_name', 'info')
+    form = LanguageForm
+    action_form = CustomActionForm
+    
+
+    
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super(LanguageAdmin, self).get_form(request, obj, **kwargs)
+        if obj is not None:
+            form.base_fields['template'].widget = AceWidget(obj.ace, request.profile.ace_theme)
+        return form
+
+    def save_model(self, request, obj, form, change):
+        # key, name, short_name을 common_name과 동일하게 설정
+        obj.key = obj.name
+        obj.common_name = obj.name
+        obj.short_name = obj.name
+        super().save_model(request, obj, form, change)
+
+
+class GenerateKeyTextInput(TextInput):
+    def render(self, name, value, attrs=None, renderer=None):
+        text = super(TextInput, self).render(name, value, attrs)
+        return mark_safe(text + format_html(
+            """\
+<a href="#" onclick="return false;" class="button" id="id_{0}_regen">{1}</a>
+<script type="text/javascript">
+django.jQuery(document).ready(function ($) {{
+    $('#id_{0}_regen').click(function () {{
+        var rand = new Uint8Array(75);
+        window.crypto.getRandomValues(rand);
+        var key = btoa(String.fromCharCode.apply(null, rand));
+        $('#id_{0}').val(key);
+    }});
+}});
+</script>
+""", name, _('Regenerate')))
+
+
+class JudgeAdminForm(ModelForm):
+    class Meta:
+        widgets = {'auth_key': GenerateKeyTextInput, 'description': AdminMartorWidget}
+
+
+class JudgeAdmin(VersionAdmin):
+    form = JudgeAdminForm
+    readonly_fields = ('created', 'online', 'start_time', 'ping', 'load', 'last_ip', 'runtimes', 'problems',
+                       'is_disabled')
+    fieldsets = (
+        (None, {'fields': ('name', 'auth_key', 'is_blocked', 'is_disabled')}),
+        (_('Description'), {'fields': ('description',)}),
+        (_('Information'), {'fields': ('created', 'online', 'last_ip', 'start_time', 'ping', 'load')}),
+        (_('Capabilities'), {'fields': ('runtimes',)}),
+    )
+    list_display = ('name', 'online_status', 'disabled_status', 'start_time_display', 'ping', 'load', 'last_ip')
+    ordering = ['-online', 'name']
+    formfield_overrides = {
+        TextField: {'widget': AdminMartorWidget},
+    }
+    action_form = CustomActionForm
+    
+
+    
+
+    def online_status(self, obj):
+        """관리자 페이지에서 채점기 온라인 상태를 pill 스타일로 표시"""
+        if obj.online:
+            return format_html('<span class="pill pill-success">온라인</span>')
+        else:
+            return format_html('<span class="pill pill-danger">오프라인</span>')
+    
+    online_status.admin_order_field = 'online'
+    online_status.short_description = _('온라인 상태')
+
+    def disabled_status(self, obj):
+        """관리자 페이지에서 채점기 비활성화 상태를 pill 스타일로 표시"""
+        if obj.is_disabled:
+            return format_html('<span class="pill pill-warning">비활성화</span>')
+        else:
+            return format_html('<span class="pill pill-success">활성화</span>')
+    
+    disabled_status.admin_order_field = 'is_disabled'
+    disabled_status.short_description = _('활성화 상태')
+
+    def start_time_display(self, obj):
+        """채점기 시작 시간을 한국 형식으로 표시"""
+        if obj.start_time:
+            return obj.start_time.strftime('%Y. %m. %d. %H:%M')
+        return '-'
+    
+    start_time_display.admin_order_field = 'start_time'
+    start_time_display.short_description = _('시작 시간')
+
+    def get_urls(self):
+        return ([path('<int:id>/disconnect/', self.disconnect_view, name='judge_judge_disconnect'),
+                 path('<int:id>/terminate/', self.terminate_view, name='judge_judge_terminate'),
+                 path('<int:id>/disable/', self.disable_view, name='judge_judge_disable')] +
+                super(JudgeAdmin, self).get_urls())
+
+    def disconnect_judge(self, id, force=False):
+        judge = get_object_or_404(Judge, id=id)
+        judge.disconnect(force=force)
+        return HttpResponseRedirect(reverse('admin:judge_judge_changelist'))
+
+    def disconnect_view(self, request, id):
+        return self.disconnect_judge(id)
+
+    def terminate_view(self, request, id):
+        return self.disconnect_judge(id, force=True)
+
+    def disable_view(self, request, id):
+        judge = get_object_or_404(Judge, id=id)
+        judge.toggle_disabled()
+        return HttpResponseRedirect(reverse('admin:judge_judge_change', args=(judge.id,)))
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj is not None and obj.online:
+            return self.readonly_fields + ('name',)
+        return self.readonly_fields
+
+    def has_delete_permission(self, request, obj=None):
+        result = super(JudgeAdmin, self).has_delete_permission(request, obj)
+        if result and obj is not None:
+            return not obj.online
+        return result

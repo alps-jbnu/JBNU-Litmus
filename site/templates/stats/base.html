@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block js_media %}
+    {% compress js %}
+        {% include "stats/media-js.html" %}
+    {% endcompress %}
+{% endblock %}
+
+{% block title_ruler %}{% endblock %}
+
+{% block title_row %}
+    {% set tab = 'language' %}
+    {% include "stats/tabs.html" %}
+{% endblock %}
+
+{% block body %}
+    {% block chart_body %}{% endblock %}
+{% endblock %}

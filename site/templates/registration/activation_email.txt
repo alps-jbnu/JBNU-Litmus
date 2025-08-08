@@ -1,0 +1,13 @@
+{% trans trimmed count=expiration_days, site_name=site.name %}
+{{ count }}일이 지나기 전에 {{ site_name }}을 활성화해주세요.
+{% pluralize %}
+{{ count }}일이 지나기 전에 {{ site_name }}을 활성화해주세요.
+{% endtrans %}
+
+
+{{ _('계정을 활성화하려면 다음 링크를 클릭하세요.:') }}
+    {{ request.scheme }}://{{ site.domain }}/accounts/activate/{{ activation_key }}/
+
+{{ _('또는 이 메시지에 답장하여 계정을 활성화할 수도 있습니다. 이 기능을 사용하려면 답장에 다음 텍스트가 그대로 포함되어야 합니다.:') }}
+
+{{ activation_key }}

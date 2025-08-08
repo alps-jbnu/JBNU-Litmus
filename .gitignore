@@ -1,0 +1,78 @@
+# hidden file
+.gitconfig
+.DS_Store
+.bashrc
+.wget-hsts
+.bash_history
+.bash_logout
+.lesshst
+.profile
+.sudo_as_admin_successful
+.viminfo
+.Xauthority
+.zshrc
+.mysql_history
+site/.env
+.env
+
+# file
+logo.png
+
+# hidden directory
+.cache/
+.config/
+.dotnet/
+.git/
+.local/
+.npm/
+.sdkman/
+.ssh/
+.vscode/
+.vscode-server/
+.cursor-server/
+.pm2/
+.vim/
+site/.github/
+litmus-backup/
+
+# Personal history files
+.dmoj_history
+.python_history
+.vimrc
+.bash_history
+.mysql_history
+
+# directory
+env/
+problems/
+problems_backup/
+judge-server/
+pdfoid/
+texoid/
+snap/
+logs/
+dmojsite/
+test/
+tmp/
+
+# Temporary and log files
+nohup.out
+*.log
+log.*
+ksl.py
+
+.idea
+.java
+
+# Judge configuration files
+.dmojrc
+judge-configs/
+judges.conf
+judges.conf.new
+
+# Development environment
+.codeium/
+.windsurf-server/
+hcpark_log_temp/
+
+site/resources/icons/problems_images/

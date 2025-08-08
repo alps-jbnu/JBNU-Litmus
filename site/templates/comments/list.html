@@ -1,0 +1,329 @@
+<style>
+    #comments {
+        display: none;
+    }
+    .comment-post-wrapper {
+        padding-bottom: 5px;
+        width: 90%;
+      }
+    .form-area.comment-submit {
+        padding-left: 15px;
+        padding-right: 15px;
+        width: 100%;
+        box-sizing: border-box;
+        background: none;
+      }
+    .new-comments .comment-display {
+        display: flex;
+        padding-left: 1em;
+        padding-top: 0.5em !important;
+        border: 1px solid;
+        border-color: #fff #fff var(--border-color) #fff;
+        border-radius: 0px;
+        background: none;
+        justify-content: space-between;
+        flex:1;
+    }
+    img.user-gravatar{
+        border-radius: 50%;
+        border: 1px solid var(--border-color);
+        width:100%;
+        margin-top: 0px;
+    }
+    .new-comments .comment .detail .header {
+        border-bottom: none;
+    }
+    .comment-submit-form{
+        display: flex;
+        flex-direction: row;
+        height: 80px;
+        width: 100%;
+        justify-content: space-between;
+    }
+    .wmd-input{
+        height: 80px;
+        border-color: var(--border-color)
+    }
+    .comment-area {
+        background-color: #fff;
+        padding: 5px;
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+    }
+    .comment-submit-button {
+        background-color: #D9D9D938;
+        border: 1px solid var(--border-color);
+    }
+    input[type=submit] {
+        width: 80px;
+        height: 80px;
+        color: #FFF;
+        border-radius: 10px;
+    }
+    input[type=submit]:hover {
+        background-color: #5288C8;
+        color: #FAFAFA;
+    }
+    .form-area.comment-submit {
+        padding: 0;
+        margin: 0;
+        padding: 10px;
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+    }
+    .comment-submit-form {
+        justify-content: flex-start;
+    }
+    .comment-post-wrapper {
+        width: 100%;
+        margin-right: 10px;
+    }
+    .wmd-input {
+        height: 80px;
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset;
+    }
+    .wmd-input:hover {
+        border: 1px solid var(--border-color);
+        box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset;
+    }
+    .wmd-input:focus {
+        box-shadow: none;
+        border-color: #9FCDF2;
+        outline: 0;
+    }
+    .comment-area {
+        padding: 15px;
+        margin-top: 32px;
+    }
+    .comment-header {
+        display: flex; 
+        justify-content: space-between;
+    }
+    .comment-tag {
+        background-color: #D9D9D969;
+        padding: 10px;
+        font-size: 14px;
+        border-radius: 10px;
+        width: 100%;
+        margin-right: 10px;
+    }
+    .comment-tag i {
+        margin-left: 20px;
+    }
+    .comment-score {
+        margin: 8px 0;
+    }
+    .vote {
+        padding-top: 0 !important;
+    }
+    .info {
+        padding-bottom: 0.5em;
+    }
+    .form-area.comment-submit {
+        margin-top: 10px;
+    }
+    .issue-report {
+        padding: 10px 30px;
+        font-size: 14px;
+        border-radius: 10px;
+    }
+    .comment-header-space {
+        height: 10px;
+    }
+    .new-comments .comment .detail .header {
+        margin-top: 10px;
+    }
+    .new-comments .comment .detail .header span {
+        font-size: 16px;
+    }
+    .new-comments .comment .detail .header .time-with-rel {
+        font-size: 12px;
+        margin: 4px
+    }
+    .content-description p {
+        margin: 3px 0 !important;
+    }
+    
+</style>
+
+<div id="comments" class="comment-area">
+    <h2 class="comment-header">
+        <div class="comment-tag">
+            <i style="padding-right: 0.3em" class="fa fa-comments"></i>
+            {{ _('Comments') }}
+        </div>
+    </h2>
+
+    {% if not comment_lock and not has_comments %}
+        <p class="no-comments-message">{{ _('There are no comments at the moment.') }}</p>
+    {% else %}
+        <div class="comment-header-space"></div>
+    {% endif %}
+
+    {% if comment_lock %}
+        <div class="alert alert-warning comment-lock">
+            {{ _('Comments are disabled on this page.') }}
+        </div>
+    {% endif %}
+
+    {% if has_comments %}
+        <ul class="comments top-level-comments new-comments">
+            {% set logged_in = request.user.is_authenticated %}
+            {% set profile = request.profile if logged_in else None %}
+            {% for node in mptt_tree(comment_list) recursive %}
+                <li id="comment-{{ node.id }}" data-revision="{{ node.revisions - 1 }}"
+                    data-max-revision="{{ node.revisions - 1 }}"
+                    data-revision-ajax="{{ url('comment_revision_ajax', node.id) }}" class="comment">
+                    <div class="comment-display{% if node.score <= vote_hide_threshold %} bad-comment{% endif %}">
+                        <div class="info">
+                            <div class="vote">
+                                {% if logged_in %}
+                                    <a href="javascript:comment_upvote({{ node.id }})"
+                                       class="upvote-link fa fa-chevron-up fa-fw{% if node.vote_score == 1 %} voted{% endif %}"></a>
+                                {% else %}
+                                    <a href="javascript:alert('{{ _('Please log in to vote')|escapejs }}')" title="{{ _('Please log in to vote') }}"
+                                       class="upvote-link fa fa-chevron-up fa-fw"></a>
+                                {% endif %}
+                                <br>
+                                <div class="comment-score">{{ node.score }}</div>
+                                {% if logged_in %}
+                                    <a href="javascript:comment_downvote({{ node.id }})"
+                                       class="downvote-link fa fa-chevron-down fa-fw{% if node.vote_score == -1 %} voted{% endif %}"></a>
+                                {% else %}
+                                    <a href="javascript:alert('{{ _('Please log in to vote')|escapejs }}')" title="{{ _('Please log in to vote') }}"
+                                       class="downvote-link fa fa-chevron-down fa-fw"></a>
+                                {% endif %}
+                            </div>
+                            {% with author=node.author, user=node.author.user %}
+                                <a href="{{ url('user_page', user.username) }}" class="user gravatar-main">
+                                    <img src="{{ gravatar(author, 75) }}" class="user-gravatar">
+                                </a>
+                            {% endwith %}
+                        </div>
+                        <div class="detail">
+                            <div class="header">
+                                <span>
+                                    {% with author=node.author, user=node.author.user %}
+                                        <a href="{{ url('user_page', user.username) }}" class="user gravatar-mobile">
+                                            <img src="{{ gravatar(author, 10) }}" class="user-gravatar">
+                                        </a>
+                                    {% endwith %}
+                                    {{ link_user(node.author) }}&nbsp;
+                                </span>
+                                {% with abs=_('commented on {time}'), rel=_('{time}') %}
+                                    {{ relative_time(node.time, abs=abs, rel=rel) }}
+                                {% endwith %}
+                                <span class="comment-spacer"></span>
+                                <span class="comment-operation">
+                                {% if node.revisions > 1 %}
+                                    <span class="comment-edits">
+                                        <a href="javascript:show_revision({{ node.id }}, -1)"
+                                           class="previous-revision">&larr;</a>
+                                        <span class="comment-edit-text">
+                                            {% if node.revisions > 2 %}
+                                                {% trans edits=node.revisions - 1 %}edit {{ edits }}{% endtrans %}
+                                            {% else %}
+                                                {{ _('edited') }}
+                                            {% endif %}
+                                        </span>
+                                        <a href="javascript:show_revision({{ node.id }}, 1)" style="visibility: hidden"
+                                           class="next-revision">&rarr;</a>
+                                    </span>
+                                {% else %}
+                                    <span class="comment-edits"></span>
+                                {% endif %}
+                                    {#
+                                    <!-- <a href="#comment-{{ node.id }}" title="{{ _('Link') }}"
+                                       class="comment-link"><i class="fa fa-link fa-fw"></i></a> -->
+                                    #}
+                                    {% if logged_in and not comment_lock %}
+                                        {% if perms.judge.change_comment %}
+                                            {#
+                                            <!-- <a href="javascript:reply_comment({{ node.id }})"
+                                               title="{{ _('Reply') }}"><i class="fa fa-reply fa-fw"></i></a>
+                                            <a data-featherlight="{{ url('comment_edit_ajax', node.id) }}"
+                                               href="{{ url('comment_edit', node.id) }}" title="{{ _('Edit') }}"
+                                               class="edit-link"><i class="fa fa-pencil fa-fw"></i></a>
+                                            <a data-featherlight="{{ url('comment_votes_ajax', node.id) }}"
+                                               href="javascript:void(0)"
+                                               title="{{ _('Votes') }}" class="votes-link"><i class="fa fa-bar-chart fa-fw"></i></a>
+                                            <a href="javascript:void(0)" title="{{ _('Hide') }}" data-id="{{ node.id }}"
+                                               class="hide-comment"><i class="fa fa-trash fa-fw"></i></a>
+                                            <a href="{{ url('admin:judge_comment_change', node.id) }}"
+                                               title="{{ _('Admin') }}"><i class="fa fa-cog fa-fw"></i></a> -->
+                                               #}
+                                        {% else %}
+                                            {% if node.time > reply_cutoff %}
+                                                <a href="javascript:reply_comment({{ node.id }})"
+                                                   title="{{ _('Reply') }}"><i class="fa fa-reply fa-fw"></i></a>
+                                            {% endif %}
+                                            {% if node.author.id == profile.id and not profile.mute %}
+                                                <a data-featherlight="{{ url('comment_edit_ajax', node.id) }}"
+                                                   href="{{ url('comment_edit', node.id) }}" title="{{ _('Edit') }}"
+                                                   class="edit-link"><i class="fa fa-pencil fa-fw"></i></a>
+                                            {% endif %}
+                                        {% endif %}
+                                    {% endif %}
+                            </span>
+                            </div>
+                            <div class="content content-description">
+                                <div class="comment-body"{% if node.score <= vote_hide_threshold %} style="display:none"{% endif %}>
+                                    {{ node.body|markdown('comment', MATH_ENGINE, True)|reference|str|safe }}
+                                </div>
+                                {% if node.score <= vote_hide_threshold %}
+                                    <div class="comment-body bad-comment-body">
+                                        <p>
+                                            {{ _('This comment is hidden due to too much negative feedback.') }}
+                                            <a href="javascript:comment_show_content({{ node.id }})">{{ _('Show it anyway.') }}</a>
+                                        </p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                <ul id="comment-{{ node.id }}-reply" class="reply-comment" hidden></ul>
+                {% with children=node.get_children() %}
+                    {% if children %}
+                        <ul id="comment-{{ node.id }}-children" class="comments">{{ loop(children) }}</ul>
+                    {% endif %}
+                {% endwith %}
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {% if request.user.is_authenticated and comment_form and not comment_lock %}
+        <div id="new-comment" class="form-area comment-submit">
+            {% block comment_submit_title %}
+                {# 
+                <!-- <h3>{{ _('New comment') }}</h3> -->
+                <!-- <hr> -->
+                #}
+            {% endblock %}
+            {% if is_new_user %}
+                <div style="margin-bottom: 0" class="alert alert-info">
+                    {{ _('You must solve at least one problem before your voice can be heard.') }}
+                </div>
+            {% else %}
+            <form class="comment-submit-form" action="" method="post">
+                {% csrf_token %}
+                {% if comment_form.errors %}
+                    <div id="form-errors">
+                        {{ comment_form.non_field_errors() }}
+                        {{ comment_form.parent.errors }}
+                        {% if comment_form.body.errors %}{{ _('Invalid comment body.') }}{% endif %}
+                    </div>
+                {% endif %}
+                {{ comment_form.parent }}
+                <div class="comment-post-wrapper">
+                    <div id="comment-form-body">{{ comment_form.body }}</div>
+                </div>                    
+                <input style="float:right" type="submit" value="{{ _('Post!') }}" class="comment-submit-button">
+            </form>
+                
+            {% endif %}
+        </div>
+    {% endif %}
+</div>

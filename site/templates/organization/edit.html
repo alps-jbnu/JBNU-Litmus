@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block js_media %}{{ form.media.js }}{% endblock %}
+{% block media %}{{ form.media.css }}{% endblock %}
+
+{% block body %}
+    <div class="centered-form">
+        <form action="" method="post" class="form-area">
+            {% csrf_token %}
+            <table border="0" class="django-as-table">{{ form.as_table() }}</table>
+            <button class="submit-bar" type="submit">{{ _('Update') }}</button>
+        </form>
+    </div>
+{% endblock %}

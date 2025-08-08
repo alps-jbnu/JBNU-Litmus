@@ -1,0 +1,936 @@
+{% extends "common-content.html" %}
+
+{% block media %}
+    <link rel="stylesheet" href="{{ static('libs/nouislider.min.css') }}">
+    <noscript>
+        <style>#category, #types {
+            visibility: visible;
+        }
+        </style>
+    </noscript>
+    
+    <style>
+        #content {
+            width: 70%;
+            margin-left: 0 auto;
+            margin-right: 0 auto;
+            margin-bottom: 4em;
+        }
+        @media screen and (max-width: 1200px) { /* 원하는 너비를 설정 */
+            #content {
+                width: 95%;
+                margin-left: 0 auto;
+                margin-right: 0 auto;
+            }
+        }
+        #content-body {
+            padding-bottom: 0;
+        }
+        #common-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex;
+            width: 100%;
+        }
+        .content-body-box {
+            background-color: #f9fafb;
+        }
+
+        #content-top {
+            display: flex;
+            width: 100%;
+        }
+        
+        #content-bottom {
+            display: flex;
+            flex: none;
+            padding-left: 0;
+            z-index: 0;
+            gap: 20px
+        }
+        .h-scrollable-table {
+            width: 100%;
+            overflow: visible;
+        }
+        .problem-list {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            margin-bottom: 20px;
+            font-family: 'Pretendard';
+            font-style: normal;
+            font-weight: 500;
+            font-size: 18px;
+            line-height: 22px;
+            text-align: left;
+            color: #17171B;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        
+        .table-div {
+            display: block; /* or display: flex; */
+            width: 100%;
+            max-height: 100%; 
+            overflow-y: auto; /* Adds a vertical scrollbar if content overflows */
+            margin: 0 auto;
+            box-shadow: var(--standard-box-shadow);
+            border-radius: 10px;
+        }
+        #problem-table {
+            box-sizing: border-box;
+            width: 100%;
+            background: #FFFFFF;
+            border-radius: 10px 10px 0px 0px;
+            margin-bottom: 0;
+        }
+        #problem-table td {
+            padding: 0;
+        }
+        #problem-table thead.incontest tr th {
+            &.tablesorter-headerAsc:after {
+                content: none;
+            }
+
+            &.tablesorter-headerDesc:after {
+                content: none;
+            }
+        }
+        #problem-table td.problem {
+            width: 80%;
+            padding: 0;
+            height: 45px;
+            padding-left: 10px;
+        }
+        #problem-table .problem {
+            text-align: left;
+        }
+        #problem-table tbody tr {
+            height: 25px;
+        }
+        #problem-table th,
+        #problem-table td {
+            width: 10%;
+            border: none;
+            border-radius: 0;
+            vertical-align: middle;
+            text-align: center;
+        }
+        #problem-table td.users {
+            text-align: center;
+        }
+        .table.striped tr:nth-child(even) {
+            background: rgba(0, 0, 0, 0.02);
+        }
+        #problem-table th {
+            height: 50px;
+            border: none;
+            padding: 0;
+            background-color: #fff;
+            font-weight: normal;
+            position: relative;
+            background: rgba(0, 0, 0, 0.03);
+        }
+        #problem-table th a {
+            color: #17171B;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        #problem-table th .sort-icon {
+            font-size: 12px;
+            font-weight: normal;
+            color: #17171B; /* 기본 상태의 아이콘 색상 */
+            margin-left: 3px;
+            cursor: pointer; /* 커서가 클릭 가능 */
+            visibility: visible;
+        }
+        #problem-table a:hover {
+            text-decoration: underline;
+        }
+
+        .bottom-pagination-bar {
+            margin: 0 auto;
+            margin-bottom: 21px;
+            margin-top: 21px;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+        }
+        .filter-form-group button {
+            width: 75px;
+            height: 30px;
+            line-height: 2;
+            padding: 0 !important;
+            background: none;
+            background-color: #5C95D9;
+            display: flex;
+            justify-content: center
+        }
+        .solved-problem-icon,
+        .wrong-problem-icon,
+        .attempted-problem-icon,
+        .unsolved-problem-icon,
+        .lock-icon {
+            width: 24px;
+            height: 24px;
+        }
+        .problem-status {
+            display: flex;
+            align-items: center;
+        }
+        .problem-status span {
+            margin-left: 8px;
+        }
+        /* SVG 아이콘 크기 조절 및 스타일 적용 */
+        .solved-problem-icon {
+            fill: #94D95C;
+            stroke: #94D95C;
+        }
+
+        .wrong-problem-icon {
+            fill: #D95C5C;  /* 아이콘 채우기 색상 */
+            stroke: #D95C5C;  /* 아이콘 테두리 색상 */
+        }
+        .attempted-problem-icon {
+            fill: #ffa500;
+            stroke: #ffa500;
+        }
+
+        .unsolved-problem-icon {
+            fill: #D95C5C;
+            stroke: #D95C5C;
+        }
+
+        .lock-icon {
+            fill: #D9D9D9;
+            stroke: #D9D9D9;
+        }
+        .table tr:first-child th:first-child {
+            border-top-left-radius: 10px !important;
+        }
+        .table tr:first-child th:last-child {
+            border-top-right-radius: 10px !important;
+        }
+        #problem-group {
+            width: 200px;
+            border-radius: 10px;
+        }
+        #problem-group > ul {
+            list-style-type: none;
+            padding-left: 0;
+            margin: 0;
+        }
+        #problem-group li {
+            cursor: pointer;
+            margin-bottom: 5px;
+        }
+        
+        #problem-group li span {
+            width: auto;
+            min-width: 120px;
+            max-width: 180px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 16px;
+            color: #8391A1;
+        }
+        
+        #problem-group li span:hover {
+            background-color: #D9D9D936;
+            transition: background-color 0.3s ease;
+        }
+        
+        #problem-group li.active > span {
+            background-color: #D9D9D936;
+            color: #373D47;
+        }
+        
+        #problem-group li ul {
+            margin-top: 5px;
+            padding-left: 15px;
+            list-style-type: none;
+        }
+        
+        /* Material Icons 사용을 위한 폰트 로딩 */
+        @font-face {
+            font-family: 'Material Symbols Outlined';
+            font-style: normal;
+            font-weight: 400;
+            src: url(https://fonts.gstatic.com/s/materialsymbolsoutlined/v156/kJEhBvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oFsI.woff2) format('woff2');
+        }
+        
+        /* 폴더 아이콘 대신 material icons 사용 */
+        .folder-toggle::before {
+            font-family: 'Material Symbols Outlined';
+            content: '\e2c8'; /* folder icon */
+            margin-right: 10px;
+            font-size: 20px;
+            color: #D9D9D9;
+            display: inline-block;
+        }
+        
+        /* 폴더가 활성화되었을 때 아이콘 변경 */
+        #problem-group li.active > span.folder-toggle::before {
+            content: '\e2c7'; /* open folder icon */
+            color: #5C95D9;
+        }
+        
+        /* All 버튼을 위한 아이콘 */
+        #problem-group li span.all-problems::before {
+            font-family: 'Material Symbols Outlined';
+            content: '\e896'; /* list icon */
+            margin-right: 10px;
+            font-size: 20px;
+            color: #D9D9D9;
+            display: inline-block;
+        }
+        
+        /* 활성화된 All 버튼 */
+        #problem-group li.active > span.all-problems::before {
+            color: #5C95D9;
+        }
+
+    </style>
+
+    
+{% endblock %}
+
+{% block js_media %}
+    <script>
+        window.point_start = {{point_start}};
+        window.point_end = {{point_end}};
+        window.point_values = {{point_values|json|safe}};
+    </script>
+    {% compress js %}
+        <script src="{{ static('libs/nouislider.min.js') }}" type="text/javascript"></script>
+        
+        
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                const problemGroups = JSON.parse('{{ problem_groups|safe }}');
+                
+                function createTree(group, path) {
+                    const ul = document.createElement('ul');
+                    ul.style.listStyleType = 'none';
+            
+                    // 객체의 키를 배열로 변환하여 순회
+                    Object.keys(group).forEach(key => {
+                        const item = group[key];
+                        const li = document.createElement('li');
+            
+                        if (item && Object.keys(item).length > 0) {
+                            li.classList.add('has-children'); // 하위 요소가 있는 경우 클래스 추가
+                            const span = document.createElement('span');
+                            span.classList.add('folder-toggle', 'collapsed');
+                            span.id = path + key;
+            
+                            span.textContent = key; // 텍스트만 표시 (아이콘은 CSS로 표시)
+                            span.onclick = () => {
+                                const nextUl = li.querySelector('ul');
+                                li.classList.toggle('active'); // li에 active 클래스 토글
+                                if (nextUl.style.display === 'none') {
+                                    nextUl.style.display = 'block';
+                                } else {
+                                    nextUl.style.display = 'none';
+                                }
+                                postGroupId(span.id); // 그룹 id를 POST 요청으로 전송
+                            };
+                            li.appendChild(span);
+                            const childrenUl = createTree(item, span.id + '/');
+                            childrenUl.style.display = 'none'; // 기본적으로 숨김
+                            li.appendChild(childrenUl);
+                        } else {
+                            const span = document.createElement('span');
+                            span.classList.add('folder-toggle', 'collapsed');
+                            span.id = path + key;
+            
+                            span.textContent = key; // 텍스트만 표시 (아이콘은 CSS로 표시)
+                            span.onclick = () => {
+                                const nextUl = li.querySelector('ul');
+                                li.classList.toggle('active'); // li에 active 클래스 토글
+                                if (nextUl.style.display === 'none') {
+                                    nextUl.style.display = 'block';
+                                } else {
+                                    nextUl.style.display = 'none';
+                                }
+                                postGroupId(span.id); // 그룹 id를 POST 요청으로 전송
+                            };
+                            li.appendChild(span);
+                            const childrenUl = createTree(item, span.id + '/');
+                            childrenUl.style.display = 'none'; // 기본적으로 숨김
+                            li.appendChild(childrenUl);
+                        }
+            
+                        ul.appendChild(li);
+                    });
+            
+                    return ul;
+                }
+            
+                const rootUl = createTree(problemGroups, '');
+                // 'all' 그룹을 rootUl의 맨 앞에 추가
+                const allLi = document.createElement('li');
+                const allSpan = document.createElement('span');
+                allSpan.classList.add('all-problems'); // 특별한 클래스 추가
+                allSpan.id = 'all';
+                allSpan.textContent = 'All'; // 텍스트만 표시
+                allSpan.onclick = () => {
+                    // 모든 li에서 active 클래스 제거
+                    document.querySelectorAll('#problem-group li').forEach(item => {
+                        item.classList.remove('active');
+                    });
+                    allLi.classList.add('active'); // 현재 항목만 active 클래스 추가
+                    postGroupId('all');
+                };
+                allLi.appendChild(allSpan);
+            
+                // rootUl의 맨 앞에 'all' 그룹을 추가
+                rootUl.insertBefore(allLi, rootUl.firstChild);
+            
+                // 생성된 트리를 DOM에 추가
+                document.getElementById('problem-group').appendChild(rootUl);
+                const urlParams = new URLSearchParams(window.location.search);
+                const activeGroup = urlParams.get('groupId') ? decodeURIComponent(urlParams.get('groupId')) : null;
+                console.log(activeGroup);
+                
+                // URL에 groupId 파라미터가 없으면 'All'을 active로 설정
+                if (!activeGroup) {
+                    const allSpan = document.getElementById('all');
+                    if (allSpan) {
+                        const allLi = allSpan.parentElement;
+                        allLi.classList.add('active');
+                    }
+                }
+                
+                // 특정 그룹이 선택된 경우 해당 경로의 모든 상위 폴더 표시
+                if (activeGroup) {
+                    // '/'로 구분하여 그룹 경로를 나눔
+                    const groupParts = activeGroup.split('/');
+                    let currentPath = '';
+            
+                    groupParts.forEach(part => {
+                        if (currentPath) {
+                            currentPath += '/';
+                        }
+                        currentPath += part;
+            
+                        // 현재 경로에 해당하는 span 요소를 찾음
+                        const activeSpan = document.getElementById(currentPath);
+                        if (activeSpan) {
+                            const activeLi = activeSpan.parentElement;
+                            const nextUl = activeLi.querySelector('ul');
+                            activeLi.classList.add('active');
+                            nextUl.style.display = 'block'; // 현재 그룹을 표시
+            
+                            // 아이콘 업데이트
+                            activeSpan.textContent = part;
+                        }
+                    });
+                }
+                
+            
+                // 그룹 클릭 시 문제를 필터링하는 이벤트 리스너 추가
+                document.querySelectorAll('.folder-toggle').forEach(element => {
+                    element.addEventListener('click', function() {
+                        const groupName = this.id; // id 속성에 그룹 이름이 설정되어 있다고 가정
+                        postGroupId(groupName); // id를 POST 요청으로 전송
+                    });
+                });
+            
+                function postGroupId(groupId) {
+
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete('groupId');
+                    if (groupId != 'all'){
+                        url.searchParams.append('groupId', groupId);
+                    }
+                    window.location.href = url.toString();
+
+                    
+                }
+            
+                function getCookie(name) {
+                    let cookieValue = null;
+                    if (document.cookie && document.cookie !== '') {
+                        const cookies = document.cookie.split(';');
+                        for (let i = 0; i < cookies.length; i++) {
+                            const cookie = cookies[i].trim();
+                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+            
+            });
+        </script>
+        <script>
+            $(function () {
+                var $form = $('form#filter-form');
+                var $search = $('#search');
+                var $category = $('#category');
+
+                function prep_form() {
+                    $search.prop('disabled', !$search.val());
+                    $category.prop('disabled', !$category.val());
+                }
+
+                function clean_submit() {
+                    prep_form();
+                    $form.submit();
+                }
+
+                $category.select2({
+                    theme: '{{ DMOJ_SELECT2_THEME }}'
+                }).css({'visibility': 'visible'}).change(clean_submit);
+                $('#types').select2({
+                    theme: '{{ DMOJ_SELECT2_THEME }}',
+                    multiple: 1, placeholder: '{{ _('Filter by type...') }}'
+                }).css({'visibility': 'visible'});
+
+                // This is incredibly nasty to do but it's needed because otherwise the select2 steals the focus
+                $search.keypress(function (e) {
+                    if (e.keyCode == 13)
+                        $('#go').click();
+                });
+
+                $('#random').click(function (e) {
+                    var action = $form.attr('action');
+                    $form.attr('action', '{{ url('problem_random') }}').attr('target', '_blank').submit();
+                    $form.attr('action', action).attr('target', '');
+                    e.preventDefault();
+                });
+
+                $('#go').click(clean_submit);
+
+                $('input#full_text, input#hide_solved, input#show_types, input#has_public_editorial').click(function () {
+                    prep_form();
+                    ($('<form>').attr('action', window.location.pathname + '?' + $form.serialize())
+                        .append($('<input>').attr('type', 'hidden').attr('name', 'csrfmiddlewaretoken')
+                            .attr('value', $.cookie('csrftoken')))
+                        .attr('method', 'POST').appendTo($('body')).submit());
+                });
+
+                // var info_float = $('.info-float');
+                // var container = $('#content-left');
+                // if (!featureTest('position', 'sticky')) {
+                //     fix_div(info_float, 55);
+                //     $(window).resize(function () {
+                //         info_float.width(container.width());
+                //     });
+                //     info_float.width(container.width());
+                // }
+
+                var intFormatter = {
+                    to: function (value) {
+                        return value;
+                    },
+                    from: function (value) {
+                        return +value;
+                    }
+                };
+                var $slider = $('#point-slider');
+                if ($slider.length) {
+                    var $start = $('#point-start');
+                    var $end = $('#point-end');
+
+                    noUiSlider.create($slider[0], {
+                        start: [point_start, point_end],
+                        connect: true,
+                        snap: true,
+                        tooltips: [intFormatter, intFormatter],
+                        range: point_values
+                    }).on('change', function (values) {
+                        var start = +values[0], end = +values[1];
+                        $start.prop('disabled', start === point_values.min).val(start);
+                        $end.prop('disabled', end === point_values.max).val(end);
+                    });
+                }
+                $('.sort-btn').click(function (event) {
+                    event.stopPropagation(); // 이벤트 버블링 중지
+                    var sortContent = $(this).next('.sort-content');
+                    var arrowIcon = $(this).find('.arrow');
+                    if (sortContent.is(':visible')) {
+                        sortContent.hide();
+                        arrowIcon.html('&#9660;'); // 아래로 향하는 화살표
+                    } else {
+                        sortContent.show();
+                        arrowIcon.html('&#9650;'); // 위로 향하는 화살표
+                    }
+                });
+                $('.sort-btn2').click(function (event) {
+                    event.stopPropagation(); // 이벤트 버블링 중지
+                    var sortContent = $(this).next('.sort-content');
+                    var arrowIcon = $(this).find('.arrow');
+                    if (sortContent.is(':visible')) {
+                        sortContent.hide();
+                        arrowIcon.html('&#9660;'); // 아래로 향하는 화살표
+                    } else {
+                        sortContent.show();
+                        arrowIcon.html('&#9650;'); // 위로 향하는 화살표
+                    }
+                });
+                // 클릭 외부 영역 클릭 시 드롭다운 닫기
+                $(document).click(function (event) {
+                    if (!$(event.target).closest('.sort-dropdown').length) {
+                        $('.sort-content').hide();
+                        $('.arrow').html('&#9660;'); // 모든 아이콘을 아래로 향하도록 설정
+                    }
+                });
+            });
+        </script>
+    {% endcompress %}
+    {% if request.in_contest %}
+        {% compress js %}
+            <script src="{{ static('libs/tablesorter.js') }}" type="text/javascript"></script>
+            <script type="text/javascript">
+                $(function () {
+                    $.tablesorter.addParser({
+                        id: 'solvedsort',
+                        is: function (s) {
+                            return false;
+                        },
+                        format: function (s, table, cell, cellIndex) {
+                            return $(cell).attr('solved');
+                        },
+                        type: 'numeric'
+                    });
+
+                    $('#problem-table').tablesorter({
+                        headers: {
+                            0: {
+                                sorter: 'solvedsort'
+                            }
+                        },
+                        textExtraction: function (node) {
+                            node = $(node);
+                            var text = node.text().replace(/^\s+|\s+$/g, '');
+                            return (node.hasClass('p') ? text.replace(/p$/, '') : text);
+                        },
+                        sortList: [], // 초기 정렬 상태를 비워둠 (기본 상태)
+                        initialized: function (table) {
+                            var headers = $(table).find('thead th');
+                            
+                             // 아이콘 클릭 이벤트 처리
+                            headers.on('click', '.sort-icon', function (e) {
+                                e.preventDefault(); // 기본 동작 방지
+
+                                var $header = $(this).closest('th');
+                                var direction = $(this).data('sort');
+                                headers.removeClass('sorted-asc sorted-desc');
+                                headers.find('.sort-icon').css('color', '#17171B');
+                                headers.find('a').removeClass('sorted');
+
+                                if (direction === 'asc') {
+                                    $header.addClass('sorted-asc');
+                                    $header.find('.sort-asc').html('&#9650;').css('color', '#5C95D9');
+                                } else if (direction === 'desc') {
+                                    $header.addClass('sorted-desc');
+                                    $header.find('.sort-desc').html('&#9660;').css('color', '#5C95D9');
+                                }
+
+                                $header.find('a').addClass('sorted');
+
+
+                                // 정렬 수행
+                                var columnIndex = $header.index();
+                                var sortDirection = direction === 'asc' ? 0 : 1;
+                                $('#problem-table').trigger('sorton', [[[columnIndex, sortDirection]]]);
+                            });
+                        }
+                    });
+                });
+            </script>
+        {% endcompress %}
+    {% endif %}
+{% endblock %}
+
+{% block title_ruler %}{% endblock %}
+
+{% block title_row %}
+    {% set tab = 'list' %}
+    {% include "problem/problem-list-tabs.html" %}
+{% endblock %}`
+
+{% block body %}
+    {#
+    <!-- {% if page_obj.has_other_pages() %}
+        <div class="top-pagination-bar">{% include "list-pages.html" %}</div>
+    {% endif %} -->
+    #}
+    <div id="common-content">
+        {% if not request.in_contest %}
+            <div id="content-top" class="problems">
+                <!-- <div class="info-float"> -->
+                    {% include "problem/search-form.html" %}
+                    {% if hot_problems %}
+                        <div class="sidebox">
+                            <h3>{{ _('Hot problems') }} <i class="fa fa-fire"></i></h3>
+                            <div class="sidebox-content">
+                                <ul class="problem-list">{% for problem in hot_problems %}
+                                    <li><a href="{{ url('problem_detail', problem.code) }}" class="hot-problem-link">
+                                        {{ problem.name }}
+                                    </a></li>
+                                {% endfor %}</ul>
+                            </div>
+                        </div>
+                    {% endif %}
+                <!-- </div> -->
+            </div>
+        {% endif %}
+       
+        
+        
+        
+        </div>
+        <div id="content-bottom">
+            <div id="problem-group"></div>
+            <div class="problems h-scrollable-table">
+                <div class="table-div">
+                    <table id="problem-table" class="table striped">
+                        {% if sort_links %} <!-- 대회 참여/관전 X -->
+                        <thead>
+                        <tr>
+                            <!-- is_authenticated - 로그인 여부 -->
+                            {% if request.user.is_authenticated %}
+                                <th class="solved">
+                                    <a href="{{ sort_links.id }}">
+                                        ID
+                                    </a>
+                                </th>
+                            {% endif %}
+                            <th class="problem">
+                                <a href="{{ sort_links.name }}">{{ _('문제') }}
+                                    {{ sort_order.name }}</a>
+                            </th>
+                            <th class="points">
+                                <a href="{{ sort_links.authors }}">출제자
+                                    {{ sort_order.authors }}</a>
+                            </th>
+                        </tr>
+                        </thead>
+                        {% else %} <!-- 대회 참여/관전 O -->
+                        <thead class="incontest">
+                            <tr>
+                                {% if request.user.is_authenticated %}
+                                    <th class="solved">
+                                        <a href="{{ sort_links.solved }}">
+                                            <i class="fa fa-check"></i>{{ sort_order.solved }}
+                                        </a>
+                                    </th>
+                                {% endif %}
+                                <th class="problem">
+                                    <a href="{{ sort_links.name }}">{{ _('문제') }}
+                                        {{ sort_order.name }}</a>
+                                </th>
+                                <th class="category">
+                                    <a href="{{ sort_links.group }}">{{ _('분류') }}
+                                        {{ sort_order.group }}</a>
+                                </th>
+                                {% if show_types %}
+                                    <th class="types">
+                                        <a href="{{ sort_links.type }}">{{ _('Types') }}
+                                            {{ sort_order.type }}</a>
+                                    </th>
+                                {% endif %}
+                                <th class="points">
+                                    <a href="{{ sort_links.authors }}">{{ _('포인트') }}
+                                        {{ sort_order.authors }}</a>
+                                </th>
+                                
+                                <th class="ac-rate">
+                                    <a href="{{ sort_links.ac_rate }}">{{ _('AC %%') }}
+                                        {{ sort_order.ac_rate }}</a>
+                                </th>
+                            </tr>
+                        </thead>
+                        {% endif %}
+                        <tbody>
+                        {% for problem in problems %}
+                            <tr data-category="{{ problem.group.name }}">
+                                <!-- {% if request.user.is_authenticated %} -->
+                                {% if problem.id in completed_problem_ids %}
+                                    <td solved="1">
+                                        {{problem.code}}
+                                        <!-- <div> -->
+                                        <!-- <a href="{{ url('user_submissions', problem.code, request.user.username) }}"> -->
+                                            <!-- {% if problem.is_public or request.in_contest %} -->
+                                                {#
+                                                <!-- <i class="solved-problem-color fa fa-check-circle"></i> -->
+                                                #}
+                                                <!-- <svg class="solved-problem-icon" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                                                    <g stroke-width="0"/>
+                                                    <g stroke-linecap="round" stroke-linejoin="round"/>
+                                                    <g>
+                                                        <path d="M100,15a85,85,0,1,0,85,85A84.93,84.93,0,0,0,100,15Zm0,150a65,65,0,1,1,65-65A64.87,64.87,0,0,1,100,165Zm25-91.5-29,35L76,94c-4.5-3.5-10.5-2.5-14,2s-2.5,10.5,2,14c6,4.5,12.5,9,18.5,13.5,4.5,3,8.5,7.5,14,8,1.5,0,3.5,0,5-1l3-3,22.5-27c4-5,8-9.5,12-14.5,3-4,4-9,.5-13L138,71.5c-3.5-2.5-9.5-2-13,2Z"/>
+                                                    </g>
+                                                </svg>
+                                            {% else %} -->
+                                                {#
+                                                <!-- <i class="solved-problem-color fa fa-lock"></i> -->
+                                                #}
+                                                <!-- <svg class="lock-icon" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                                                    <g stroke-width="0"/>
+                                                    <g stroke-linecap="round" stroke-linejoin="round"/>
+                                                    <g>
+                                                        <path d="M85,100a15,15,0,1,0,15-15A15,15,0,0,0,85,100Zm-55,0A15,15,0,1,0,45,85,15,15,0,0,0,30,100Zm110,0a15,15,0,1,0,15-15,15,15,0,0,0-15,15Z"/>
+                                                    </g>
+                                                </svg>
+                                            {% endif %} -->
+                                        <!-- </a> -->
+                                        <!-- </div> -->
+                                    </td>
+                                    {% elif problem.id in attempted_problems %}
+                                        <td solved="0">
+                                            <!-- <a href="{{ url('user_submissions', problem.code, request.user.username) }}"> -->
+                                            {{problem.code}}
+                                            <!-- <div>
+                                                {% if problem.is_public or request.in_contest %} -->
+                                                    {#
+                                                    <!-- <i class="attempted-problem-color fa fa-minus-circle"></i> -->
+                                                    #}
+                                                    <!-- {% if problem.points > 0 %}
+                                                        <svg class="attempted-problem-icon" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                                                            <g stroke-width="0"/>
+                                                            <g stroke-linecap="round" stroke-linejoin="round"/>
+                                                            <g>
+                                                                <path d="M100,15a85,85,0,1,0,85,85A84.93,84.93,0,0,0,100,15Zm0,150a65,65,0,1,1,65-65A64.87,64.87,0,0,1,100,165Zm30-72.5H70a10,10,0,0,0,0,20h60a10,10,0,0,0,0-20Z"/>
+                                                            </g>
+                                                        </svg>
+                                                    {% else %} -->
+                                                        {#
+                                                        <!-- <i class="attempted-problem-color fa fa-lock"></i> -->
+                                                        #}
+                                                        <!-- <svg class="wrong-problem-icon" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                                                            <g stroke-width="0"/>
+                                                            <g stroke-linecap="round" stroke-linejoin="round"/>
+                                                            <g>
+                                                                <path d="M100,15a85,85,0,1,0,85,85A84.93,84.93,0,0,0,100,15Zm0,150a65,65,0,1,1,65-65A64.87,64.87,0,0,1,100,165Z"/>
+                                                                <path d="M128.5,74a9.67,9.67,0,0,0-14,0L100,88.5l-14-14a9.9,9.9,0,0,0-14,14l14,14-14,14a9.9,9.9,0,0,0,14,14l14-14,14,14a9.9,9.9,0,0,0,14-14l-14-14,14-14A10.77,10.77,0,0,0,128.5,74Z"/>
+                                                            </g>
+                                                        </svg>
+                                                    {% endif %}
+                                                    {% else %} -->
+                                                            <!-- 이 외의 경우에는 기본 잠금 아이콘 사용 -->
+                                                        <!-- <svg class="lock-icon" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                                                            <g stroke-width="0"/>
+                                                            <g stroke-linecap="round" stroke-linejoin="round"/>
+                                                            <g>
+                                                                <path d="M85,100a15,15,0,1,0,15-15A15,15,0,0,0,85,100Zm-55,0A15,15,0,1,0,45,85,15,15,0,0,0,30,100Zm110,0a15,15,0,1,0,15-15,15,15,0,0,0-15,15Z"/>
+                                                            </g>
+                                                        </svg> -->
+                                                    <!-- {% endif %} -->
+                                                
+                                            <!-- </a> -->
+                                            <!-- </div> -->
+                                        </td>
+                                    {% else %}
+                                        <td solved="-1">  
+                                            {{problem.code}}
+                                            {#
+                                                <!-- 안 푼 문제 -->
+                                                <!-- <i class="unsolved-problem-color"></i> -->
+                                                {% if problem.is_public or request.in_contest %}
+                                                    <i class="unsolved-problem-color fa fa-minus-circle"></i>
+                                                {% else %}
+                                                    <i class="unsolved-problem-color fa fa-lock"></i>
+                                                {% endif %}
+                                
+                                                <svg class="attempted-problem-icon" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                                                    <g stroke-width="0"/>
+                                                    <g stroke-linecap="round" stroke-linejoin="round"/>
+                                                    <g>
+                                                        <path d="M154.5,140.75a77.3,77.3,0,0,0,16-47c.5-42.5-34-77-76.5-77a77,77,0,0,0,0,154,76.21,76.21,0,0,0,47-16l25.5,25.5c4,4,10,4,13.5,0a9.67,9.67,0,0,0,0-14Zm-60.5,10a57,57,0,1,1,57-57A57,57,0,0,1,94,150.75Z"/>
+                                                        <path d="M126.5,84.25h-64a10,10,0,0,0,0,20h64a10,10,0,0,0,0-20Z"/>
+                                                    </g>
+                                                </svg>
+                                                #}
+                                            </td>
+                                        {% endif %}
+                                    <!-- {% endif %} -->
+                                    <td class="problem">
+                                        <a href="{{ url('problem_detail', problem.code) }}">{{ problem.i18n_name or problem.name }}</a>
+                                    </td>
+                                    <!-- <td class="category">{{ problem.group.full_name }}</td>
+                                    {% if show_types %}
+                                        <td class="types">
+                                            {% for type in problem.types_list %}
+                                                <span class="type-tag">{{ type }}</span>{% if not loop.last %}, {% endif %}
+                                            {% endfor %}
+                                        </td>
+                                    {% endif %} -->
+                                    <td class="author">
+                                        {% for author in problem.authors.all() %}
+                                            {{ author.user.first_name }}
+                                        {% endfor %}
+                                    </td>
+                                    {% if not request.in_contest %}
+                                        <!-- <td class="ac-rate">{{ problem.ac_rate|floatformat(1) }}%</td> -->
+                                        {#
+                                        <!-- <td>
+                                            {% if problem.has_public_editorial %}
+                                                <a href="{{ url('problem_editorial', problem.code) }}">
+                                                    <i class="has-editorial-color fa fa-check-circle"></i>
+                                                </a>
+                                            {% else %}
+                                                <i class="no-editorial-color fa fa-minus-circle"></i>
+                                            {% endif %}
+                                        </td> -->
+                                        #}
+                                    {% endif %}
+                                    <!-- <td class="users"> -->
+                                        <!-- {# <a href="{{ url('ranked_submissions', problem.code) }}"> #} -->
+                                            <!-- {% if not request.in_contest or not hide_contest_scoreboard %}
+                                                {{ problem.user_count }}
+                                            {% else %}
+                                                ???
+                                            {% endif %}
+                                        </a> -->
+                                        {#
+                                        {% if request.user.is_authenticated %}
+                                        <th class="solved"><i class="fa fa-check"></i></th>
+                                        {% endif %}
+                                        <th class="problem">{{ _('Problem') }}</th>
+                                        <th class="category">{{ _('Category') }}</th>
+                                        {% if show_types %}
+                                            <th>{{ _('Types') }}</th>
+                                        {% endif %}
+                                        <th class="points">{{ _('Points') }}</th>
+                                        <th class="users">{{ _('Users') }}</th> 
+                                        #}
+                                    <!-- </td> -->
+
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>   
+            {% block before_table %}{% endblock %}
+            
+            </div>
+            <!-- <div class="bottom-pagination-bar">
+                {% include "list-pages.html" %}
+            </div> -->
+        
+            {% if page_obj.has_other_pages() %}
+                <div class="bottom-pagination-bar">{% include "list-pages.html" %}</div>
+            {% endif %}
+        </div>
+        
+    </div>
+    
+{% endblock %}

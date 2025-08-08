@@ -1,0 +1,483 @@
+<style>
+    .container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+    }
+    .h3-title {
+        min-width: 25px;
+        font-family: Pretendard;
+        font-size: 14px;
+        font-weight: 500;
+        text-align: left;
+        color: #495057;
+        margin-right: 10px;
+    }
+    
+    .sort-container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 5px;
+        margin: 0px;
+    }
+    .sort-dropdown {
+        display: flex;
+        position: relative;
+        display: inline-block;
+        color: #e0b8b8;
+        width: 95%;
+    }
+    .sort-dropdown .button, button, input[type=submit] {
+        background: none !important;
+    }
+
+    .sort-btn, .sort-btn2 {
+        background-color: #FFFFFF08 !important;
+        color: #495057;
+        padding: 6px 8px 5px 13px;
+        gap: 8px;
+        border-radius: 10px;
+        border: 1px solid #5C95D95C;
+        cursor: pointer;
+
+    }
+    .sort-btn .arrow, .sort-btn2 .arrow {
+        font-size: 12px;
+        margin-left: 8px;
+        display: inline-block;
+        width: 12px; /* 아이콘의 너비와 높이를 동일하게 설정 */
+        height: 12px;
+        text-align: center; /* 아이콘을 가운데 정렬 */
+    }
+ 
+    .sort-content {
+        display: none;
+        flex-direction: column;
+        position: absolute;
+        top: 35px;
+        background-color: #f9f9f9;
+        min-width: 100%;
+        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+        z-index: 1000 !important;
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+    }
+
+    .sort-content a {
+        display: block;
+        color: black;
+        padding: 12px 16px;
+        text-decoration: none;
+        width: 100%; /* 가로 너비를 부모 요소에 맞춤 */
+        box-sizing: border-box; /* 패딩 포함한 크기 설정 */
+        border-bottom: 1px solid #ddd; /* 항목 사이에 구분선 추가 */
+    }
+
+    .sort-content a:hover {
+        background-color: #f1f1f1;
+    }
+
+    .search-container {
+        position: relative;
+        display: flex;
+        border-radius: 8px;
+        background: #FFFFFF;
+        margin-left: auto;
+        width: 250px;
+        height: 35px;
+    }
+    .search-container input[type="text"] {
+        border: 1px solid #DADADA;
+        border-radius: 8px;
+        color: #8391A1;
+        font-family: Pretendard;
+        font-size: 14px;
+        font-weight: 500;
+        text-align: left;
+    }
+
+    .search-container .fa-search {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%); /* Center icon vertically */
+        right: 10px; /* Adjust right spacing */
+        color: #5C95D9;
+        pointer-events: none; /* Prevent icon from being clickable */
+    }
+
+    #filter-form {
+        display: flex;
+        min-width: 500px;
+        width: 100%;
+        margin: 0;
+        margin-bottom: 10px;
+    }
+
+    .apply-btn {
+        height: 100%;
+        border-radius: 10px;
+        background-color: #D9D9D94D;
+        font-family: Pretendard;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 17.5px;
+        text-align: left;
+        color: #8391A1;
+
+    }
+    .apply-btn.active {
+        height: 100%;
+        border-radius: 10px;
+        background-color: #5C95D9 !important;
+        font-family: Pretendard;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 17.5px;
+        text-align: left;
+        color: #FFFFFF;
+    }
+    
+    #filter-form input {
+        height: 35px;
+        margin-bottom: 0;
+        padding: 0;
+        padding-left: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        border: none;
+        transition: box-shadow 0.2s ease;
+    }
+    #filter-form input:hover {
+        transition: box-shadow 0.2s ease;
+        box-shadow: 0 4px 6px rgba(82, 168, 236, 0.15);
+    }
+    #filter-form input::placeholder {
+        color: var(--font-grey);
+        font-size: 14px;
+    }
+</style>
+
+
+<div class="container">
+    <form id="filter-form" name="form" action="" method="get"> 
+        <div class="search-container">
+            <input id="search" type="text" name="search" value="{{ search_query or '' }}"placeholder="문제 검색"> 
+            <i class="fa fa-search"></i>
+        </div>
+    </form>
+</div>
+
+
+{% block js_media %}
+{% compress js %}
+    <script src="{{ static('libs/nouislider.min.js') }}" type="text/javascript"></script>
+    <script>
+        $(function () {
+            var $form = $('form#filter-form');
+            var $sortObject = $('#object');
+            var $sortOrder = $('#order');
+            var $search = $('#search');
+
+            function prep_form() {
+                //$search.prop('disabled', !$search.val());  // 검색어가 없으면 비활성화
+            }
+
+            function clean_submit() {
+                prep_form();
+                $form.submit();
+            }
+
+            // 드롭다운 토글 및 다른 드롭다운 닫기
+            if ($('.sort-btn').on('click', function (event) {
+                event.stopPropagation();
+                var $this = $(this);
+                var $dropdown = $this.closest('.sort-dropdown');  // 현재 클릭된 드롭다운 그룹
+                var $sortContent = $dropdown.find('.sort-content');
+                sort-btn.css('display') === 'flex';
+                var $arrowIcon = $this.find('.arrow');
+
+                // // 다른 드롭다운 닫기
+                // sort-btn2.css('display') === 'none';
+                // $('sort-btn2 .arrow').not($arrowIcon).html('&#9660;');
+
+                // // 현재 드롭다운 목록 표시 또는 숨김
+                // if ($sortContent.css('display') === 'none') {
+                //     $sortContent.show();
+                //     $arrowIcon.html('&#9650;'); // 위로 향하는 화살표
+                // } else {
+                //     $sortContent.hide();
+                //     $arrowIcon.html('&#9660;'); // 아래로 향하는 화살표
+                // }
+                // 다른 드롭다운 닫기
+                $('.sort-content').not($sortContent).hide();
+                $('.arrow').not($arrowIcon).html('&#9660;');
+
+                // 현재 드롭다운 목록 표시 또는 숨김
+                if ($sortContent.is(':hidden')) {
+                    $sortContent.show();
+                    $arrowIcon.html('&#9650;'); // 위로 향하는 화살표
+                } else {
+                    $sortContent.hide();
+                    $arrowIcon.html('&#9660;'); // 아래로 향하는 화살표
+                }
+            }));
+
+            // 드롭다운 토글 및 다른 드롭다운 닫기
+            if ($('.sort-btn2').on('click', function (event) {
+                event.stopPropagation();
+                var $this = $(this);
+                var $dropdown = $this.closest('.sort-dropdown');  // 현재 클릭된 드롭다운 그룹
+                var $sortContent = $dropdown.find('.sort-content');
+                sort-btn2.css('display') === 'flex';
+                var $arrowIcon = $this.find('.arrow');
+
+                // // 다른 드롭다운 닫기
+                // sort-btn.css('display') === 'none';
+                // $('sort-btn .arrow').not($arrowIcon).html('&#9660;');
+
+                // // 현재 드롭다운 목록 표시 또는 숨김
+                // if ($sortContent.css('display') === 'none') {
+                //     $sortContent.show();
+                //     $arrowIcon.html('&#9650;'); // 위로 향하는 화살표
+                // } else {
+                //     $sortContent.hide();
+                //     $arrowIcon.html('&#9660;'); // 아래로 향하는 화살표
+                // }
+                // 다른 드롭다운 닫기
+                $('.sort-content').not($sortContent).hide();
+                $('.arrow').not($arrowIcon).html('&#9660;');
+
+                // 현재 드롭다운 목록 표시 또는 숨김
+                if ($sortContent.is(':hidden')) {
+                    $sortContent.show();
+                    $arrowIcon.html('&#9650;'); // 위로 향하는 화살표
+                } else {
+                    $sortContent.hide();
+                    $arrowIcon.html('&#9660;'); // 아래로 향하는 화살표
+                }
+
+            }));
+            // 정렬 대상과 순서 선택
+            $('.sort-content a').on('click', function (event) {
+                event.preventDefault();
+                var $this = $(this);
+                var sortValue = $this.data('sort');
+                var $dropdown = $this.closest('.sort-dropdown');  // 현재 클릭된 드롭다운 그룹
+                var $sortBtn = $dropdown.find('.sort-btn, .sort-btn2');
+                var $sortContent = $dropdown.find('.sort-content');
+                
+                // object와 order 필드를 구분하여 저장
+                if ($sortBtn.attr('id') === 'object-btn') {
+                    $sortObject.val(sortValue);  // 선택된 정렬 대상을 숨겨진 필드에 저장
+                    $sortBtn.html($this.text() + ' <span class="arrow down">&#9650;</span>');  // 선택된 값을 버튼에 표시
+                }
+                else if ($sortBtn.attr('id') === 'order-btn') {
+                    $sortOrder.val(sortValue);  // 선택된 정렬 순서를 숨겨진 필드에 저장
+                    $sortBtn.html($this.text() + ' <span class="arrow down">&#9660;</span>');  // 선택된 값을 버튼에 표시
+                }
+
+                $sortContent.hide();
+                $sortBtn.find('.arrow').html('&#9660;');
+
+            });
+
+            // // 정렬 대상과 순서 선택
+            // $('.sort-content a').on('click', function (event) {
+            //     event.preventDefault();
+            //     var $this = $(this);
+            //     var sortValue = $this.data('sort');
+            //     var parentDropdown = $this.closest('.sort-dropdown');
+
+            //     if (parentDropdown.find('.sort-btn').text().includes('정렬 대상')) {
+            //         $('#object').val(sortValue);  // 선택된 정렬 대상을 숨겨진 필드에 저장
+            //     }
+            //     if (parentDropdown.find('.sort-btn').text().includes('정렬 순서')) {
+            //         $('#order').val(sortValue);  // 선택된 정렬 순서를 숨겨진 필드에 저장
+            //     }
+
+            //     // 선택한 값을 버튼 텍스트에 반영
+            //     parentDropdown.find('.sort-btn').text($this.text() + ' ' + parentDropdown.find('.arrow').html());
+            //     parentDropdown.find('.sort-content').css('display', 'hide'); // 목록 선택 후 닫기
+            //     parentDropdown.find('.arrow').html('&#9660;');
+      
+
+            // 클릭 외부 영역 클릭 시 드롭다운 닫기
+            $(document).click(function (event) {
+                if (!$(event.target).closest('.sort-dropdown').length) {
+                    $('.sort-content').hide();
+                    $('.arrow').html('&#9660;');
+                }
+            });
+
+            // 페이지 로드 시, 이전에 선택된 값이 있으면 버튼에 표시
+            if ($sortObject.val()) {
+                var selectedObjectText = $('[data-sort=' + $sortObject.val() + ']').text();
+                $('#object-btn').html(selectedObjectText + ' <span class="arrow down">&#9660;</span>');
+            }
+            if ($sortOrder.val()) {
+                var selectedOrderText = $('[data-sort=' + $sortOrder.val() + ']').text();
+                $('#order-btn').html(selectedOrderText + ' <span class="arrow down">&#9660;</span>');
+            }
+
+            // 추가 부분 
+            function constructUrl() {
+                var baseUrl = '/problems/';
+                var sortObject = $sortObject.val();
+                var sortOrder = $sortOrder.val();
+                var searchQeury = $search.val();
+
+                var url = baseUrl + '?order=';
+
+                if (sortObject && sortOrder) {
+                    if (sortObject === 'name' && sortOrder === 'asc') {
+                        url += 'name';
+                    } else if (sortObject === 'points' && sortOrder === 'asc') {
+                        url += 'points';
+                    } else if (sortObject === 'ac_rate' && sortOrder === 'asc') {
+                        url += 'ac_rate';
+                    } else if (sortObject === 'user_count' && sortOrder === 'asc') {
+                        url += 'user_count';
+                    } else if (sortObject === 'name' && sortOrder === 'desc') {
+                        url += '-name';
+                    } else if (sortObject === 'points' && sortOrder === 'desc') {
+                        url += '-points';
+                    } else if (sortObject === 'ac_rate' && sortOrder === 'desc') {
+                        url += '-ac_rate';
+                    } else if (sortObject === 'user_count' && sortOrder === 'desc') {
+                        url += '-user_count';
+                    }
+                }
+                /* 추가 부분 */
+                if (searchQeury) {
+                    url += '&search=' + encodeURIComponent(searchQuety);  // 검색어를 url에 추가 
+                }
+
+
+                return url;
+            }
+
+            // <-- 여기까지 
+            
+            // 적용 버튼 클릭 시 폼 제출 및 색상 변경
+            $('#go').click(function (event) {
+                // event.preventDefault();
+                clean_submit();
+                $(this).addClass('active');
+                var targetUrl = constructUrl();
+
+                if (targetUrl) {
+                    window.location.href = targetUrl;
+                }
+            });
+
+            // 검색 입력란에서 Enter 키를 누르면 폼 제출
+            $search.keypress(function (e) {
+                // if (e.keyCode == 13) $('#go').click();
+                if (e.keyCode == 13) $form.submit();
+            });
+
+            $('#group_id_select').change(function() {
+                $form.submit();
+
+            });
+
+            var intFormatter = {
+                to: function (value) {
+                    return value;
+                },
+                from: function (value) {
+                    return +value;
+                }
+            };    
+            
+            // $('.sort-btn').click(function (event) {
+            //     event.stopPropagation(); // 이벤트 버블링 중지
+            //     var sortContent = $(this).next('.sort-content');
+            //     var arrowIcon = $(this).find('.arrow');
+            //     if (sortContent.is(':visible')) {
+            //         sortContent.hide();
+            //         arrowIcon.html('&#9660;'); // 아래로 향하는 화살표
+            //     } else {
+            //         sortContent.show();
+            //         arrowIcon.html('&#9650;'); // 위로 향하는 화살표
+            //     }
+            // });
+            // // 클릭 외부 영역 클릭 시 드롭다운 닫기
+            // $(document).click(function (event) {
+            //     if (!$(event.target).closest('.sort-dropdown').length) {
+            //         $('.sort-content').hide();
+            //         $('.arrow').html('&#9660;'); // 모든 아이콘을 아래로 향하도록 설정
+            //     }
+            // });
+    
+    });
+</script>
+{% endcompress %}
+{% if request.in_contest %}
+    {% compress js %}
+    <script src="{{ static('libs/tablesorter.js') }}" type="text/javascript"></script>
+    <script type="text/javascript">
+        $(function () {
+            $.tablesorter.addParser({
+                id: 'solvedsort',
+                is: function (s) {
+                    return false;
+                },
+                format: function (s, table, cell, cellIndex) {
+                    return $(cell).attr('solved');
+                },
+                type: 'numeric'
+            });
+
+            $('#problem-table').tablesorter({
+                headers: {
+                    0: {
+                        sorter: 'solvedsort'
+                    }
+                },
+                textExtraction: function (node) {
+                    node = $(node);
+                    var text = node.text().replace(/^\s+|\s+$/g, '');
+                    return (node.hasClass('p') ? text.replace(/p$/, '') : text);
+                },
+                sortList: [], // 초기 정렬 상태를 비워둠 (기본 상태)
+                initialized: function (table) {
+                    var headers = $(table).find('thead th');
+                    
+                    // 아이콘 클릭 이벤트 처리
+                    headers.on('click', '.sort-icon', function (e) {
+                        e.preventDefault(); // 기본 동작 방지
+
+                        var $header = $(this).closest('th');
+                        var direction = $(this).data('sort');
+                        headers.removeClass('sorted-asc sorted-desc');
+                        headers.find('.sort-icon').css('color', '#17171B');
+                        headers.find('a').removeClass('sorted');
+
+                        if (direction === 'asc') {
+                            $header.addClass('sorted-asc');
+                            $header.find('.sort-asc').html('&#9650;').css('color', '#5C95D9');
+                        } else if (direction === 'desc') {
+                            $header.addClass('sorted-desc');
+                            $header.find('.sort-desc').html('&#9660;').css('color', '#5C95D9');
+                        }
+
+                    $header.find('a').addClass('sorted');
+
+
+                    // 정렬 수행
+                    var columnIndex = $header.index();
+                    var sortDirection = direction === 'asc' ? 0 : 1;
+                    $('#problem-table').trigger('sorton', [[[columnIndex, sortDirection]]]);
+                });
+            }
+        });
+    });
+</script>
+{% endcompress %}
+{% endif %}
+{% endblock %}
+
+{% block title_ruler %}{% endblock %}

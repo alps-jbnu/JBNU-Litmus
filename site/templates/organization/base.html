@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+    <title>{% block title %}{{ title }} - {{ SITE_LONG_NAME }}{% endblock %}</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    {% if misc_config.meta_keywords %}
+        <meta name="keywords" content="{{ misc_config.meta_keywords }}">
+    {% endif %}
+    {% if meta_description %}
+        <meta name="description" content="{{ meta_description }}">
+    {% endif %}
+    <meta id="viewport" name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Favicons-->
+    <link rel="apple-touch-icon" sizes="57x57" href="/apple-touch-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="/apple-touch-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="/apple-touch-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="/apple-touch-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="/apple-touch-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="/apple-touch-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="/apple-touch-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/apple-touch-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180x180.png">
+    <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="/android-chrome-192x192.png" sizes="192x192">
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96">
+    <link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="msapplication-TileColor" content="#FFBB33">
+    <meta name="msapplication-TileImage" content="/mstile-144x144.png">
+    {# Chrome 39 for Android colour #}
+    <meta name="theme-color" content="#FFBB33">
+    {% if og_image %}
+        <meta property="og:image" content="{{ request.build_absolute_uri(og_image) }}">
+    {% endif %}
+    {% block og_title %}{% endblock %}
+    <meta property="og:site_name" content="{{ SITE_LONG_NAME }}">
+    <meta property="og:url"
+          content="{{ DMOJ_SCHEME }}://{{ DMOJ_CANONICAL|default(site.domain) }}{{ request.get_full_path() }}">
+    {% if meta_description %}
+        <meta property="og:description" content="{{ meta_description }}">
+    {% endif %}
+    {% block meta %}{% endblock %}
+    {% if not INLINE_FONTAWESOME %}
+        <link rel="stylesheet" href="{{ FONTAWESOME_CSS }}">
+    {% endif %}
+    {% compress css %}
+        <link rel="stylesheet" href="{{ static(STYLE_CSS) }}">
+        {% if INLINE_FONTAWESOME %}<link rel="stylesheet" href="{{ static('libs/fontawesome/font-awesome.css') }}">{% endif %}
+        <link rel="stylesheet" type="text/css" href="{{ static('libs/clipboard/tooltip.css') }}">
+        <link rel="stylesheet" type="text/css" href="{{ static('libs/select2/select2.css') }}">
+    {% endcompress %}
+    <link rel="canonical"
+          href="{{ DMOJ_SCHEME }}://{{ DMOJ_CANONICAL|default(site.domain) }}{{ request.get_full_path() }}">
+    {% if request.user.is_impersonate %}
+        <style>
+            #nav-container {
+                background: #893e89 !important;
+            }
+        </style>
+    {% endif %}
+    {% block media %}{% endblock %}
+    {% if not INLINE_JQUERY %}
+        <script src="{{ JQUERY_JS }}"></script>
+    {% endif %}
+
+    {% compress js %}
+        <script>{{ inlinei18n(LANGUAGE_CODE)|safe }}</script>
+        {% if INLINE_JQUERY %}
+            <script src="{{ static('libs/jquery-3.4.1.min.js') }}"></script>
+        {% endif %}
+        <script src="{{ static('libs/jquery-cookie.js') }}"></script>
+        <script src="{{ static('libs/jquery-taphold.js') }}"></script>
+        <script src="{{ static('libs/jquery.unveil.js') }}"></script>
+        <script src="{{ static('libs/moment.js') }}"></script>
+        <script src="{{ static('libs/select2/select2.js') }}"></script>
+        {% include "extra_js.html" %}
+        <script src="{{ static('common.js') }}"></script>
+        <script>
+            moment.locale('{{ LANGUAGE_CODE }}');
+            set_date_locale('{{ LANGUAGE_CODE }}');
+            $(function () {
+                $('img.unveil').unveil(200);
+            });
+        </script>
+         <!-- JavaScript for toggling menu -->
+        <script>
+            function toggleMenu() {
+                var navList = document.getElementById('nav-list');
+                if (navList.classList.contains('show')) {
+                    navList.classList.remove('show');
+                } else {
+                    navList.classList.add('show');
+                }
+            }
+        </script>
+    {% endcompress %}
+    {% block js_media %}{% endblock %}
+    {% if request.in_contest %}
+        <script>$(function () {
+            count_down($("#contest-time-remaining"));
+
+            var selected = null,
+                x_pos = 0, y_pos = 0,
+                x_elem = 0, y_elem = 0;
+
+            $('#contest-info').mousedown(function () {
+                selected = $(this);
+                x_elem = x_pos - selected.offset().left;
+                y_elem = y_pos - (selected.offset().top - $(window).scrollTop());
+                return false;
+            });
+
+            if (localStorage.getItem("contest_timer_pos")) {
+                data = localStorage.getItem("contest_timer_pos").split(":");
+                $("#contest-info").css({
+                    left: data[0],
+                    top: data[1]
+                });
+            }
+
+            $("#contest-info").show();
+
+            $(document).mousemove(function (e) {
+                x_pos = e.screenX;
+                y_pos = e.screenY;
+                x_pos = Math.max(Math.min(x_pos, window.innerWidth), 0);
+                y_pos = Math.max(Math.min(y_pos, window.innerHeight), 0);
+
+                if (selected !== null) {
+                    left_px = (x_pos - x_elem) + 'px';
+                    top_px = (y_pos - y_elem) + 'px';
+
+                    localStorage.setItem("contest_timer_pos", left_px + ":" + top_px);
+
+                    selected.css({
+                        left: left_px,
+                        top: top_px
+                    });
+                }
+            });
+
+            $(document).mouseup(function () {
+                selected = null;
+            })
+        });
+        </script>
+    {% endif %}
+
+    {% if request.user.is_authenticated %}
+        <script>
+            window.user = {
+                email: '{{ request.user.email|escapejs }}',
+                id: '{{ request.user.id|escapejs }}',
+                name: '{{ request.user.username|escapejs }}'
+            };
+        </script>
+    {% else %}
+        <script>window.user = {};</script>
+    {% endif %}
+
+    {% if misc_config.analytics %}
+        {{ misc_config.analytics|safe }}
+    {% endif %}
+
+    {# Don't run userscript since it may be malicious #}
+    {% if request.user.is_authenticated and request.profile.user_script and not request.user.is_impersonate and not ignore_user_script %}
+        <script type="text/javascript">{{ request.profile.user_script|safe }}</script>
+    {% endif %}
+
+    <noscript>
+        <style>
+            #content {
+                width: 75%;
+                margin-left: 0 auto;
+                margin-right: 0 auto;
+                border: #2980B9;
+            }
+            @media screen and (max-width: 1200px) { 
+                #content {
+                    width: 95%;
+                    margin-left: 0 auto;
+                    margin-right: 0 auto;
+                }
+            }
+            #navigation {
+                top: 27px;
+            }
+        </style>
+    </noscript>
+    <style>
+        #content {
+                width: 75%;
+                margin-left: 0 auto;
+                margin-right: 0 auto;
+            }
+            @media screen and (max-width: 1200px) { 
+                #content {
+                    width: 95%;
+                    margin-left: 0 auto;
+                    margin-right: 0 auto;
+                }
+            }
+        :root {
+            --primary-color: #5C95D9;
+            --secondary-color: #9FCDF2;
+            --font-black: #17171B;
+        }
+        #content-body {
+            margin-top: 20px;
+        }
+        /* 여기서부터 네비게이션 바 css */
+        #nav-container {
+        background: #FFF;
+        width: 100%;
+        height: 100%;
+        margin: 0 auto;
+        box-shadow: 0px 7px 29px 0px rgba(100, 100, 111, 0.1);
+        }
+        #nav-list {
+            width: 75%;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 500;
+        }
+        nav ul {
+            margin: 0 0 0 -5px;
+            padding: 0 0 0 1%;
+            display: block;
+        }
+        nav ul li {
+            display: inline-block;
+            color: var(--font-black);
+            text-transform: uppercase;
+            position: relative;
+        }
+        nav ul li.home-nav-element {
+            margin-right: 35px;
+        }
+        nav ul li.home-nav-element a {
+            padding: 0;
+            height: 44px;
+        }
+        nav ul li.home-nav-element a:hover {
+            border-bottom: none;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+        nav ul li a, nav ul li button {
+            display: inline-block;
+            text-decoration: none;
+            vertical-align: middle;
+            color: var(--font-black);
+            padding: 13px 7px;
+            height: 18px;
+        }
+        nav ul li a:link, nav ul li button:link {
+            color: var(--font-black);
+        }
+        nav ul li a:hover, nav ul li button:hover {
+            color: var(--primary-color);
+            margin: 0;
+        }
+        nav ul li a.active, nav ul li button.active {
+            color: var(--primary-color);
+            background: #FFF;
+        }
+        nav ul li a .nav-expand, nav ul li button .nav-expand {
+            display: none;
+        }
+        nav ul li ul {
+            padding: 0;
+            position: absolute;
+            left: 5px;
+            display: none;
+            color: var(--font-black);
+            background: #FFF;
+            margin: 0 !important;
+            box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+        }
+        nav ul li ul li:first-child a.active {
+            border-top: 1px solid #3b3b3b;
+        }
+        nav ul li ul li {
+        display: block;
+        }
+        nav ul li ul li a, nav ul li ul li button {
+            padding: 8px 20px 8px 8px !important;
+            font-size: 0.8em;
+            line-height: 18px;
+            display: block;
+            border-left: 4px solid var(--primary-color);
+            white-space: nowrap;
+        }
+        nav ul li button {
+            background: none;
+            text-align: center;
+            border: none;
+            width: 100%;
+            border-radius: 0;
+            height: auto;
+        }
+        nav ul li:hover > ul, nav ul li:active > ul, nav ul li:focus > ul {
+            display: block !important;
+        }
+        nav ul li.home-nav-element a:hover {
+            border-bottom: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            background: transparent;
+        }
+        nav .nav-divider {
+            width: 1px;
+            vertical-align: middle;
+            padding-left: 3px;
+            display: inline-block;
+            height: 32px;
+            margin-right: 1px;
+            border-right: 3px solid rgba(255, 255, 255, 0.15);
+        }
+        #navicon {
+            display: none;
+        }
+
+        #user-links {
+            top: 0;
+            right: 0;
+            position: absolute;
+            height: 100%;
+        }
+        #user-links .anon {
+            padding-right: 10px;
+            display: inline-flex;
+            min-height: 100%;
+            align-items: center;
+            white-space: nowrap;
+            color: #5c5954;
+        }
+        #user-links .anon a {
+            color: var(--font-black);
+        }
+        #user-links li {
+            text-transform: none;
+        }
+        #user-links > ul {
+            display: block;
+            margin: 0;
+        }
+        #user-links > ul > li > a {
+            display: block;
+            padding: 0;
+            height: 100%;
+        }
+        #user-links > ul > li > a > span {
+        font-size: 13px;
+        padding: 10px 10px;
+        display: block;
+        white-space: nowrap;
+        }
+        #user-links > ul > li > a > span > img {
+        vertical-align: middle;
+        border-radius: 4px;
+        margin-right: 6px;
+        }
+        #user-links > ul > li > a > span > span {
+        vertical-align: middle;
+        color: var(--font-black);
+        }
+        #user-links > ul > li > ul {
+        left: 0;
+        }
+
+        @media screen and (max-width: 1200px) { 
+            #nav-list {
+                width: 95%;
+            }
+        }
+                /* footer 디자인 */
+                footer {
+            background-color: #FFF;
+            color: #8391A1;
+            border: none;
+            height: 40px;
+        }
+        #footer-content {
+            width: 306px;
+            margin: 0 auto;
+            text-align: left;
+        }
+        footer .copyright {
+            font-weight: 500;
+        }
+        footer a:link {
+            color: #8391A1;
+        }
+        footer a:visited {
+            color: #8391A1;
+        }
+        footer a:hover {
+            color: #8391A1;
+        }
+        .footer-content a:active {
+            color: #8391A1;
+        }
+        
+        /* @media (max-width: 830px) {
+            #navigation {
+                height: 36px;
+            }
+            #navicon {
+                transition-duration: 0.25s;
+                display: block;
+                line-height: 26px;
+                font-size: 2em;
+                color: #FFF;
+                padding: 0 0.25em;
+                margin: 4px 0.25em;
+                white-space: nowrap;
+                float: left;
+            }
+            #navicon.hover {
+                color: #4db7fe;
+                text-shadow: 0 0 5px #2980B9;
+                transition-duration: 0.25s;
+            }
+            #nav-list {
+                display: flex;
+                justify-content: space-between;
+                padding: 0;
+                margin: 0;
+                position: fixed;
+                top: 36px;
+                background: #3b3b3b;
+                bottom: 0;
+                width: 95%;
+                left: 0;
+            }
+            #nav-list li:not(.home-nav-element):not(.user-nav-element) {
+                display: none;
+            }
+            #nav-list.show-list {
+                display: block;
+            }
+            #nav-list li {
+                display: block;
+            }
+            #nav-list li a {
+                display: block;
+            }
+            #nav-list li a .nav-expand {
+                float: right;
+                display: block;
+                height: inherit;
+                margin: -13px -7px;
+                padding: inherit;
+            }
+            #nav-list li ul {
+                left: 8em;
+                top: auto;
+                bottom: auto;
+                margin-top: -36px;
+            }
+            #user-links {
+                display: inline-flex;
+                align-items: center;
+            }
+            #user-links > ul > li > a > span {
+                padding: 6px 8px;
+            }
+     }
+        */
+        @media (max-width: 830px) {
+            #nav-list li:not(.home-nav-element):not(.user-nav-element) {
+                display: none;
+            }
+            #nav-list {
+                display: flex;
+                justify-content: space-between;
+                width: 100%;
+            }
+            #user-links {
+                display: inline-flex;
+                align-items: center;
+            }
+        }
+
+        /* 여기까지 */
+    </style>
+</head>
+<body>
+<svg width="0" height="0" style="display: block">
+    <defs>
+        <clipPath id="rating-clip"><circle cx="8" cy="8" r="7"/></clipPath>
+    </defs>
+</svg>
+<nav id="navigation" class="unselectable">
+    <div id="nav-container">
+        <div id="navicon" href="javascript:void(0)" onclick="toggleMenu()"><i class="fa fa-bars"></i></div>
+        <ul id="nav-list">
+            <li class="home-nav-element"><a href="{{ url('home') }}">{% include "site-logo-fragment.html" %}</a></li>
+            <li><a href="{{ url('problem_list') }}">PROBLEMS</a></li>
+            <li><a href="{{ url('all_submissions') }}">SUBMISSIONS</a></li>
+            <li><a href="{{ url('user_list') }}">USERS</a></li>
+            <li><a href="{{ url('practice_list') }}">PRACTICES</a></li>
+            <li><a href="{{ url('contest_list') }}">CONTESTS</a></li>
+            <li><a href="{{ url('about') }}">ABOUT</a></li>
+            <div id="user-links" class="user-nav-element">
+                {% if request.user.is_authenticated %}
+                    <ul>
+                        <li>
+                            <a href="{{ url('user_page') }}">
+                                <span>
+                                    <img src="{{ gravatar(request.user, 32) }}" height="24" width="24">{# -#}
+                                    <span>{{ _('Hello, %(username)s.', username=bold(request.profile.display_name)) }}</span>
+                                </span>
+                            </a>
+                            <ul style="width: 150px">
+                                {% if request.user.is_staff or request.user.is_superuser %}
+                                    <li><a href="{{ url('admin:index') }}">{{ _('Admin') }}</a></li>
+                                {% endif %}
+                                    <li><a href="{{ url('user_edit_profile') }}">{{ _('Edit profile') }}</a></li>
+                                {% if request.user.is_impersonate %}
+                                    <li><a href="{{ url('impersonate-stop') }}">{{ _('Stop impersonating') }}</a></li>
+                                {% else %}
+                                    <li>
+                                        <form action="{{ url('home') }}" method="POST">
+                                            {% csrf_token %}
+                                            <button type="submit">{{ _('Log out') }}</button>
+                                        </form>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </li>
+                    </ul>
+                {% else %}
+                    <span class="anon">
+                        <a href="{{ url('auth_login') }}?next={{ LOGIN_RETURN_PATH|urlencode }}"><b>{{ _('Log in') }}</b></a>
+                        &nbsp;{{ _('or') }}&nbsp;
+                        <a href="{{ url('registration_register') }}"><b>{{ _('Sign up') }}</b></a>
+                    </span>
+                {% endif %}
+            </div>
+        </ul>
+            {#
+            <!-- <li class="home-nav-element"><span class="nav-divider"></span></li> -->
+            <!-- <li class="home-menu-item"><a href="{{ url('home') }}" class="nav-home">{{ _('Home') }}</a></li>
+            {% for node in mptt_tree(nav_bar) recursive %}
+                <li>
+                    <a href="{{ node.path }}" class="nav-{{ node.key }}{% if node.key in nav_tab %} active{% endif %}">
+                        {{ user_trans(node.label) }}
+                        {% if not node.is_leaf_node %}
+                            <div href="javascript:void(0)" class="nav-expand">></div>
+                        {% endif %}
+                    </a>
+                    {% with children=node.get_children() %}
+                        {% if children %}<ul>{{ loop(children) }}</ul>{% endif %}
+                    {% endwith %}
+                </li>
+            {% endfor %} -->
+            #}
+        
+    </div>
+</nav>
+{% if request.in_contest %}
+    <div id="contest-info">
+        <a href="{% if request.participation.contest.is_practice %}{{ url('practice_view', request.participation.contest.key) }}{% else %}{{ url('contest_view', request.participation.contest.key) }}{% endif %}" style="vertical-align: middle">
+            {{ request.participation.contest.name }} -
+            {% if request.participation.spectate %}
+                {{ _('spectating') }}
+            {% elif request.participation.end_time %}
+                <div id="contest-time-remaining" data-secs="{{ request.participation.time_remaining|seconds }}">
+                    {{ request.participation.time_remaining|timedelta("localized") }}
+                </div>
+            {% else %}
+                {{ _('virtual') }}
+            {% endif %}
+        </a>
+    </div>
+{% endif %}
+<div id="page-container">
+    <noscript>
+        <div id="noscript">{{ _('This site works best with JavaScript enabled.') }}</div>
+    </noscript>
+    <br>
+    <main id="content">
+        <div class="title-div">
+            {% block title_row %}
+                <h2 style="display:inline">
+                    {% block content_title %}
+                        {% if content_title %}{{ content_title }}{% else %}{{ title }}{% endif %}
+                    {% endblock %}
+                </h2>
+            {% endblock %}
+            {% block header %}{% endblock %}
+            {% block title_ruler %}
+                <!-- <hr> -->
+            {% endblock %}
+
+              
+		{% if can_edit or perms.judge.change_organization and organization %}
+        <div id="management" class="organization-btn-container">
+            <div class="organization-btn-container-inner">
+                {% if can_edit %}
+                <div id="edit" class="button-cont">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <mask id="mask0_1485_988" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="20" height="20">
+                            <rect width="20" height="20" fill="#D9D9D9"/>
+                        </mask>
+                        <g mask="url(#mask0_1485_988)">
+                            <path d="M4.16667 15.8333H5.35417L13.5 7.6875L12.3125 6.5L4.16667 14.6458V15.8333ZM2.5 17.5V13.9583L13.5 2.97917C13.6667 2.82639 13.8507 2.70833 14.0521 2.625C14.2535 2.54167 14.4653 2.5 14.6875 2.5C14.9097 2.5 15.125 2.54167 15.3333 2.625C15.5417 2.70833 15.7222 2.83333 15.875 3L17.0208 4.16667C17.1875 4.31944 17.309 4.5 17.3854 4.70833C17.4618 4.91667 17.5 5.125 17.5 5.33333C17.5 5.55556 17.4618 5.76736 17.3854 5.96875C17.309 6.17014 17.1875 6.35417 17.0208 6.52083L6.04167 17.5H2.5ZM12.8958 7.10417L12.3125 6.5L13.5 7.6875L12.8958 7.10417Z" fill="#74A4DE"/>
+                        </g>
+                    </svg>
+
+                    <div class="btn-text">
+                        <a href="{{ url('edit_organization', organization.id, organization.slug) }}">{{ _('Edit organization') }}</a>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if perms.judge.change_organization %}
+                    <div id="edit" class="button-cont">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <mask id="mask0_1485_992" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="20" height="20">
+                                <rect width="20" height="20" fill="#D9D9D9"/>
+                            </mask>
+                            <g mask="url(#mask0_1485_992)">
+                                <path d="M7.70833 18.3334L7.375 15.6667C7.19444 15.5973 7.02431 15.514 6.86458 15.4167C6.70486 15.3195 6.54861 15.2154 6.39583 15.1042L3.91667 16.1459L1.625 12.1876L3.77083 10.5626C3.75694 10.4654 3.75 10.3716 3.75 10.2813V9.71883C3.75 9.62855 3.75694 9.5348 3.77083 9.43758L1.625 7.81258L3.91667 3.85425L6.39583 4.89591C6.54861 4.7848 6.70833 4.68064 6.875 4.58341C7.04167 4.48619 7.20833 4.40286 7.375 4.33341L7.70833 1.66675H12.2917L12.625 4.33341C12.8056 4.40286 12.9757 4.48619 13.1354 4.58341C13.2951 4.68064 13.4514 4.7848 13.6042 4.89591L16.0833 3.85425L18.375 7.81258L16.2292 9.43758C16.2431 9.5348 16.25 9.62855 16.25 9.71883V10.2813C16.25 10.3716 16.2361 10.4654 16.2083 10.5626L18.3542 12.1876L16.0625 16.1459L13.6042 15.1042C13.4514 15.2154 13.2917 15.3195 13.125 15.4167C12.9583 15.514 12.7917 15.5973 12.625 15.6667L12.2917 18.3334H7.70833ZM9.16667 16.6667H10.8125L11.1042 14.4584C11.5347 14.3473 11.934 14.1841 12.3021 13.9688C12.6701 13.7536 13.0069 13.4931 13.3125 13.1876L15.375 14.0417L16.1875 12.6251L14.3958 11.2709C14.4653 11.0765 14.5139 10.8716 14.5417 10.6563C14.5694 10.4411 14.5833 10.2223 14.5833 10.0001C14.5833 9.77786 14.5694 9.55911 14.5417 9.34383C14.5139 9.12855 14.4653 8.92369 14.3958 8.72925L16.1875 7.37508L15.375 5.95841L13.3125 6.83342C13.0069 6.51397 12.6701 6.24661 12.3021 6.03133C11.934 5.81605 11.5347 5.65286 11.1042 5.54175L10.8333 3.33341H9.1875L8.89583 5.54175C8.46528 5.65286 8.06597 5.81605 7.69792 6.03133C7.32986 6.24661 6.99306 6.50703 6.6875 6.81258L4.625 5.95841L3.8125 7.37508L5.60417 8.70841C5.53472 8.91675 5.48611 9.12508 5.45833 9.33341C5.43056 9.54175 5.41667 9.76397 5.41667 10.0001C5.41667 10.2223 5.43056 10.4376 5.45833 10.6459C5.48611 10.8542 5.53472 11.0626 5.60417 11.2709L3.8125 12.6251L4.625 14.0417L6.6875 13.1667C6.99306 13.4862 7.32986 13.7536 7.69792 13.9688C8.06597 14.1841 8.46528 14.3473 8.89583 14.4584L9.16667 16.6667ZM10.0417 12.9167C10.8472 12.9167 11.5347 12.632 12.1042 12.0626C12.6736 11.4931 12.9583 10.8056 12.9583 10.0001C12.9583 9.19453 12.6736 8.50703 12.1042 7.93758C11.5347 7.36814 10.8472 7.08341 10.0417 7.08341C9.22222 7.08341 8.53125 7.36814 7.96875 7.93758C7.40625 8.50703 7.125 9.19453 7.125 10.0001C7.125 10.8056 7.40625 11.4931 7.96875 12.0626C8.53125 12.632 9.22222 12.9167 10.0417 12.9167Z" fill="#74A4DE"/>
+                            </g>
+                        </svg>
+                        <div class="btn-text">
+                            <a href="{{ url('admin:judge_organization_change', organization.id) }}">{{ _('Admin organization') }}</a>
+                        </div>
+                    </div>
+                {% endif %}
+                </div>
+        </div>
+
+        {% endif %}	
+        </div>
+        
+		{% if organization %}
+        <div id="management" class="organization-btn-container">
+
+            <div class="member-block">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <mask id="mask0_1485_985" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24">
+                    <rect width="24" height="24" fill="#D9D9D9"/>
+                    </mask>
+                    <g mask="url(#mask0_1485_985)">
+                    <path d="M0 18V16.425C0 15.7083 0.366667 15.125 1.1 14.675C1.83333 14.225 2.8 14 4 14C4.21667 14 4.425 14.0042 4.625 14.0125C4.825 14.0208 5.01667 14.0417 5.2 14.075C4.96667 14.425 4.79167 14.7917 4.675 15.175C4.55833 15.5583 4.5 15.9583 4.5 16.375V18H0ZM6 18V16.375C6 15.8417 6.14583 15.3542 6.4375 14.9125C6.72917 14.4708 7.14167 14.0833 7.675 13.75C8.20833 13.4167 8.84583 13.1667 9.5875 13C10.3292 12.8333 11.1333 12.75 12 12.75C12.8833 12.75 13.6958 12.8333 14.4375 13C15.1792 13.1667 15.8167 13.4167 16.35 13.75C16.8833 14.0833 17.2917 14.4708 17.575 14.9125C17.8583 15.3542 18 15.8417 18 16.375V18H6ZM19.5 18V16.375C19.5 15.9417 19.4458 15.5333 19.3375 15.15C19.2292 14.7667 19.0667 14.4083 18.85 14.075C19.0333 14.0417 19.2208 14.0208 19.4125 14.0125C19.6042 14.0042 19.8 14 20 14C21.2 14 22.1667 14.2208 22.9 14.6625C23.6333 15.1042 24 15.6917 24 16.425V18H19.5ZM8.125 16H15.9C15.7333 15.6667 15.2708 15.375 14.5125 15.125C13.7542 14.875 12.9167 14.75 12 14.75C11.0833 14.75 10.2458 14.875 9.4875 15.125C8.72917 15.375 8.275 15.6667 8.125 16ZM4 13C3.45 13 2.97917 12.8042 2.5875 12.4125C2.19583 12.0208 2 11.55 2 11C2 10.4333 2.19583 9.95833 2.5875 9.575C2.97917 9.19167 3.45 9 4 9C4.56667 9 5.04167 9.19167 5.425 9.575C5.80833 9.95833 6 10.4333 6 11C6 11.55 5.80833 12.0208 5.425 12.4125C5.04167 12.8042 4.56667 13 4 13ZM20 13C19.45 13 18.9792 12.8042 18.5875 12.4125C18.1958 12.0208 18 11.55 18 11C18 10.4333 18.1958 9.95833 18.5875 9.575C18.9792 9.19167 19.45 9 20 9C20.5667 9 21.0417 9.19167 21.425 9.575C21.8083 9.95833 22 10.4333 22 11C22 11.55 21.8083 12.0208 21.425 12.4125C21.0417 12.8042 20.5667 13 20 13ZM12 12C11.1667 12 10.4583 11.7083 9.875 11.125C9.29167 10.5417 9 9.83333 9 9C9 8.15 9.29167 7.4375 9.875 6.8625C10.4583 6.2875 11.1667 6 12 6C12.85 6 13.5625 6.2875 14.1375 6.8625C14.7125 7.4375 15 8.15 15 9C15 9.83333 14.7125 10.5417 14.1375 11.125C13.5625 11.7083 12.85 12 12 12ZM12 10C12.2833 10 12.5208 9.90417 12.7125 9.7125C12.9042 9.52083 13 9.28333 13 9C13 8.71667 12.9042 8.47917 12.7125 8.2875C12.5208 8.09583 12.2833 8 12 8C11.7167 8 11.4792 8.09583 11.2875 8.2875C11.0958 8.47917 11 8.71667 11 9C11 9.28333 11.0958 9.52083 11.2875 9.7125C11.4792 9.90417 11.7167 10 12 10Z" fill="#8391A1"/>
+                    </g>
+                </svg>                        
+                <div class="member-text">
+                    <a href="{{ organization.get_users_url() }}">{{ _('멤버 확인하기') }}</a>
+                </div>
+            </div>
+
+            <div class="organization-btn-container-inner">
+                {% if request.user.is_authenticated %}
+                    {% if request.profile in organization %}
+                        <form method="post" action="{{ url('leave_organization', organization.id, organization.slug) }}">
+                            {% csrf_token %}
+                            <input id="leave" type="submit" class="unselectable button full leave-organization" value="{{ _('Leave organization') }}">
+                        </form>
+                    {% elif organization.is_open %}
+                        <form method="post" action="{{ url('join_organization', organization.id, organization.slug) }}">
+                            {% csrf_token %}
+                            <input id="leave" type="submit" class="unselectable button full" value="{{ _('Join organization') }}">
+                        </form>
+                    {% else %}
+                        <a href="{{ url('request_organization', organization.id, organization.slug) }}"
+                        class="unselectable button full">{{ _('Request membership') }}</a>
+                    {% endif %}
+                
+                {% endif %}
+
+                {% if can_review_requests %}
+                    <div>
+                        <a href="{{ url('organization_requests_pending', organization.id, organization.slug) }}">{{ _('View requests') }}</a>
+                    </div>
+                {% endif %}
+            </div>
+            
+        </div>
+
+    {% endif %}	
+
+        <div id="content-body">{% block body %}{% endblock %}</div>
+    </main>
+
+    {% if i18n_config.announcement %}
+        <div id="announcement">{{ i18n_config.announcement|safe }}</div>
+    {% endif %}
+
+    {% block bodyend %}{% endblock %}
+
+    <footer>
+        <div id="footer-content">
+            <a href="https://github.com/alps-jbnu" target="_blank" rel="noopener noreferrer">이용약관</a> | <a href="https://github.com/alps-jbnu" target="_blank" rel="noopener noreferrer">개인정보처리방침</a>
+            <br><a class="copyright" href="https://sites.google.com/view/jbnu-alps" target="_blank" rel="noopener noreferrer">Copyright @ JBNU and ALPS All rights reserved.</a><hr>
+            {% if i18n_config.footer %}
+                {{ i18n_config.footer|safe }} |
+            {% endif %}
+            {#
+            <!-- <form action="{{ url('set_language') }}" method="post" style="display: inline">
+                {% csrf_token %}
+                <input name="next" type="hidden" value="{{ request.get_full_path() }}">
+                <select name="language" onchange="form.submit()" style="height: 1.5em">
+                    {% for language in language_info_list(LANGUAGES) %}
+                        <option value="{{ language.code }}" {% if language.code == LANGUAGE_CODE %}selected{% endif %}>
+                            {{ language.name_local }} ({{ language.code }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </form> -->
+            #}
+        </div>
+    </footer>
+</div>
+</body>
+</html>

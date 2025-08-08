@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block media %}
+    <style>
+        #page-container {
+            background: #FFF !important;
+        }
+        footer {
+            background: #FFF !important;
+        }
+        .title-div {
+            visibility: hidden;
+        }
+        #page-container {
+            display: flex;
+            background: #fff !important;
+        }
+        #content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 90vh !important;
+            margin-top: 0px !important;
+            margin: auto;
+            width: 1040px;
+        }
+        .content-body-box {
+            min-height: 100% !important;
+            margin-bottom: 50px;
+        }
+        #content-body {
+            padding-bottom: 0px;
+        }
+        .title-box {
+            display: none;
+        }
+        .auth-flow-form {
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+            font-family: "Pretendard";
+        }
+        .auth-flow-form h2 {
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .form-area {
+            width: 350px;
+            gap: 10px;
+            border: none;
+            background: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            font-family: "Pretendard";
+        }
+        .form-area input[type="email"] {
+            padding: 10px 10px 10px 16px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            width: 100%;
+            height: 46px;
+            box-sizing: border-box;
+            font-family: "Pretendard";
+        }
+
+        .form-area button[type="submit"],
+        .form-area button,
+        .form-area .button {
+            background: none;
+            background-color: #5C95D9;
+            display: block;
+            border-radius: 8px;
+            border: 1px solid #5C95D9;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            line-height: 1.5;
+            height: 40px;
+            box-sizing: border-box; /* 패딩과 테두리가 총 크기에 포함되도록 설정 */
+            font-family: "Pretendard";
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .form-area a.button {
+            display: block; /* 인라인 요소를 블록 요소로 변경 */
+            text-align: center;
+            padding: 10px; /* 버튼과 동일한 패딩 적용 */
+            font-size: 14px;
+            color: #5C95D9 !important;
+            background: none;
+            background-color: white;
+            border: 1px solid #D9D9D9;
+            border-radius: 8px;
+            height: 40px;
+            box-sizing: border-box;
+            line-height: 1.5; /* 텍스트가 버튼의 중앙에 위치하도록 설정 */
+            cursor: pointer;
+            text-decoration: none; /* 기본 링크 스타일 제거 */
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .form-area button:hover {
+            background-color: #5288C8;
+            color: #FAFAFA;
+        }
+
+        .form-area a.button:hover {
+            background-color: #F7F7F7;
+            color: #5487C5;
+        }
+
+        
+        /* 이메일 입력 전체 영역 스타일 */
+        .email-input-wrapper {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 18px;
+        }
+
+        input[type=text], input[type=password], input[type=email], input[type=number] {
+            padding: 4px 8px;
+            color: #3b3b3b;
+            background: #fff none;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset;
+            transition: border-color 0.15s ease-in-out 0s, box-shadow 0.15s ease-in-out 0s;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        input[type=text]:hover, input[type=password]:hover, input[type=email]:hover, input[type=number]:hover {
+            box-shadow: none;
+            box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset;
+        }
+        input[type=text]:focus, input[type=password]:focus, input[type=email]:focus, input[type=number]:focus {
+            box-shadow: none;
+            border-color: #9FCDF2;
+            outline: 0;
+        }
+        input[type=number] {
+            padding: 2px 0 2px 5px;
+        }
+        input[type=checkbox] {
+            vertical-align: middle;
+        }
+        span.email_domain {
+            color: var(--font-basic-black);
+            background: #f1f1f1;
+            border: 1px solid var(--border-color);
+            border-left: none;  /* 왼쪽 테두리 제거 */
+            border-radius: 0 8px 8px 0;  /* 오른쪽만 둥글게 */
+            padding: 10px;
+            font-size: 14px;
+            height: 46px;  /* input 높이와 맞춤 */
+            display: flex;
+            align-items: center;
+            box-sizing: border-box;
+            width: 28%;  /* 도메인 부분의 너비 조정 */
+            pointer-events: none;  /* 도메인 부분을 클릭할 수 없게 함 */
+            font-family: "Pretendard";
+        }  
+                /* 로컬 이메일 입력 필드 스타일 정의 */
+        input[type=text].email_local {
+            color: #000;
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-right: none;  /* 오른쪽 테두리 제거 */
+            border-radius: 8px 0 0 8px;  /* 왼쪽만 둥글게 */
+            padding: 10px 10px 10px 16px;
+            font-size: 14px;
+            box-sizing: border-box;
+            height: 46px;
+            width: 72%;  /* 이메일 로컬 부분의 너비 조정 */
+            font-family: "Pretendard";
+        }
+
+        /* 도메인 부분 스타일 정의 */
+        input[type=text].email-domain {
+            color: var(--font-basic-black);
+            background: #f1f1f1;
+            border: 1px solid var(--border-color);
+            border-left: none;  /* 왼쪽 테두리 제거 */
+            border-radius: 0 8px 8px 0;  /* 오른쪽만 둥글게 */
+            padding: 10px;
+            font-size: 14px;
+            height: 46px;  /* input 높이와 맞춤 */
+            display: flex;
+            align-items: center;
+            box-sizing: border-box;
+            width: 28%;  /* 도메인 부분의 너비 조정 */
+            pointer-events: none;  /* 도메인 부분을 클릭할 수 없게 함 */
+            font-family: "Pretendard";
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <div class="auth-flow-form">
+        <form action="" method="post" class="form-area">
+            <h2>아이디 찾기</h2>
+            {% csrf_token %}
+            {% if form.errors %}
+                {% for field, errors in form.errors.items() %}
+                    {% for error in errors %}
+                        <div id="form-errors">
+                            <p class="error">{{ error }}</p>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+            {% endif %}
+            {# <!-- <table border="0">{{ form.as_table() }}</table> --> #}
+            {% if form.non_field_errors %}
+                <div class="error-message">
+                    <ul>
+                        {% for error in form.non_field_errors() %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+           {% endif %}
+            <span class="email-input-wrapper{% if form.email_local.errors %}-error{% endif %}">
+                {{ form.email_local }}
+                <span class="email_domain">@jbnu.ac.kr</span>
+            </span>
+            
+            <button style="float:right;" type="submit">메일 발송하기</button>
+            <a href="{{ url('auth_login') }}" class="button">{{ _('로그인 페이지로 돌아가기') }}</a>
+        </form>
+    </div>
+{% endblock %}

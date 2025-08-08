@@ -1,0 +1,25 @@
+<head>
+  <link 
+    rel="stylesheet" 
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  >
+</head>
+<form method="get">
+  {% for key, value in request.GET.items %}
+    {% if key not in spec.filter_keys %}
+        <input type="hidden" name="{{ key }}" value="{{ value }}">
+    {% endif %}
+    {% endfor %}
+<label>
+  대회 이름
+    <input type="text" name="contest_name" value="{{ request.GET.contest_name }}" placeholder="대회 이름을 입력하세요.">
+</label>
+<label>
+  사용자 이름
+    <input type="text" name="user_name" value="{{ request.GET.user_name }}" placeholder="사용자 이름을 입력하세요.">
+</label>
+
+ <button type="submit">
+  <i class="fa-solid fa-filter"></i> 필터 적용
+</button>
+</form>

@@ -1,0 +1,376 @@
+{% extends "base.html" %}
+{% block title_row %}{% endblock %}
+{% block title_ruler %}{% endblock %}
+
+{% block media %}
+<link rel="alternate" type="application/atom+xml" href="{{ url('blog_atom') }}" title="Atom Blog Feed">
+<link rel="alternate" type="application/rss+xml" href="{{ url('blog_rss') }}" title="RSS Blog Feed">
+<link rel="alternate" type="application/atom+xml" href="{{ url('comment_atom') }}" title="Atom Comment Feed">
+<link rel="alternate" type="application/rss+xml" href="{{ url('comment_rss') }}" title="RSS Comment Feed">
+<link rel="alternate" type="application/atom+xml" href="{{ url('problem_atom') }}" title="Atom Problem Feed">
+<link rel="alternate" type="application/rss+xml" href="{{ url('problem_rss') }}" title="RSS Problem Feed">
+{% endblock %}
+
+{% block js_media %}
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('.time-remaining').each(function () {
+            count_down($(this));
+        });
+
+        $('.blog-sidebar').hide();
+        $('#blog-tab').find('a').click(function (e) {
+            e.preventDefault();
+            $('#blog-tab').addClass('active');
+            $('#event-tab').removeClass('active');
+            $('.blog-content').show();
+            $('.blog-sidebar').hide();
+        });
+        $('#event-tab').find('a').click(function (e) {
+            e.preventDefault();
+            $('#event-tab').addClass('active');
+            $('#blog-tab').removeClass('active');
+            $('.blog-content').hide();
+            $('.blog-sidebar').show();
+        });
+    });
+</script>
+{% endblock %}
+
+{% block body %}
+<style>
+    /* #content {
+        width: 100%;
+        margin-right: 0;
+        margin-left: 0;
+    } */
+
+    #page-container {
+        background: #FFF;
+    }
+    footer {
+        background: #FFF !important;
+        position: absolute;
+        bottom: 0;
+    }
+    #blog-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 85vh;
+    }
+    .blog-main {
+        display: flex;
+        flex-wrap: wrap;
+        width: 100%;
+        margin-top: 20px;
+    }
+    .left-top {
+        flex: 1 1 50%;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        /* 아래쪽에 붙이기 */
+        gap: 10px;
+        /* 두 div 사이의 간격 */
+        padding: 10px;
+        padding-top: 0;
+        /* 패딩을 추가하여 요소가 너무 붙지 않도록 설정 */
+        box-sizing: border-box;
+        /* 패딩이 전체 크기에 포함되도록 설정 */
+    }
+    .right-top {
+        flex: 1 1 50%;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        /* 아래쪽에 붙이기 */
+        gap: 5px;
+        /* 두 div 사이의 간격 */
+        padding: 10px;
+        padding-top: 0;
+        /* 패딩을 추가하여 요소가 너무 붙지 않도록 설정 */
+        box-sizing: border-box;
+        /* 패딩이 전체 크기에 포함되도록 설정 */
+    }
+    .top-item {
+        font-size: 50px;
+        font-weight: 600;
+    }
+    .right {
+        font-size: 20px;
+        text-align: right;
+    }
+    .blue {
+        color: #5C95D9;
+    }
+    .bottom img {
+        max-width: 100%;
+    }
+    .bottom .alarm{
+        background-color: #EBF0F8;
+        padding: 5px 12px;
+        border-radius:4px;
+        transition: color 0.3s ease;
+    }
+    .bottom .alarm:hover {
+        color: #2f5da8;
+    }
+    #mobile.tabs {
+        display: none;
+    }
+    .alarm {
+        color: var(--font-basic-black);
+        transition: color 0.2s;
+        font-size: 15px;
+        width: 100%;
+        box-sizing: border-box;
+        font-weight: 400;
+    }
+    .alarm:hover {
+        color: var(--primary-hover-color);
+    }
+    .notice-urgent {
+        background-color: #ffe3e3;
+        color: black !important;
+        padding: 7px 15px;
+        border-radius: 8px;
+        font-size: 16px;
+        text-align: center;
+        border: 1px solid #ffa8a8;
+        cursor: default;
+        margin-bottom: 10px;
+        text-align : left;
+    }
+    .notice-alert {
+        background-color: #fff9c4;
+        color: black !important;
+        padding: 7px 15px;
+        border-radius: 8px;
+        font-size: 16px;
+        text-align: center;
+        border: 1px solid #fce51c;
+        cursor: default;
+        margin-bottom: 10px;
+        text-align : left;
+    }
+</style>
+{% block before_posts %}{% endblock %}
+<!-- mobile div는 현재 숨겨져 있음. 기능은 잘 모르겠다. -->
+<div id="mobile" class="tabs">
+    <ul>
+        <li id="blog-tab" class="tab active"><a href="#">
+                <i class="tab-icon fa fa-info-circle"></i> {{ _('Blog') }}
+            </a></li>
+        <li id="event-tab" class="tab"><a href="#"><i class="tab-icon fa fa-rss"></i> {{ _('Events') }}</a></li>
+    </ul>
+</div>
+<!-- 메인 페이지의 내용 부분. -->
+<div id="blog-container">
+    {#
+    <!-- <div class="blog-content sidebox">
+            <h3>{{ _('News') }} <i class="fa fa-terminal"></i></h3>
+            <div class="sidebox-content">
+                {% for post in posts %}
+                    <section class="{% if post.sticky %}sticky {% endif %}post">
+                        <h2 class="title">
+                            <a href="{{ url('blog_post', post.id, post.slug) }}">{{ post.title }}</a>
+                        </h2>
+                        <span class="time">
+                            {%- if post.sticky %}<i title="Sticky" class="fa fa-star fa-fw"></i>{% endif -%}
+                            {% with authors=post.authors.all() %}
+                                {%- if authors -%}
+                                    <span class="post-authors">{{ link_users(authors) }}</span>
+                                {%- endif -%}
+                            {% endwith %}
+                            {% with abs=_('posted on {time}'), rel=_('posted {time}') %}
+                                {{ relative_time(post.publish_on, abs=abs, rel=rel) }}
+                            {% endwith %}
+                        </span><span class="comment-data">
+                            <a href="{{ url('blog_post', post.id, post.slug) }}#comments" class="comment-count-link">
+                                <i class="fa fa-comments comment-icon"></i><span class="comment-count">
+                                    {{- post_comment_counts[post.id] or 0 -}}
+                                </span>
+                            </a>
+                        </span>
+                        <div class="summary content-description">
+                            {% cache 86400 'post_summary' post.id %}
+                                {{ post.summary|default(post.content, true)|markdown('blog', 'svg', lazy_load=True)|reference|str|safe }}
+                            {% endcache %}
+                            {%- if post.summary -%}
+                                <p><a href="{{ url('blog_post', post.id, post.slug) }}">{{ _('Continue reading...') }}</a></p>
+                            {%- endif -%}
+                        </div>
+                    </section>
+                {% endfor %}
+            </div>
+            {% if page_obj.has_other_pages() %}
+                <div class="bottom-pagination-bar">{% include "list-pages.html" %}</div>
+            {% endif %}
+        </div>
+
+        <div class="blog-sidebar">
+            {% if request.in_contest and request.participation.contest.use_clarifications %}
+                <div class="blog-sidebox sidebox">
+                    <h3>{{ _('Clarifications') }} <i class="fa fa-question-circle"></i></h3>
+                    <div class="sidebox-content">
+                        {% if has_clarifications %}
+                            <ul>
+                                {% for clarification in clarifications %}
+                                    <li class="clarification">
+                                        <a href="{{ url('problem_detail', clarification.problem.code) }}"
+                                           class="problem">
+                                            {{ clarification.problem.name }}
+                                        </a>
+                                        <span class="time">{{ relative_time(clarification.date) }}</span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="no-clarifications-message">
+                                {{ _('No clarifications have been made at this time.') }}
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+            {% if current_contests %}
+                <div class="blog-sidebox sidebox">
+                    <h3>{{ _('Ongoing contests') }} <i class="fa fa-trophy"></i></h3>
+                    <div class="sidebox-content sidebox-ongoing-contest">
+                        {% for contest in current_contests %}
+                            <div class="contest">
+                                <div class="contest-list-title">
+                                    <a href="{{ url('contest_view', contest.key) }}">{{ contest.name }}</a>
+                                </div>
+                                <div class="time">
+                                    {{ _('Ends in %(countdown)s.', countdown=as_countdown(contest.time_before_end)) }}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if future_contests %}
+                <div class="blog-sidebox sidebox">
+                    <h3>{{ _('Upcoming contests') }} <i class="fa fa-trophy"></i></h3>
+                    <div class="sidebox-content">
+                        {% for contest in future_contests %}
+                            <div class="contest">
+                                <div class="contest-list-title">
+                                    <a href="{{ url('contest_view', contest.key) }}">{{ contest.name }}</a>
+                                </div>
+                                <div class="time">
+                                    {{ _('Starting in %(countdown)s.', countdown=as_countdown(contest.time_before_start)) }}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="blog-sidebox sidebox">
+                <h3>{{ _('Comment stream') }} <i class="fa fa-comments"></i></h3>
+                <div class="sidebox-content">
+                    <ul>
+                        {% for comment in comments %}
+                            <li>
+                                <span style="padding-left:0.25em" class="poster">
+                                    {{ link_user(comment.author) }}
+                                </span> &rarr;
+                                <a href="{{ comment.link }}#comment-{{ comment.id }}">{{ comment.page_title }}</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    <span class="rssatom">
+                        <a href="{{ url('comment_rss') }}"><span><i class="fa fa-rss"></i></span> RSS</a>
+                        /
+                        <a href="{{ url('comment_atom') }}">Atom</a>
+                    </span>
+                </div>
+            </div>
+            <div class="blog-sidebox sidebox">
+                <h3>{{ _('New problems') }} <i class="fa fa-puzzle-piece"></i>
+                </h3>
+                <div class="sidebox-content">
+                    <ul class="problem-list">
+                        {% for problem in new_problems %}
+                            <li><a href="{{ url('problem_detail', problem.code) }}">{{ problem.name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                    <span class="rssatom">
+                        <a href="{{ url('problem_rss') }}"><span><i class="fa fa-rss"></i></span> RSS</a>
+                        /
+                        <a href="{{ url('problem_atom') }}">Atom</a>
+                    </span>
+                </div>
+            </div>
+            {% if own_open_tickets %}
+                <div class="blog-sidebox sidebox">
+                    <h3>{{ _('My open tickets') }} <i class="fa fa-question-circle"></i></h3>
+                    <div class="sidebox-content">
+                        <ul class="open-tickets">
+                            {% for ticket in own_open_tickets %}
+                                <li>
+                                    <a href="{{ url('ticket', ticket.id) }}">{{ ticket.title }}</a>
+                                    <div class="object">
+                                        <a href="{{ ticket.linked_item.get_absolute_url() }}">
+                                            {{ ticket.linked_item|item_title }}</a>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if perms.judge.test_site and open_tickets %}
+                <div class="blog-sidebox sidebox">
+                    <h3>{{ _('New tickets') }} <i class="fa fa-exclamation-circle"></i></h3>
+                    <div class="sidebox-content">
+                        <ul class="open-tickets">
+                            {% for ticket in open_tickets %}
+                                <li>
+                                    <a href="{{ url('ticket', ticket.id) }}">{{ ticket.title }}</a>
+                                    <div class="object">
+                                        <a href="{{ ticket.linked_item.get_absolute_url() }}">
+                                            {{ ticket.linked_item|item_title }}</a>
+                                    </div>
+                                    <div class="author">{{ link_user(ticket.user) }}</div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            {% endif %}
+        </div> -->
+    #}
+    <!-- <a class="alarm notice-urgent">
+            📌실시간 과제·대회 포인트 반영에 오류가 발생하여 순위가 실제와 다를 수 있습니다.
+        </a>
+    <a class="alarm notice-alert">
+        📢시스템 점검안내 : 7월 12일(금) 오전 2시부터 4시까지 서버 점검이 예정되어 있습니다. 점검 시간 동안 서비스 이용이 제한될 수 있습니다.
+    </a> 
+    <a class="alarm notice-alert">
+        🛠️시스템 점검안내 : 7월 12일(금) 오전 2시부터 4시까지 서버 점검이 예정되어 있습니다. 점검 시간 동안 서비스 이용이 제한될 수 있습니다.
+    </a>    -->
+    <div class="blog-main">
+        <div class="left-top">
+            <div class="top-item">LITMUS</div>
+            <div class="top-item">ONLINE JUDGE</div>
+        </div>
+        <div class="right-top">
+            <div class="top-item right">{{ problem_count }} Algorithm Problems</div>
+            <div class="top-item right blue">With</div>
+            <div class="top-item right">{{ user_count }} People</div>
+        </div>
+        <div class="bottom">
+            <img src="main_logo.png" alt="image" />
+            <!-- <p><a class="alarm" href="{{ url('about') }}">25-03-04 패치가 진행되었습니다. 자세한 내용은 ABOUT 탭에서 확인하실 수 있습니다.</a></p> -->
+            <p><a class="alarm" href="https://forms.gle/tJCPQHDdf6yJeiYz7">버그 발견 시 <b>여기</b>에 제보해주시면 감사하겠습니다.</a></p>
+        </div>
+    </div>
+</div>
+{% block after_posts %}{% endblock %}
+{% endblock %}

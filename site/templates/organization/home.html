@@ -1,0 +1,166 @@
+{% extends "organization/common-content.html" %}
+
+{% block content_media %}
+    <style>
+        .class-list td {
+            vertical-align: middle;
+        }
+
+        .class-list td:first-child {
+            text-align: left;
+            padding: 0.5em 0.5em 0.5em 1em;
+        }
+
+        .class-list td:last-child {
+            width: 8em;
+        }
+
+        .class-description {
+            color: #777;
+        }
+        #page-container {
+            margin-top: 125px;
+            width: 85%;
+            min-height: 80%;
+            box-shadow: 0px 8px 24px 0px #959DA533;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 10px; /* Adjust the gap between the buttons as needed */
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            margin: 0 auto;
+        }
+
+        .title-div {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .button-cont {
+            display: flex;
+            border-radius: 15px;
+            background: #EBEFF3;
+            color: #74A4DE;
+            text-decoration: none;
+            max-height: 35px;
+            justify-content: center;
+            align-items: center;
+            font-family: Pretendard;
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 16.8px;
+            text-align: center;
+            padding: 8px 3px;
+            min-width: 109px;
+            margin-left: 5px;
+        }
+        
+        #edit a, #manage a {
+            color: #74A4DE;
+            text-decoration: none;
+        }
+        #leave {
+            display: block;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 7px 20px;
+            background: transparent;
+            width: fit-content; /* Adjust the width as needed */
+            float: right;
+            font-family: Pretendard;
+            font-size: 14px;
+            font-weight: bold;
+            line-height: 17.5px;
+            text-align: left;
+            color: #8391A1;
+        }
+        .member-text {
+            margin-left: 5px;
+            color: #8391A1;
+        }
+
+        .member-text a {
+            color: #8391A1;
+        }
+        #footer-content {
+            display: none;
+        }
+
+        .member-block {
+            display: flex;
+            align-items: center;
+        }
+
+        .btn-text {
+            margin-left: 5px;
+        }
+
+        .organization-btn-container {
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .organization-btn-container-inner {
+            display: flex;
+            justify-content: right;
+        }
+
+        #content-left {
+            margin-top: 25px;
+        }
+    </style>
+{% endblock %}
+
+{% block content_js_media %}
+    <script type="text/javascript">
+        $(function () {
+            $('.leave-organization').click(function () {
+                return confirm('{{ _('Are you sure you want to leave this organization?') }}\n' +
+                    {% if organization.is_open %}
+                        '{{ _('You will have to rejoin to show up on the organization leaderboard.') }}'
+                    {% else %}
+                        '{{ _('You will have to request membership in order to join again.') }}'
+                    {% endif %}
+                );
+            });
+        });
+    </script>
+{% endblock %}
+
+
+
+{% block description %}
+    {% cache 3600 'organization_html' organization.id MATH_ENGINE %}
+        {{ organization.about|markdown('organization-about', MATH_ENGINE)|reference|str|safe }}
+    {% endcache %}
+
+    {% if classes %}
+        <hr>
+        <table class="table striped class-list">
+            <thead><tr><th>{{ _('Class') }}</th><th></th></tr></thead>
+            <tbody>
+                {% for class in classes %}
+                    <tr>
+                        <td>
+                            <a href="{{ class.get_absolute_url() }}">{{ class.name }}</a>
+                            <div class="class-description">{{ class.description }}</div>
+                        </td>
+                        <td>{% if class.joined %}
+                            {{ _('Joined') }}
+                        {% else -%}
+                            <a class="button" href="{{ class.get_join_url() }}">{{ _('Request to join') }}</a>
+                        {%- endif %}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+{% endblock %}

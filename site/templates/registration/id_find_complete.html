@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+
+{% block media %}
+<style>
+    .title-div{
+        margin-left: auto;
+        margin-right: auto;
+        width: 1040px;
+        margin-top: 24px;
+    }
+    #page-container {
+        background: #FFF !important;
+    }
+    footer {
+        background: #FFF !important;
+    }
+    .message-container {
+        display: flex;
+        flex: column;
+        justify-content: center;
+        align-items: center;
+        height: 200px;
+        background-color: #f5f5f5;
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+        margin: 20px;
+    }
+    .message-text {
+        font-size: 18px;
+        color: #333;
+        text-align: center;
+        padding-top: 20px;
+    }
+
+    .login-button {
+        display: inline-block;
+        padding-top: 20px;
+        padding: 10px 20px;
+        font-size: 16px;
+        text-align: center;
+        text-decoration: none;
+        background-color: #5C95D9;
+        color: #fff;
+        border-radius: 10px;
+        transition: background-color 0.3s;
+    }
+    .login-button:hover {
+        background-color: #fff;
+        color: #5C95D9;
+    }
+
+    .button-container {
+        display: flex;
+        justify-content: center;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+    <div class="message-continer">
+        <p class="message-text">{{ _('등록된 이메일로 사용자 로그인 정보가 전송되었습니다.') }}</p>
+        
+        <div class="button-container">
+            <a href="{{ url('auth_login') }}" class="login-button">{{ _('로그인하기') }}</a>
+        </div>
+        
+    </div>
+    
+{% endblock %}

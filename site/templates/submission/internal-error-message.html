@@ -1,0 +1,31 @@
+<div class="status-card">
+    <div class="card-header">
+        <h3 class="card-title" style="color: #DD4124;">{{ _('내부 오류') }}</h3>
+    </div>
+    <div class="card-content">
+        <div style="background: rgba(221, 65, 36, 0.06); border: 1px solid rgba(221, 65, 36, 0.23); color: #DD4124; padding: 16px; border-radius: 6px;">
+            {% if request.user == submission.user.user %}
+                {{ _('채점하는 동안 내부 오류가 발생하여 %(site_name)s 관리자에게 알렸습니다.', site_name=SITE_NAME) }}
+                <br><br>
+                {{ _('잠시 후 다시 제출하세요.') }}
+            {% else %}
+                {{ _('채점하는 동안 내부 오류가 발생했습니다.') }}
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if submission.error and request.user.is_authenticated %}
+    {% if request.profile.id in submission.problem.editor_ids or perms.judge.edit_all_problem %}
+        <div class="status-card">
+            <div class="card-header">
+                <h3 class="card-title">{{ _('오류 정보') }}</h3>
+            </div>
+            <div class="card-content">
+                <div style="border-radius: 6px;">
+                    <pre><code>{{ submission.error|highlight('pytb') }}</code></pre>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endif %}

@@ -1,0 +1,28 @@
+\{% extends "base.html" %}
+
+{% block media %}
+<style>
+    #page-container {
+        background: #FFF !important;
+    }
+    footer {
+        background: #FFF !important;
+    }
+    #content .title {
+        text-align: center;
+        padding-top: 35px;
+    }
+    p {
+        font-size: 18px;
+        color: var(--font-basic-black);
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+    <p>
+        이메일 변경이 완료되었습니다.
+        계정 활성화를 위해 메일을 확인해주세요.
+    </p>
+{% endblock %}

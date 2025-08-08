@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block media %}
+<style>
+    #page-container {
+        background: #FFF !important;
+    }
+    footer {
+        background: #FFF !important;
+    }
+    #content .title {
+        text-align: center;
+        padding-top: 35px;
+    }
+    p {
+        font-size: 18px;
+        color: var(--font-basic-black);
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+    <p>{{ _('%(key)s is an invalid activation key.', key=activation_key) }}</p>
+{% endblock %}

@@ -1,0 +1,256 @@
+<!-- 유저페이지 - 문제 -->
+
+{% extends "user/user-base.html" %}
+{% set active_tab = 'problems' %} 
+
+{% block user_js_media %}
+    <script type="text/javascript">
+        window.show_pp_base = 1;
+        window.currently_requesting_pp = false;
+        window.load_more_pp = function () {
+            if (window.currently_requesting_pp) return;
+            window.currently_requesting_pp = true;
+
+            var ajaxUrl = '{{ url("user_pp_ajax", user=user.user.username) }}';
+            $.get(ajaxUrl, {
+                start: window.show_pp_base * 10,
+                end: (window.show_pp_base + 1) * 10
+            }).done(function (data) {
+                var results = $(data['results']);
+                $('.pp-table').append(results);
+                if (typeof register_time === 'function') {
+                    register_time(results.find('.time-with-rel'));
+                }
+                window.show_pp_base++;
+                if (!data['has_more']) {
+                    $("#pp-load-link-wrapper").hide();
+                }
+                window.currently_requesting_pp = false;
+            });
+        };
+    </script>
+{% endblock %}
+
+{% block title_ruler %}{% endblock %}
+
+{% block title_row %}
+    {% set tab = 'problems' %}
+    {% include "user/user-tabs.html" %}
+{% endblock %}
+
+{% block media %}
+    <style>
+        .pp-breakdown-header {
+            font-size: 20px;
+            font-weight: 500;
+            color: var(--font-basic-black);
+            margin-bottom: 20px;
+        }
+        .content-submission {
+            width: 100%;
+            margin: 0 auto;
+            padding-top: 20px;
+            padding-bottom: 20px;
+        }
+        .content-submission #total-point {
+            text-align: right;
+            font-size: 13px;
+            padding: 15px 0;
+            margin-right: 10px;
+        }
+        .content-submission #total-point b {
+            font-size: 22px;
+            font-weight: 500;
+            color: #78C0B9;
+            margin-left: 5px;
+        }
+        .content-submission .pp-table .sub-table-head {
+            display: flex;
+            flex-direction: row;
+            background: rgba(0, 0, 0, 0.03);
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--font-basic-black);
+            border: none;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            height: 50px;
+            align-items: center;
+        }
+        .content-submission .pp-table .sub-table-head .zero-head {
+            text-align: center;
+            width: 10%;
+        }
+        .content-submission .pp-table .sub-table-head .first-head {
+            padding-left: 25px;
+            text-align: left;
+            width: 66%;
+        }
+        .content-submission .pp-table .sub-table-head .second-head {
+            text-align: center;
+            width: 15.75%;
+        }
+        .content-submission .pp-table .sub-table-head .third-head {
+            text-align: center;
+            width: 8.25%;
+            margin-left: 5px;
+        }
+        .user-problem-group {            
+            display: none;
+            
+        }
+        .no-submission {
+            width: 100%;
+            text-align: center;
+            background-color: white;
+            font-size: 14px;
+            padding-top: 5px;
+            padding-bottom: 5px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+        #submissions-table {
+            box-shadow: var(--standard-box-shadow);
+            border-radius: 10px;
+            background: white;
+        }
+        .submission-row {
+            background-color: white;
+            border: none;
+        }
+        .submission-row:nth-child(even) {
+            background: rgba(0, 0, 0, 0.02);
+        }
+        .submission-row:hover {
+            background: #FFF;
+        }
+        .submission-row:nth-child(even):hover {
+            background: rgba(0, 0, 0, 0.02);
+        }
+        .AC {
+            background-color: #94D95C;
+        }
+        .submission-row .sub-result {
+            border-right: none;
+        }
+        .submission-row > div {
+            border-bottom: none;
+        }
+        .submission-row:last-child .sub-result .sub-result-color {
+            border-bottom-left-radius: 10px;
+        }
+        .submission-row:last-child .sub-usage {
+            border-bottom-right-radius: 10px;
+        }
+    </style>
+{% endblock %}
+
+{% block user_content %}
+    <div class="content-submission">
+        {#
+        <!-- <h3 class="pp-breakdown-header">{{ _('Points breakdown') }}</h3> -->
+         #}
+        <h3 class="pp-breakdown-header"> 해결한 문제 목록</h3>
+        {% if pp_breakdown %}
+        <div id="submissions-table" class="pp-table table">
+            <div class="sub-table-head">
+                <div class="zero-head">결과</div>
+                <div class="first-head">문제명</div>
+                <div class="second-head">가중치 및 포인트</div>
+                <div class="third-head">점수</div>
+            </div>
+            {% include "user/pp-table-body.html" %}
+        </div>
+        {% else %}
+        <div>
+            <div class="no-submission">
+                해결한 문제가 없습니다.
+            </div>
+        </div>
+        {% endif %}
+        <div id="total-point">총점<b>{{ "%.0f"|format(user.performance_points) }}pp</b></div>
+        {% if pp_has_more %}
+            <div id="pp-load-link-wrapper">
+                <a id="pp-load-more-link" href="javascript:load_more_pp()">{{ _('Load more...') }}</a>
+            </div>
+        {% endif %}
+
+
+    {% if authored %}
+        <div class="user-problem-group">
+            <h3 class="unselectable toggle closed">
+                <span class="fa fa-chevron-right fa-fw"></span>{{ _('Authored problems') }} ({{ authored|length }})
+            </h3>
+            <table style="display: none" class="table striped toggled">
+                <thead>
+                <tr>
+                    <th>{{ _('Problem') }}</th>
+                    <th>{{ _('Category') }}</th>
+                    <th>{{ _('Points') }}</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for problem in authored %}
+                    <tr>
+                        <td>
+                            <a href="{{ url('problem_detail', problem.code) }}">{{ problem.name }}</a>
+                        </td>
+                        <td>{{ problem.group.full_name }}</td>
+                        {# <!-- <td><a href="{{ url('ranked_submissions', problem.code) }}">
+                            {{ problem.points|floatformat }}{% if problem.partial %}p{% endif %}
+                        </a></td> --> #}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    <!-- 풀었던 문제 숨기기 버튼 - Litmus에는 필요 없어서 주석처리 함 -->
+    {# <!-- {% if request.user.is_authenticated and request.user != user.user %}
+        <div class="hide-solved-problems"><span>
+            <form name="form" action="" method="get">
+                <input id="hide_solved" style="vertical-align:middle" onclick="form.submit()" type="checkbox"
+                       name="hide_solved"{% if hide_solved %} checked{% endif %} value="1">
+                <label style="vertical-align:middle" for="hide_solved">{{ _("Hide problems I've solved") }}</label>
+            </form>
+        </span></div>
+    {% endif %} --> #}
+
+    {#
+    <!-- {% for group in best_submissions %}
+        <div class="user-problem-group">
+            <h3 class="unselectable toggle closed"><span class="fa fa-chevron-right fa-fw"></span>
+                {%- with points_str=group.points|floatformat(-3) -%}
+                    {{ _('%(group)s (%(val)s points)', group=group.name, val=points_str) }}
+                {%- endwith -%}
+            </h3>
+            <table style="display: none" class="table striped toggled">
+                <thead>
+                <tr>
+                    <th>{{ _('Problem') }}</th>
+                    <th>{{ _('Score') }}</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for entry in group.problems %}
+                    <tr>
+                        <td>
+                            <a href="{{ url('problem_detail', entry.code) }}">{{ entry.name }}</a>
+                        </td>
+                        <td>
+                            <a href="{{ url('user_submissions', entry.code, user.user.username) }}">
+                                {%- with points_str=entry.points|floatformat(-3), total_str=entry.total|floatformat(-3) -%}
+                                    {{ _('%(points)s / %(total)s', points=points_str, total=total_str) }}
+                                {%- endwith -%}
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endfor %} -->
+    #}
+</div>
+{% endblock %}

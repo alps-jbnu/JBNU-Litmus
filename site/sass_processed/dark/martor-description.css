@@ -1,0 +1,217 @@
+form .martor-preview {
+  line-height: 1.5em;
+  font-size: 1em;
+  font-family: "Segoe UI", "Lucida Grande", Arial, sans-serif;
+}
+
+form .martor-preview p {
+  margin: 1em 0 !important;
+  padding: 0 !important;
+}
+
+form .martor-preview img {
+  max-width: 100%;
+  height: auto;
+}
+
+form .martor-preview img.tex-full, form .martor-preview img.tex-image, form .martor-preview img.inline-math, form .martor-preview img.display-math {
+  -webkit-filter: invert(1) hue-rotate(180deg);
+  filter: invert(1) hue-rotate(180deg);
+}
+
+form .martor-preview h1, form .martor-preview h2, form .martor-preview h3, form .martor-preview h4, form .martor-preview h5, form .martor-preview h6 {
+  font-weight: normal;
+  color: #eee;
+  margin-bottom: 0.75em;
+  padding: 0;
+  background: 0;
+}
+
+form .martor-preview h3, form .martor-preview h4, form .martor-preview h5, form .martor-preview h6 {
+  font-weight: bold;
+}
+
+form .martor-preview h1 {
+  font-size: 2.5em;
+}
+
+form .martor-preview h2 {
+  font-size: 2em;
+}
+
+form .martor-preview h3 {
+  font-size: 1.6em;
+  margin: 0;
+  padding: 0;
+}
+
+form .martor-preview h4 {
+  font-size: 1.4em;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  line-height: 1.225;
+  padding-bottom: 0.3em;
+  padding-top: 0.5em;
+}
+
+form .martor-preview h5 {
+  font-size: 1.15em;
+  margin-top: 0;
+}
+
+form .martor-preview h6 {
+  font-size: 0.9em;
+}
+
+form .martor-preview blockquote {
+  color: #808080;
+  margin: 0;
+  padding-left: 1.5em;
+  border-left: 0.5em #111 solid;
+}
+
+form .martor-preview hr {
+  display: block;
+  height: 0;
+  border: 0;
+  font-style: italic;
+  border-bottom: 1px solid #3b3b3b;
+  margin: 25px 0 20px 0;
+  padding: 0;
+}
+
+form .martor-preview pre, form .martor-preview code, form .martor-preview kbd, form .martor-preview samp, form .martor-preview span.code {
+  color: #fff;
+  page-break-inside: avoid;
+  font-family: Consolas, "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier, monospace;
+  font-size: 0.98em;
+}
+
+form .martor-preview code, form .martor-preview span.code {
+  font-family: Consolas, "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier, monospace !important;
+  margin: 0 2px;
+  padding: 0 5px;
+  border: 1px solid #3b3b3b;
+  background-color: #080808;
+  border-radius: 4px;
+  font-size: 0.95em;
+  color: #ccc;
+}
+
+form .martor-preview pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin: 1.5em 0 1.5em 0;
+  padding: 1em;
+  border: 1px solid #3b3b3b;
+  background-color: #080808;
+  color: #fff;
+  border-radius: 4px;
+}
+
+form .martor-preview pre code, form .martor-preview pre div.code {
+  border: 0;
+  line-height: 1em;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  font-size: 1em;
+  color: #fff;
+}
+
+form .martor-preview b, form .martor-preview strong {
+  font-weight: bold;
+}
+
+form .martor-preview dfn {
+  font-style: italic;
+}
+
+form .martor-preview ins {
+  background: #ff9;
+  color: #000;
+  text-decoration: none;
+}
+
+form .martor-preview mark {
+  background: #ff0;
+  color: #000;
+  font-style: italic;
+  font-weight: bold;
+}
+
+form .martor-preview sub {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+
+form .martor-preview sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+  top: -0.5em;
+}
+
+form .martor-preview sub {
+  bottom: -0.25em;
+}
+
+form .martor-preview ul, form .martor-preview ol {
+  padding: 0 0 0 2em;
+}
+
+form .martor-preview li p:last-child {
+  margin: 0;
+}
+
+form .martor-preview dd {
+  margin: 0 0 0 2em;
+}
+
+form .martor-preview img {
+  border: 0;
+  -ms-interpolation-mode: bicubic;
+  vertical-align: middle;
+}
+
+form .martor-preview td {
+  vertical-align: top;
+}
+
+form .martor-preview ul li {
+  list-style: unset !important;
+}
+
+form .martor-preview ul, form .martor-preview ol {
+  margin-left: 0 !important;
+}
+
+form .martor-preview h5 {
+  text-transform: none !important;
+}
+
+.main-martor-fullscreen {
+  z-index: 99999 !important;
+}
+
+.section-martor div[data-tab=editor-tab-description] {
+  padding: 0;
+}
+
+.section-martor .markdown-selector.markdown-emoji {
+  display: none !important;
+}
+
+.section-martor .tab-martor-menu a.item {
+  font-size: 0.8rem;
+}
+
+.section-martor .martor-field {
+  height: 400px;
+}
+
+
+
+/*# sourceMappingURL=martor-description.css.map */

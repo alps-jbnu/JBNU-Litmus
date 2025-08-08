@@ -1,0 +1,267 @@
+{% extends "submission/info-base.html" %}
+
+{% block media %}
+    <style>
+        .title-div {
+            padding-top: 24px;
+        }
+        .title-area {
+            margin-bottom: 0;
+        }
+        .submission-info { /* 기존에 오른쪽 위에 뜨던 제출 정보 숨김 */
+            display: none;
+        }
+        .line {
+            position: relative;
+        }
+
+        .highlighter {
+            position: absolute;
+            width: 9999px;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+
+        a:active .line .highlighter {
+            background: rgba(255, 212, 0, 0.48);
+        }
+
+        /* 카드 스타일 */
+        .status-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            overflow: hidden;
+            padding: 20px 30px;
+        }
+        
+        .card-header {
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--font-basic-black);
+            margin: 0;
+            font-family: Pretendard, sans-serif;
+        }
+        
+        .card-content {
+            padding-top: 15px;
+        }
+
+        /* 액션 버튼 스타일 */
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+        .action-btn {
+            padding: 6px 16px;
+            border-radius: 6px;
+            border: none;
+            font-size: 14px;
+            font-weight: 400;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            background: #edf3fb;
+            color: #5285c4;
+        }
+
+        .action-btn:hover {
+            background: #e3eaf6;
+            color: #6291d0;
+            text-decoration: none;
+        }
+
+        /* 오버랩 복사 버튼 */
+        .copy-btn-overlay {
+            position: absolute;
+            top: 35px;
+            right: 2px;
+            border: none;
+            background: none;
+            color: #6c757d;
+            cursor: pointer;
+            font-size: 14px;
+            transition: color 0.3s ease;
+            z-index: 10;
+        }
+
+        .copy-btn-overlay:hover {
+            background: none;
+            color: #17171B;
+        }
+        .source-wrap {
+            background: rgba(28, 59, 96, 0.06);
+        }
+
+    </style>
+{% endblock %}
+
+{% block js_media %}
+<script>
+function copySourceCode() {
+    // 소스코드 영역에서 텍스트 추출 (라인 번호 제외)
+    const sourceCodeElement = document.querySelector('.source-code');
+    let sourceCode = '';
+    
+    if (sourceCodeElement) {
+        // pre 태그 내부의 텍스트만 추출
+        const preElements = sourceCodeElement.querySelectorAll('pre');
+        if (preElements.length > 0) {
+            sourceCode = preElements[0].textContent || preElements[0].innerText;
+        } else {
+            sourceCode = sourceCodeElement.textContent || sourceCodeElement.innerText;
+        }
+    }
+    
+    if (!sourceCode) {
+        alert('소스코드를 찾을 수 없습니다.');
+        return;
+    }
+    
+    // 클립보드에 복사
+    if (navigator.clipboard && window.isSecureContext) {
+        // 최신 브라우저용 Clipboard API
+        navigator.clipboard.writeText(sourceCode).then(function() {
+            showCopySuccess();
+        }).catch(function(err) {
+            console.error('복사 실패:', err);
+            fallbackCopyTextToClipboard(sourceCode);
+        });
+    } else {
+        // 구형 브라우저용 fallback
+        fallbackCopyTextToClipboard(sourceCode);
+    }
+}
+
+function fallbackCopyTextToClipboard(text) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    textArea.style.left = "-999999px";
+    textArea.style.top = "-999999px";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+            showCopySuccess();
+        } else {
+            alert('복사에 실패했습니다.');
+        }
+    } catch (err) {
+        console.error('복사 실패:', err);
+        alert('복사에 실패했습니다.');
+    }
+    
+    document.body.removeChild(textArea);
+}
+
+function showCopySuccess() {
+    const copyBtn = document.querySelector('.copy-btn-overlay');
+    const originalIcon = copyBtn.innerHTML;
+    copyBtn.innerHTML = '<i class="fa fa-check"></i>';
+    copyBtn.style.color = '#4CAF50';
+    
+    // 2초 후 원래 아이콘으로 복원
+    setTimeout(function() {
+        copyBtn.innerHTML = originalIcon;
+        copyBtn.style.color = '#6c757d';
+    }, 2000);
+}
+</script>
+{% endblock %}
+
+{% block body %}
+<br>
+    <!-- 액션 버튼 카드 -->
+    <div class="status-card">
+        <div class="card-header">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 class="card-title">{{ _('소스코드 보기') }}</h3>
+                <div class="action-buttons">
+                    <a href="{{ url('submission_status', submission.id) }}" class="action-btn btn-view-status">
+                        <i class="fa fa-list"></i>
+                        {{ _('상태 보기') }}
+                    </a>
+                    <a href="{{ url('submission_source_raw', submission.id) }}" class="action-btn btn-view-raw">
+                        <i class="fa fa-file-text-o"></i>
+                        {{ _('원본 보기') }}
+                    </a>
+                    {% if perms.judge.rejudge_submission and not submission.is_locked %}
+                    <form action="{{ url('submission_rejudge') }}" method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="id" value="{{ submission.id }}">
+                        <input type="hidden" name="path" value="{{ url('submission_status', submission.id) }}">
+                        <button type="submit" class="action-btn btn-rejudge" onclick="return confirm('{{ _('Are you sure you want to rejudge?') }}')">
+                            <i class="fa fa-refresh"></i>
+                            {{ _('재채점') }}
+                        </button>
+                    </form>
+                    {% endif %}
+                    {% if request.user == submission.user.user or perms.judge.resubmit_other %}
+                    <a href="{{ url('problem_submit', submission.problem.code, submission.id) }}" class="action-btn btn-resubmit">
+                        <i class="fa fa-upload"></i>
+                        {{ _('다시 제출하기') }}
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="card-content" style="position: relative;">
+            <!-- 제출 정보 -->
+            <div style="color: #6c757d; text-align: right;">
+                <span class="submission-date" style="display: inline-flex; gap: 10px; align-items: center;">
+                    {% with date=submission.date|date(_('N j, Y, g:i a')), can_edit=submission.problem.is_editable_by(request.user) %}
+                        {% if can_edit and submission.judged_on %}
+                            {{ _('%(date)s on %(judge)s', date=date, judge=submission.judged_on.name) }}
+                        {% else %}
+                            {{ date }}
+                        {% endif %}
+                        <span>{{ submission.language }}</span>
+                        {% if can_edit %}
+                            <a href="{{ url('admin:judge_submission_change', submission.id) }}">[{{ _('Admin') }}]</a>
+                        {% endif %}
+                    {% endwith %}
+                    <span style="color: #495057;">{{ submission.user.user.username }}</span>
+                </span>
+            </div>
+            
+            <div class="source-wrap">
+                <table>
+                    <tr>
+                        <td class="source-ln">
+                            <div>
+                                {% for line in raw_source.split('\n') %}
+                                    <a href="#line-{{ loop.index }}" name="line-{{ loop.index }}">
+                                        <pre class="line">{{ loop.index }}</pre>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        </td>
+                        <td class="source-code">{{ highlighted_source }}</td>
+                    </tr>
+                </table>
+                <textarea id="hidden-source-raw" style="position:absolute; left:-9999px; top:-9999px;">{{ raw_source }}</textarea>
+                <button type="button" class="copy-btn-overlay" onclick="copySourceCode()" title="{{ _('소스코드 복사') }}">
+                    <i class="fa fa-copy"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock %}

@@ -1,0 +1,111 @@
+{% block media %}
+    <style>
+        .submission-row {
+            background-color: white;
+            border: none;
+        }
+        .submission-row:nth-child(even) {
+            background: rgba(0, 0, 0, 0.02);
+        }
+        .AC {
+            background-color: #94D95C;
+        }
+        .submission-row .sub-result {
+            border-right: none;
+        }
+        .submission-row > div {
+            border-bottom: none;
+        }
+
+        /* 첫번째 블럭 - sub-result */
+
+        .submission-row .sub-result {
+            display: flex;
+            flex-direction: row;
+            padding: 0;
+            width: 10%;
+        }
+        .submission-row .sub-result .sub-result-color {
+            width: 10%;
+        }
+        .submission-row .sub-result .sub-result-info {
+            background-color: #f5f5f5;
+            width: 90%;
+            margin: 0 auto; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 5px;
+        }
+        .submission-row .sub-result .sub-result-info .score {
+            font-size: 15px;
+            font-weight: 400;
+            color: #94D95C;
+        }
+        .submission-row .sub-result .sub-result-info .state {
+            font-size: 12px;
+            font-weight: 400;
+            color: var(--font-grey);
+        }
+
+        /* 두번째 블럭 - sub-main */
+
+        .submission-row .sub-main {
+            width: 65%;
+        }
+        .submission-row .sub-main .sub-info {
+        }
+        .submission-row .sub-main .sub-info .name {
+            font-weight: 400;
+            font-size: 18px;
+        }
+        .submission-row .sub-main .sub-info .name a {
+            color: var(--font-basic-black);
+        }
+        .submission-row .sub-main .sub-info .name a:hover {
+            text-decoration: underline;
+        }
+        .submission-row .sub-main .sub-info .time {
+            font-size: 12px;
+            color: var(--font-grey);
+        }
+
+        /* 세번째 블럭 - sub-usage */
+
+        .submission-row .sub-usage {
+            width: 25% !important;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+        }
+        .submission-row .sub-usage .pp-weighted {
+            width: 75%;
+            margin: auto;
+            text-align: center;
+            font-weight: 200w;
+            font-size: 13px;
+        }
+        .submission-row .sub-usage .pp-weighted a {
+        }
+        .submission-row .sub-usage .pp {
+            width: 25%;
+            margin: auto;
+            text-align: center;
+            font-size: 13px;
+            color: #78C0B9;
+        }
+        .submission-row .sub-usage .pp a {
+            color: #78C0B9;
+        }
+        
+    </style>
+{% endblock %}
+
+{% for breakdown in pp_breakdown %}
+    <!-- <div class="submission-row">
+        <div class="sub-result">문제</div>
+        <div class="sub-main">문제</div>
+        <div class="sub-usage">포인트</div>
+    </div> -->
+    <div class="submission-row">{% include "user/pp-row.html" %}</div>
+{% endfor %}

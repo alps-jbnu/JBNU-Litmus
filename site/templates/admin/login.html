@@ -1,0 +1,184 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}{{ block.super }}
+<link rel="stylesheet" type="text/css" href="{% static "admin/css/login.css" %}" />
+<style>
+  #container {
+    overflow: visible !important;
+  }
+  #bottombar {
+    display: none;
+  }
+  #content {
+    width: 100%;
+    background: none !important;
+  }
+  #content-main {
+    width: 100%;
+    background: none;
+    margin: 0 auto;
+  }
+  #content-main #login-form {
+    margin-top: 33px !important;
+    overflow: visible;
+    text-align: center;
+  }
+  #content-main h2.title-login {
+    margin: 0 auto;
+    margin-bottom: 20px;
+    font-size: 24px;
+    font-weight: normal;
+  }
+  #content-main .form-row label.required {
+    display: none;
+  }
+  #content-main #login-form .module {
+    display: flex;
+    flex-direction: column;
+    padding: 5px 10px 10px;
+    gap: 10px;
+    background: none;
+    border: none;
+    overflow: visible !important;
+  }
+  #content-main #login-form .module .form-row  {
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 auto;
+    border: none;
+    background: none;
+    overflow: visible !important;
+  }
+  #content-main #login-form .module .form-row:focus {
+  }
+  #content-main #login-form .module .form-row input {
+    width: 100%;
+    height: 48px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset;
+    margin: 0 auto;
+    font-size: 16px;
+    border: 1px solid var(--border-secondary);
+    border-radius: 8px;
+  }
+  #content-main #login-form .module .form-row input:focus {
+    border: 1px solid rebeccapurple;
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6) !important;
+  }
+  #content-main #login-form .module .form-row input:hover {
+    border: none;
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6) !important;
+  }
+  #content-main #login-form .module .form-row input:active {
+    border: none;
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6) !important;
+  }
+  #content-main #login-form .module button[type="submit"] {
+    height: 40px;
+    color: #FFF;
+    font-size: 14px;
+    font-weight: bold;
+    background-color: #5C95D9;
+    border-radius: 8px;
+    border: 1px solid #5C95D9;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+  }
+  #content-main #login-form .module button[type="submit"]:hover {
+    background-color: #9FCDF2;
+  }
+  #content-main #login-form .module .button {
+    height: 40px;
+    color: #5C95D9;
+    font-size: 14px;
+    font-weight: bold;
+    background-color: #FFF;
+    border-radius: 8px;
+    border: 1px solid #5C95D9;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+    line-height: 2.5;
+  }
+  #content-main #login-form button:hover,
+  #content-main #login-form a.button:hover {
+    background-color: #9FCDF2;
+  }
+  #content-main #login-form .form-links {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-bottom: 10px;
+        color: #8391A1;
+        font-size: 14px;
+    }
+
+    #content-main #login-form .form-links a {
+        text-decoration: none;
+        color: #8391A1;
+    }
+
+    #content-main #login-form .form-links a:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} login{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block content_title %}{% endblock %}
+
+{% block breadcrumbs %}{% endblock %}
+
+{% block content %}
+{% if form.errors and not form.non_field_errors %}
+<p class="errornote">
+{% if form.errors.items|length == 1 %}{% trans "Please correct the error below." %}{% else %}{% trans "Please correct the errors below." %}{% endif %}
+</p>
+{% endif %}
+
+{% if form.non_field_errors %}
+{% for error in form.non_field_errors %}
+<p class="errornote">
+    {{ error }}
+</p>
+{% endfor %}
+{% endif %}
+
+<div id="content-main">
+<form action="{{ app_path }}" method="post" id="login-form">{% csrf_token %}
+  <h2 class="title-login">로그인</h2>
+  <fieldset class="module">
+    <div class="form-row {% if form.username.errors %}errors{% endif %}">
+      {{ form.username.errors }}
+      <label for="id_username" class="required">{{ form.username.label }}:</label> {{ form.username }}
+    </div>
+    <div class="form-row {% if form.password.errors %}errors{% endif %}">
+      {{ form.password.errors }}
+      <label for="id_password" class="required">{% trans 'Password:' %}</label> {{ form.password }}
+    </div>
+    <input type="hidden" name="next" value="{{ next }}" />
+    <div class="form-links">
+      <a href="{% url 'id_find' %}">{{ _('아이디 찾기') }}</a> | 
+      <a href="{% url 'password_reset' %}">{{ _('비밀번호 초기화') }}</a>
+  </div>
+    <button type="submit" title="{% trans 'Log in' %}"><span class="text">{% trans 'Log in' %}</span></button>
+    <a href="{% url 'registration_register' %}" class="button">{{ _('회원가입') }}</a>
+  </fieldset>
+  <div id="bottombar">
+    <button type="submit" title="{% trans 'Log in' %}"><i class="fa fa-lg fa-sign-in"></i> <span class="text">{% trans 'Log in' %}</span></button>
+  </div>
+</form>
+{% url 'admin_password_reset' as password_reset_url %}
+{% if password_reset_url %}
+<div class="module password-reset-link">
+  <a href="{{ password_reset_url }}">{% trans 'Forgotten your password or username?' %}</a>
+</div>
+{% endif %}
+
+<script type="text/javascript">
+document.getElementById('id_username').focus()
+</script>
+</div>
+{% endblock %}

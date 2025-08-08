@@ -1,0 +1,579 @@
+{% block content_media %}
+<style>
+    .title-div {
+        margin-top: 24px;
+    }
+    .title-area {
+        margin-bottom: 0;
+        margin-top: 0;
+    }
+    .title-div .title {
+        margin-top: 0;
+    }
+    .status-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+        overflow: hidden;
+        padding: 20px 30px;
+    }
+    
+    .card-header {
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .card-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--font-basic-black);
+        margin: 0;
+        font-family: Pretendard, sans-serif;
+    }
+    
+    .card-content {
+        padding-top: 10px;
+    }
+    
+    .summary-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+    
+    .summary-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .summary-label {
+        color: var(--font-basic-black);
+        font-size: 14px;
+    }
+    
+    .summary-value {
+        font-weight: 500;
+        color: var(--font-black);
+    }
+    
+    .summary-value.passed {
+        color: #4CAF50;
+    }
+    
+    .summary-value.failed {
+        color: #F44336;
+    }
+    
+    .summary-value.score {
+        font-size: 14px;
+        font-weight: 600;
+    }
+    
+    .warning-text {
+        background: rgba(28, 59, 96, 0.06);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 16px;
+        color: #856404;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+        line-height: 1.5;
+        white-space: pre-wrap;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+    }
+    
+    .action-btn {
+        padding: 6px 16px;
+        border-radius: 6px;
+        border: none;
+        font-size: 14px;
+        font-weight: 400;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s ease;
+        background: #edf3fb;
+        color: #5285c4;
+    }
+
+    .action-btn:hover {
+        background: #e3eaf6;
+        color: #6291d0;
+        text-decoration: none;
+    }
+    
+    .testcase-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        background: white;
+        border-top-left-radius: 8px;
+        border-top-right-radius: 8px;
+        border: 1px solid var(--border-color);
+    }
+    
+    .testcase-table th {
+        background: #f8f9fa;
+        padding: 6px 16px;
+        text-align: center;
+        font-weight: 600;
+        color: #495057;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 14px;
+    }
+    
+    .testcase-table th:first-child {
+        border-top-left-radius: 8px;
+    }
+    
+    .testcase-table th:last-child {
+        border-top-right-radius: 8px;
+    }
+    
+    .testcase-table td {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 14px;
+        vertical-align: middle;
+        text-align: center !important;
+        padding: 3px 0 !important;
+    }
+
+    #test-cases .case-row td:nth-child(3) span {
+        float: none !important;
+        font-weight: 500;
+        font-size: 13px;
+    }
+
+    #test-cases table td.case-number {
+        text-align: left !important;
+        padding-left: 6px !important;
+    }
+    
+    .testcase-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .testcase-row {
+        position: relative;
+        transition: background-color 0.2s ease;
+    }
+    
+    .testcase-row:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .testcase-row {
+        background-color: white;
+    }
+    
+    .status-ac, .AC {
+        color: #4CAF50;
+        font-weight: 600;
+    }
+    
+    .status-wa, .WA {
+        color: #F44336;
+        font-weight: 600;
+    }
+    
+    .status-tle, .TLE,
+    .status-rte, .RTE,
+    .status-mle, .MLE {
+        color: #FFB300;
+        font-weight: 600;
+    }
+    
+    .status-ole, .OLE,
+    .status-ir, .IR {
+        color: #546E7A;
+        font-weight: 600;
+    }
+    
+    .status-ab, .AB {
+        color: #6c757d;
+        font-weight: 600;
+    }
+    
+    .case-number {
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .execution-time {
+        color: #6c757d;
+        font-family: 'Courier New', monospace;
+    }
+    
+    .memory-usage {
+        color: #6c757d;
+        font-family: 'Courier New', monospace;
+    }
+    
+    .testcase-table td.score-points {
+        font-weight: 400;
+        color: #495057;
+        font-size: 13px;
+    }
+    
+    .processing-message {
+        text-align: center;
+        padding: 40px 20px;
+        color: #6c757d;
+        font-size: 16px;
+    }
+    
+    .spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #5C95D9;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-right: 8px;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+
+{% endblock %}
+
+{% block content_js_media %}
+<script>
+function confirm_rejudge() {
+    return confirm('{{ _('Are you sure you want to rejudge?') }}');
+}
+</script>
+{% endblock %}
+
+<br>
+{% if request.user.is_staff %}
+        {% set prefix_length = None %}
+    {% elif submission.contest_or_none %}
+        {% set prefix_length = submission.contest_or_none.problem.output_prefix_override %}
+    {% else %}
+        {% set prefix_length = None %}
+    {% endif %}
+    {% set is_pretest = submission.is_pretested %}
+
+    {% if submission.status != 'IE' %}
+        {% if submission.status == 'QU' %}
+            <div class="status-card">
+                <div class="card-content">
+                    <div class="processing-message">
+                        <div class="spinner"></div>
+                        {{ _('We are waiting for a suitable judge to process your submission...') }}
+                    </div>
+                </div>
+            </div>
+        {% elif submission.status == 'P' %}
+            <div class="status-card">
+                <div class="card-content">
+                    <div class="processing-message">
+                        <div class="spinner"></div>
+                        {{ _('Your submission is being processed...') }}
+                    </div>
+                </div>
+            </div>
+        {% elif submission.status == 'CE' %}
+            <div class="status-card">
+                <div class="card-header">
+                    <h3 class="card-title">{{ _('Compilation Error') }}</h3>
+                </div>
+                <div class="card-content">
+                    <div class="warning-text">{{ submission.error|ansi2html }}</div>
+                </div>
+            </div>
+        {% else %}
+            <!-- 제출 중단 메시지 -->
+            {% if submission.status == 'AB' %}
+            <div class="status-card">
+                <div class="card-header">
+                    <h3 class="card-title" style="color: #6c757d;">{{ _('제출 중단') }}</h3>
+                </div>
+                <div class="card-content">
+                    <div style="background: rgba(108, 117, 125, 0.06); border: 1px solid rgba(108, 117, 125, 0.23); color: #6c757d; padding: 16px; border-radius: 6px;">
+                        {{ _('제출이 중단되었습니다.') }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- 제출 결과 요약 카드 -->
+            <div class="status-card">
+                <div class="card-header">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3 class="card-title">{{ _('제출 결과 요약') }}</h3>
+                        <div class="action-buttons">
+                            <a href="{{ url('submission_source', submission.id) }}" class="action-btn btn-view-source">
+                                <i class="fa fa-code"></i>
+                                {{ _('소스코드 보기') }}
+                            </a>
+                            {% if perms.judge.rejudge_submission and not submission.is_locked %}
+                            <form action="{{ url('submission_rejudge') }}" method="post" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="id" value="{{ submission.id }}">
+                                <input type="hidden" name="path" value="{{ url('submission_status', submission.id) }}">
+                                <button type="submit" class="action-btn btn-rejudge" onclick="return confirm_rejudge()">
+                                    <i class="fa fa-refresh"></i>
+                                    {{ _('재채점') }}
+                                </button>
+                            </form>
+                            {% endif %}
+                            {% if request.user == submission.user.user or perms.judge.resubmit_other %}
+                            <a href="{{ url('problem_submit', submission.problem.code, submission.id) }}" class="action-btn btn-resubmit">
+                                <i class="fa fa-upload"></i>
+                                {{ _('다시 제출하기') }}
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <span class="summary-label">{{ _('총 자원:') }}</span>
+                            <span class="summary-value">
+                                {% if submission.result == "TLE" %}
+                                    ---
+                                {% else %}
+                                    {{ submission.time|floatformat(3) }}s
+                                    {% if submission.memory %}
+                                        /{{ submission.memory|kbdetailformat }}
+                                    {% endif %}
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">{{ _('총 테스트 케이스:') }}</span>
+                            <span class="summary-value">
+                                {% if submission.case_total %}
+                                    {{ submission.case_total|floatformat(0) }}
+                                {% else %}
+                                    {% set total_cases = 0 %}
+                                    {% for batch in batches %}
+                                        {% set total_cases = total_cases + batch.cases|length %}
+                                    {% endfor %}
+                                    {{ total_cases }}
+                                {% endif %}
+                            </span>
+                            <span style="margin: 0 8px; color: #6c757d;">|</span>
+                            <span class="summary-label">{{ _('통과:') }}</span>
+                            <span class="summary-value passed">
+                                {% if submission.case_points %}
+                                    {{ submission.case_points|floatformat(0) }}
+                                {% else %}
+                                    {% set passed_count = 0 %}
+                                    {% for batch in batches %}
+                                        {% for case in batch.cases %}
+                                            {% if case.status == 'AC' %}
+                                                {% set passed_count = passed_count + 1 %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endfor %}
+                                    {{ passed_count }}
+                                {% endif %}
+                            </span>
+                            <span style="margin: 0 8px; color: #6c757d;">|</span>
+                            <span class="summary-label">{{ _('실패:') }}</span>
+                            <span class="summary-value failed">
+                                {% if submission.case_total is not none and submission.case_points is not none %}
+                                    {{ (submission.case_total - submission.case_points)|floatformat(0) }}
+                                {% else %}
+                                    {% set failed_count = 0 %}
+                                    {% for batch in batches %}
+                                        {% for case in batch.cases %}
+                                            {% if case.status != 'AC' %}
+                                                {% set failed_count = failed_count + 1 %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endfor %}
+                                    {{ failed_count }}
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">{{ _('최종 점수:') }}</span>
+                            <span class="summary-value score">
+                                {{ submission.case_points|floatformat(0) }}/{{ submission.case_total|floatformat(0) }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!-- 테스트 케이스 상태 표시 -->
+                    {% if statuses or not submission.is_graded %}
+                        <div style="text-align: left;">
+                            {% for case in statuses %}
+                                {% if case.status == "AC" %}
+                                    <span class="fa fa-check case-AC" style="color: #4CAF50; font-size: 18px; margin: 0 2px;"></span>
+                                {% elif case.status == "SC" %}
+                                    <span class="case-SC" style="color: #6c757d; font-size: 18px; margin: 0 2px;">&ndash;</span>
+                                {% else %}
+                                    <a href="#{{ case.id }}">
+                                        <span class="fa fa-times case-{{ case.status }} case-bad" style="color: #F44336; font-size: 18px; margin: 0 2px;"></span>
+                                    </a>
+                                {% endif %}
+                                {% if case.num_combined > 1 %}
+                                    <sup class="case-{{ case.status }}" style="color: #6c757d;">&times;{{ case.num_combined }}</sup>
+                                {% endif %}
+                            {% endfor %}
+                            {% if not submission.is_graded %}
+                                <span class="fa fa-spinner fa-pulse" style="color: #5C95D9; font-size: 18px; margin-left: 8px;"></span>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- 컴파일 경고 카드 -->
+            {% if submission.error %}
+            <div class="status-card">
+                <div class="card-header">
+                    <h3 class="card-title">{{ _('컴파일 경고') }}</h3>
+                </div>
+                <div class="card-content">
+                    <div class="warning-text">{{ submission.error|ansi2html }}</div>
+                </div>
+            </div>
+            {% endif %}
+
+                                    <!-- 실행 결과 카드 -->
+                        <div class="status-card">
+                            <div class="card-header">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <h3 class="card-title">
+                                        {% if is_pretest %}
+                                            {{ _('Pretest Execution Results') }}
+                                        {% else %}
+                                            {{ _('실행 결과') }}
+                                        {% endif %}
+                                    </h3>
+                                    <div class="action-buttons">
+                                    </div>
+                                </div>
+                            </div>
+                <div class="card-content">
+                    {% if statuses or not submission.is_graded %}
+                        {% if not submission.is_graded %}
+                            <div class="processing-message">
+                                <div class="spinner"></div>
+                                {{ _('채점 중...') }}
+                            </div>
+                        {% else %}
+                            <table class="testcase-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 6px; padding: 0;"></th>
+                                        <th style="text-align: left; padding-left: 8px;">{{ _('테스트 케이스') }}</th>
+                                        <th>{{ _('결과') }}</th>
+                                        <th>{{ _('실행시간') }}</th>
+                                        <th>{{ _('메모리') }}</th>
+                                        <th>{{ _('점수') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% set test_case_id = counter() %}
+                                    {% for batch in batches %}
+                                        {% if batch.id %}
+                                            <tr>
+                                                <td colspan="6" style="background: #f8f9fa; font-weight: 600; color: #17171B; padding: 12px 16px;">
+                                                    {{ _('Batch #%(id)d', id=test_case_id()) }}
+                                                    ({{ _('%(points)s/%(total)s points', points=batch.points|floatformat(0), total=batch.total|floatformat(0)) }})
+                                                </td>
+                                            </tr>
+                                        {% endif %}
+                                        {% for case in batch.cases %}
+                                        {% set print_case_output = case.status != 'AC' and case.output and (prefix_length is none or prefix_length > 0) %}
+                                        <tr id="{{ case.id }}" class="testcase-row case-row toggle closed {{ case.result_class }}">
+                                            <td style="width: 8px; padding: 0; background-color: 
+                                                {% if case.status == 'AC' %}#4CAF50
+                                                {% elif case.status == 'WA' %}#F44336
+                                                {% elif case.status == 'TLE' %}#FFB300
+                                                {% elif case.status == 'RTE' %}#FFB300
+                                                {% elif case.status == 'MLE' %}#FFB300
+                                                {% elif case.status == 'AB' %}#6c757d
+                                                {% else %}#546E7A{% endif %};"></td>
+                                            <td class="case-number">
+                                                {%- if batch.id -%}
+                                                    #{{ loop.index }}
+                                                {%- elif is_pretest -%}
+                                                    {{ _('Pretest #%(id)d', id=test_case_id()) }}
+                                                {%- else -%}
+                                                    #{{ test_case_id() }}
+                                                {%- endif -%}
+                                            </td>
+                                            <td>
+                                                <span title="{{ case.long_status }}" class="status-{{ case.result_class }}">
+                                                    {%- if case.status == 'SC' %}&mdash;{% else %}{{ case.status }}{% endif -%}
+                                                </span>
+                                                {%- if case.feedback %}&nbsp;({{ case.feedback }}){% endif -%}
+                                            </td>
+                                            <td class="execution-time">
+                                                {%- if case.status != 'SC' -%}
+                                                    {%- if case.status == 'TLE' -%}
+                                                        &gt;{{ time_limit|floatformat(3) }}s
+                                                    {%- else -%}
+                                                        {{ case.time|floatformat(3) }}s
+                                                    {%- endif -%}
+                                                {%- endif -%}
+                                            </td>
+                                            <td class="memory-usage">
+                                                {% if case.status != 'SC' and case.memory %}{{ case.memory|kbdetailformat }}{% endif %}
+                                            </td>
+                                            {% if not batch.id %}
+                                                <td class="score-points">
+                                                    {{ case.points|floatformat(0) }}/{{ case.total|floatformat(0) }}
+                                                </td>
+                                            {% endif %}
+                                        </tr>
+
+                                        {% if print_case_output or case.extended_feedback %}
+                                            <tr id="{{ case.id }}-output" style="display:none" class="case-feedback toggled">
+                                                {% if print_case_output %}
+                                                    <td colspan="5" class="case-output">
+                                                        <div class="case-info">
+                                                            <strong>{{ _('Your output (clipped)') }}</strong>
+                                                            {% if prefix_length is none %}
+                                                                <pre class="case-output">{{ case.output|linebreaksbr }}</pre>
+                                                            {% else %}
+                                                                <pre class="case-output">{{ case.output[:prefix_length]|linebreaksbr }}</pre>
+                                                            {% endif %}
+                                                        </div>
+                                                    </td>
+                                                {% endif %}
+                                                {% if case.extended_feedback %}
+                                                    <td colspan="5" class="case-ext-feedback">
+                                                        <div class="case-info">
+                                                            <strong>{{ _('Judge feedback') }}</strong>
+                                                            <pre class="case-output">{{ case.extended_feedback|linebreaksbr }}</pre>
+                                                        </div>
+                                                    </td>
+                                                {% endif %}
+                                            </tr>
+                                        {% endif %}
+                                        {% endfor %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    {% else %}
+        {% include "submission/internal-error-message.html" %}
+    {% endif %}

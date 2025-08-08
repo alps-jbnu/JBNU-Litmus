@@ -1,0 +1,26 @@
+<section id="message-{{ message.id }}" class="ticket-message">
+    <div class="info">
+        <a href="{{ url('user_page', message.user.user.username) }}" class="user">
+            <img src="{{ gravatar(message.user, 135) }}" class="gravatar">
+        </a>
+    </div>
+    <div class="detail">
+        <div class="header">
+            {{ link_user(message.user) }}&nbsp;
+            <span class="time">
+                {% with abs=_('messaged on {time}'), rel=_('messaged {time}') %}
+                    {{ relative_time(message.time, abs=abs, rel=rel) }}
+                {% endwith %}
+            </span>
+            <span class="operation">
+                {% if perms.judge.change_ticket and perms.judge.change_ticketmessage %}
+                    <a href="{{ url('admin:judge_ticket_change', ticket.id) }}"
+                       title="{{ _('Admin') }}"><i class="fa fa-cog fa-fw"></i></a>
+                {% endif %}
+            </span>
+        </div>
+        <div class="content content-description">
+            {{ message.body|markdown('ticket', MATH_ENGINE)|reference|str|safe }}
+        </div>
+    </div>
+</section>

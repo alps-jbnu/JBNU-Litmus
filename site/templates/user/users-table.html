@@ -1,0 +1,80 @@
+{% extends "user/base-users-table.html" %}
+
+{% block media %}
+    <style>
+        .problems {
+            width:8%;
+        }
+        .department {
+            width: 10%;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    {% if page_obj %}
+        <div class="control-bar">
+            <div class="top-pagination-bar">
+                <form id="search-form" name="form" action="{{ url('user_ranking_redirect') }}" method="get">
+                    <input id="search-handle" type="text" name="search" placeholder="사용자 검색">
+                </form>
+            </div>
+        </div>
+    {% endif %}
+
+    <div id="common-content" style="flex-direction: column;">
+        {% block users_table %}{% endblock %}
+    </div>
+{% endblock %}
+
+
+<!-- users 테이블에서 '순위' 칼럼 -->
+{% block after_rank_head %}
+    <th class="header rate">
+        {% if sort_links %}<a href="{{ sort_links.rating }}">{% endif %}
+        <span class="rate-group">
+            <svg class="rate-box rate-primary0" viewBox="0 0 16 16">
+                <circle cx="8" cy="8" r="7"></circle>
+                <path clip-path="url(#rating-clip)" d="M0 16v-4.8h16 0v16z"></path>
+            </svg>
+        </span>
+        {% if sort_links %}{{ sort_order.rating }}</a>{% endif %}
+    </th>
+{% endblock %}
+
+{% block after_rank %}
+    <td class="rate">{% if user.rating %}{{ rating_number(user) }}{% endif %}</td>
+{% endblock %}
+
+
+{% block department_field %}
+    <th class="header department">{{ _('학과') }}</th>
+{% endblock %}
+
+{% block after_department %}
+    <td class="user-department">{{ user.department }}</td>
+{% endblock %}
+
+{% block information_field %}
+    <th class="header information">{{ _('소개') }}</th>
+{% endblock %}
+
+<!-- point 관련 블럭 비활성화 -->
+{% block point_field %} {% endblock %}
+{% block point %} {% endblock %}
+
+
+<!-- users 테이블에서 '문제' 칼럼 -->
+{# {% block after_point_head %}
+    <th class="header problems">
+        {% if sort_links %}<a href="{{ sort_links.problem_count }}">{% endif %}
+        {{ _('Problems') }}
+        {%- if sort_links %}{{ sort_order.problem_count }}</a>{% endif %}
+    </th>
+{% endblock %} #}
+
+{#
+{% block after_point %}
+    <td class="problem-count">{{ user.problem_count }}</td>
+{% endblock %}
+#}

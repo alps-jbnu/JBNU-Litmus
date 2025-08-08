@@ -1,0 +1,361 @@
+{% extends "tabs-base.html" %}
+
+{% block media %}
+    
+{% endblock %}
+
+{% block admin_tab %}
+    {% if can_edit %}
+    <div class="admin-tab">
+        {{ make_tab('edit', 'fa-edit', url('admin:judge_contest_change', contest.id), _('Edit')) }}
+        {{ make_tab('clone', 'fa-copy', url('contest_clone', contest.key), '복사') }}
+        {{ make_tab('download', 'fa-download', url('contest_detail_excel_download', contest.key), '결과 다운로드') }}
+        {{ make_tab('code_download', 'fa-code', url('contest_detail_code_download', contest.key), '코드 다운로드') }}
+    </div>
+    {% endif %}
+{% endblock %}
+
+{% block tabs %}
+<script>
+    function openModal(contestKey) {
+        const modal = document.getElementById("join-contest-modal");
+        modal.setAttribute('data-contest-key', contestKey);
+        modal.style.display = "flex";
+    }
+
+    // DOM이 로드된 후 이벤트 리스너 추가
+    document.addEventListener("DOMContentLoaded", function() {
+        // 모달 닫기 버튼 이벤트 리스너
+        const buttonCloseModal = document.getElementById("close_join_modal");
+        buttonCloseModal.addEventListener("click", function(e) {
+            const modal = document.getElementById("join-contest-modal");
+            modal.style.display = "none";
+        });
+
+        // 모달 내부의 제출 버튼 이벤트 리스너
+        const submitButton = document.getElementById("join-contest-submit");
+        submitButton.addEventListener("click", function(e) {
+            submitContestCode();
+        });
+    });
+
+    // 코드 검증 함수
+    function submitContestCode() {
+        const contestKey = document.getElementById("join-contest-modal").getAttribute('data-contest-key');
+        const enteredCode = document.getElementById("join-contest-code").value;
+
+        // 입력된 코드 검증을 위한 API 요청
+        fetch(`/api/contest/${contestKey}/verify-code/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken') // CSRF 토큰 설정
+            },
+            body: JSON.stringify({ code: enteredCode })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.valid) {
+                window.location.href = `/contest/${contestKey}/`;
+            } else {
+                alert("잘못된 코드입니다. 다시 시도해 주세요.");
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+
+    // CSRF 토큰 가져오기 함수
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+
+<style>
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        padding-top: 100px;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgb(0,0,0);
+        background-color: rgba(0,0,0,0.4);
+    }
+    .modal-content {
+        background-color: #fefefe;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+    }
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+    .close:hover,
+    .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    form.contest-join-pseudotab {
+        width: auto;
+        background: none;
+        background-color: #5C95D9;
+        margin-left: auto;
+        border-radius: 8px 8px 8px 8px;
+        border: 1px solid #5C95D9;
+        display: flex;
+        align-items: center;
+    }
+    form.contest-join-pseudotab.leave {
+        display: none;
+    }
+    .button{
+        background: none;
+        background-color: #5C95D9;
+        margin-left: auto;
+        border-radius: 8px 8px 8px 8px;
+        border: 1px solid #5C95D9;
+        display: flex;
+        align-items: center;
+    }
+    form.contest-join-pseudotab input[type="submit"]{
+        height: auto;
+        width: auto;
+        font-weight: normal;
+        color: white !important;
+        background: none !important;
+        border: none !important;
+        border-radius: 0;
+    }
+    form.contest-join-pseudotab input {
+        display: inline;
+        border: none;
+        padding: 0;
+        background: none;
+        font-weight: normal;
+    }
+    .button:hover, button:hover, input[type=submit]:hover {
+        background: #265a88;
+    }
+    .button:active, button:active, input[type=submit]:active {
+        border-color: #245580;
+        background: #265a88;
+    }
+    .button, button, input[type=submit] {
+        width: 100px;
+        
+        color: white;
+        text-decoration: none !important;
+        cursor: pointer;
+        vertical-align: middle;
+        white-space: nowrap;
+        font-weight: normal;
+        background: var(--LITMUS-Primary, #5C95D9);
+        border-radius: 10px;
+        padding: 6px 12px;
+        display: block;
+        border: none;
+        text-align: center;
+        font-size: 14px;
+        font-family: Pretendard;
+        line-height: 17.5px;
+        
+    }
+    .modal_overlay {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        z-index: 10000;
+        left: 0;
+        top: 0;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(1px);
+        -webkit-backdrop-filter: blur(1px);
+    }
+    .modal_window {
+        background: white;
+        backdrop-filter: blur(13.5px);
+        -webkit-backdrop-filter: blur(13.5px);
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        width: 380px;
+        height: 210px;
+        position: relative;
+        padding: 10px;
+    }
+    .modal_title{
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        line-height: 1.5em;
+    }
+    .modal_title_side{
+        flex: 0 0 20px;
+        text-align: center;
+        font-size: 30px;
+    }
+    #join-contest-code, #join-contest-submit {
+        width: 266px;
+        height: 40px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+    #contest-code-title {
+        font-size: 16px;
+        font-weight: bold;
+        margin: 15px 0;
+    }
+    .modal_content {
+        width: 266px;
+        margin: 0 auto;
+    }
+    .contest-entry{
+        display: none;
+    }
+    #close_join_modal{
+        cursor:pointer;
+    }
+    #join-contest-modal{
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 10000;
+        text-align: center;
+        white-space: nowrap;
+        cursor: pointer;
+    }
+</style>
+
+<div id="join-contest-modal" class="modal_overlay">
+    <div class="modal_window">
+        <div class="modal_title">
+            <div class="modal_title_side"></div>
+            <div></div>
+            <div class="modal_title_side">
+                <span id="close_join_modal" class="material-icons-outlined">
+                    ×
+                </span>
+            </div>
+        </div>
+        <div class="modal_content">
+            <div id="contest-code-title">대회 참여 코드</div>
+            <input type="text" id="join-contest-code" name="join-contest-code" maxlength="100" placeholder="대회 참여 코드를 입력해 주세요">
+            <button id="join-contest-submit" type="submit">대회 입장하기</button>
+        </div>
+    </div>
+</div>
+    {{ make_tab('detail', 'fa-info-circle', url('contest_view', contest.key), _('Info')) }}
+    
+    {% if request.user.is_authenticated %}
+        {% if contest.start_time <= now or perms.judge.see_private_contest %}
+            {% if is_participation or can_edit or contest.ended %}
+                {{ make_tab('ranking', 'fa-bar-chart', url('contest_ranking', contest.key), _('Rankings')) }}
+                {{ make_tab('submissions', 'fa-pie-chart', url('contest_all_user_submissions', contest.key), _('제출')) }}
+            {% endif %}
+        {% endif %}
+
+        {% if can_edit %}
+            {{ make_tab('stats', 'fa-pie-chart', url('contest_stats', contest.key), _('Statistics')) }}
+            {% if has_moss_api_key %}
+                {{ make_tab('moss', 'fa-gavel', url('contest_moss', contest.key), '표절 검사') }}
+            {% endif %}
+        {% endif %}
+    {% endif %}
+    {% if request.user.is_authenticated %}
+        {% if contest.started or is_editor or is_tester %}
+            {% set in_contest = contest.is_in_contest(request.user) %}
+            {% if not contest.ended %}
+                {# Allow users to leave the contest #}
+                {% if in_contest %}
+                    <form action="{{ url('contest_leave', contest.key) }}" method="post"
+                          class="contest-join-pseudotab unselectable button leave">
+                        {% csrf_token %}
+                        <input type="submit" value="
+                            {%- if request.participation.spectate %}
+                                {{- _('Stop spectating') -}}
+                            {% else %}
+                                {{- _('Leave contest') -}}
+                            {% endif %}">
+                    </form>                
+                {% endif %}
+                {# {% elif contest.is_live_joinable_by(request.user) %}
+                    <form action="{{ url('contest_join', contest.key) }}" method="post"
+                          class="contest-join-pseudotab unselectable button">
+                        {% csrf_token %}
+                        <input type="submit"
+                               class="contest-join{% if not has_joined %} first-join{% endif %}"
+                               value="{{ _('Join contest') }}">
+                    </form>
+                {% elif contest.is_spectatable_by(request.user) %}
+                    <form action="{{ url('contest_join', contest.key) }}" method="post"
+                          class="contest-join-pseudotab unselectable button">
+                        {% csrf_token %}
+                        <input type="submit" value="{{ _('Spectate contest') }}" class="contest-join">
+                    </form>
+                {% else %}
+                    <form action="{{ url('contest_join', contest.key) }}" method="post"
+                          class="contest-join-pseudotab unselectable button disabled">
+                        {% csrf_token %}
+                        <input type="submit" class="disabled"
+                               title="{{ _('You cannot join this contest.') }}"
+                               value="{{ _('Join contest') }}" disabled>
+                    </form>
+                #}
+                {% if not in_contest %}
+                    {% if contest.is_live_joinable_by(request.user) %}
+                    <button onclick="openModal('{{ contest.key }}')" class="contest-join-pseudotab unselectable button">
+                            {{ _('대회 참가') }}
+                        </button>
+                    
+                    {% elif contest.is_spectatable_by(request.user) %}
+                        <!-- {# <form action="{{ url('contest_join', contest.key) }}" method="post"
+                            class="contest-join-pseudotab unselectable button">
+                            {% csrf_token %}
+                            <input type="submit" value="{{ _('Spectate contest') }}" class="contest-join">
+                        </form> #} -->
+                    {% else %}
+                        <!-- {#<form action="{{ url('contest_join', contest.key) }}" method="post"
+                            class="contest-join-pseudotab unselectable button disabled">
+                            {% csrf_token %}
+                            <input type="submit" class="disabled"
+                                title="{{ _('You cannot join this contest.') }}"
+                                value="{{ _('Join contest') }}" disabled>
+                        </form>#} -->
+                    {% endif %}
+                {% endif %}
+            {% endif %}
+        {% endif %}
+    {% elif contest.started %}
+        <form action="{{ url('auth_login') }}" method="get"
+              class="contest-join-pseudotab unselectable button">
+            <input type="hidden" name="next" value="{{ LOGIN_RETURN_PATH|urlencode }}">
+            <input type="submit" value="{{ _('Log in to participate') }}">
+        </form>
+    {% endif %}
+{% endblock %}

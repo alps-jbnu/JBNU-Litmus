@@ -1,0 +1,226 @@
+{% extends "admin/change_form.html" %}
+{% load i18n %}
+
+{% block extrahead %}{{ block.super }}
+    <style>
+        /* The Modal (background) */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            padding-top: 100px;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        /* Modal Content */
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        /* The Close Button */
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Custom CSS for positioning the modal button */
+        .open-modal-btn {
+            margin-left: 15px;  
+        }
+        .hidden {
+            display: none;
+        }
+        td.field-points{
+            text-align: center; 
+            vertical-align: middle; 
+            height: 100%;
+        }
+        td.field-partial{
+            text-align: center; 
+            vertical-align: middle; 
+            height: 100%;
+        }
+        td.field-rejudge_column{
+            text-align: center; 
+            vertical-align: middle; 
+            height: 100%;
+        }
+        td.delete{
+            text-align: center; 
+            vertical-align: middle; 
+            height: 100%;
+        }
+        .original{
+            display:none;
+        }
+        td.delete div {
+            display: inline-block;
+        }
+        td.delete button {
+            width: 100%;
+            background-position: center;
+        }
+        #content .inline-group .tabular 
+        tr.has_original td{
+            padding-top:8px;
+        }
+        /* td.field-rejudge_column{
+            display: none;
+        } */
+        th.hidden {
+            display: none;
+        }
+        /* #content .form-row.field-key {
+            display: none;
+        } */
+    </style>
+
+    {% if original and original.pk %}
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            var popupWindow = null;
+            // 버튼 생성 함수
+            function createButton() {
+                var button = document.createElement('button');
+                button.type = 'button';
+                button.innerText = '문제 관리';
+                button.classList.add('open-modal-btn');
+                button.onclick = function openPopup() {
+                    // 팝업 창 크기 및 위치 설정
+                    var width = 1000;
+                    var height = 700;
+                    var left = (screen.width - width) / 2;
+                    var top = (screen.height - height) / 2;
+                    
+                    var popupOptions = "width=" + width + ",height=" + height + ",left=" + left + ",top=" + top + ",scrollbars=yes,resizable=yes,status=no,menubar=no,toolbar=no";
+                    
+                    const popupWindow = window.open("{% url 'admin:problem_manager' original.pk %}", "ProblemManager", popupOptions);
+
+                    // 주기적으로 팝업 창의 상태를 확인하여 닫혔는지 체크
+                    var popupCheckInterval = setInterval(function() {
+                        if (popupWindow.closed) {
+                            clearInterval(popupCheckInterval);
+                            location.reload(); // 페이지 새로고침
+                        }
+                    }, 500); // 0.5초마다 체크
+                }
+                return button;
+            }
+
+            // <fieldset>과 <div class="inline-group sortable"> 사이에 버튼 삽입
+            var inlineGroup = document.getElementById('contest_problems-group');
+            if (inlineGroup)
+            {
+                var h2 = inlineGroup.querySelector('fieldset.module h2');
+                if (h2) {
+                    var button = createButton();
+                    h2.appendChild(button);
+                    
+                }
+                // 삭제 버튼 오버라이딩
+                var fieldset = inlineGroup.querySelector('fieldset.module');
+                if (fieldset)
+                {
+                    var deleteTds = fieldset.querySelectorAll('table tbody tr');
+                    deleteTds.forEach(function(tr) {
+                        var td = tr.querySelector('td.delete');
+                        if (td)
+                        {
+                            //1. invisible
+                            var checkbox = td.querySelector('input');
+                            if (checkbox)
+                            {
+                                checkbox.style.display = 'none';  // td 요소를 보이지 않게 만듭니다.
+                                //2. button추가 (check상태 true바꾸고, 저장까지)
+                                var button = document.createElement('button');
+                                button.type = 'button';
+                                button.innerText = '삭제';
+                                button.classList.add('inline-deletelink');
+                                // button.classList.add('open-modal-btn'); //추후 버튼 css구성
+                                button.onclick = function deleteRow() {
+                                    checkbox.checked = true;  // 체크 상태로 변경합니다.
+                                    tr.style.visibility = 'hidden';
+                                    tr.classList.add('hidden');
+                                }
+                                td.appendChild(button);
+                            }
+                        }
+                    });
+                }
+            }
+        });
+    </script>
+    {% endif %}
+
+    <script>
+        django.jQuery(function ($) {
+            $('.rerate-link').appendTo('div#bottombar').show();
+            $('.rejudge-link').click(function () {
+                return confirm('{{ _('Are you sure you want to rejudge ALL the submissions?') }}');
+            });
+        });
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // 대상이 되는 모든 th 요소를 선택합니다.
+            const thElements = document.querySelectorAll("th");
+    
+            // 대상이 되는 모든 td 요소를 선택합니다.
+            const tdElements = document.querySelectorAll("td.field-points, td.field-partial, td.delete");
+    
+            // th 요소에 스타일 적용
+            thElements.forEach(function(th) {
+                const text = th.textContent.trim();
+                if (text === '점수' || text === '부분 점수 허용' || text === '삭제') {
+                    th.style.textAlign = "center";
+                    th.style.verticalAlign = "middle";
+                }
+                if(text==''){
+                    th.classList.add('hidden');
+                }
+            });
+    
+            
+        });
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // class="required"인 th 요소를 선택합니다.
+            const thElement = document.querySelector("th.required");
+    
+            // 선택된 요소가 존재하고, colspan 속성이 있을 경우
+            if (thElement && thElement.hasAttribute('colspan')) {
+                thElement.setAttribute('colspan', '1');  // 원하는 값으로 colspan을 변경합니다.
+            }
+        });
+    </script>
+{% endblock extrahead %}
+
+{% block after_field_sets %}{{ block.super }}
+    {% if original and original.is_rated and original.ended and perms.judge.contest_rating %}
+        <a style="display: none" title="{% trans "Rate" %}" href="{% url 'admin:judge_contest_rate' original.pk %}"
+           class="button rerate-link">
+            <i class="fa fa-lg fa-signal"></i>
+            <span class="text">{% trans "Rate" %}</span>
+        </a>
+    {% endif %}
+{% endblock %}

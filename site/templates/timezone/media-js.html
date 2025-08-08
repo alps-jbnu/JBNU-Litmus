@@ -1,0 +1,14 @@
+{% compress js %}
+    <script src="{{ static('libs/featherlight/featherlight.min.js') }}" type="text/javascript"></script>
+    <script type="text/javascript" src="{{ static('libs/timezone-map/timezone-picker.js') }}"></script>
+    <script type="text/javascript">
+        $(function () {
+            $('#open-map').featherlight({
+                afterOpen: function () {
+                    timezone_picker($('.featherlight-inner .map-inset'), $('#id_timezone'),
+                        '{{ static('libs/timezone-map/timezone-picker.json') }}');
+                }
+            });
+        });
+    </script>
+{% endcompress %}

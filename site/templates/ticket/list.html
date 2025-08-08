@@ -1,0 +1,547 @@
+{% extends "base.html" %}
+{% block media %}
+<style>
+   
+#ticket-list-container {
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+}
+
+.title-div {
+    display: none;
+}
+.title-info {
+    color: rgba(131, 145, 161, 1);
+
+}
+
+/* Sidebar (filters) adjustments */
+/* aside {
+    width: 250px;
+    padding-right: 20px;
+}
+
+aside div {
+    background: #f5f5f5;
+    padding: 10px;
+    border-radius: 5px;
+} */
+
+
+
+.container-box {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+.container-box .filter-check {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    padding: 6px 12px 6px 8px;
+    background-color: #FFFFFF;
+    border: 1px solid var(--border-color);
+    border-radius: 50px;
+    order: 0;
+    flex-grow: 0;
+    font-family: 'Pretendard';
+    font-style: normal;
+    font-weight: 500;
+    font-size: 14px;
+
+}
+
+
+#hide-checkbox {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-color);
+    border-radius: 25px;
+    padding: 5px 15px;
+    cursor: pointer;
+    background: #FFFFFF;
+
+}
+
+#hide-checkbox input[type="checkbox"] {
+    display: none;
+
+}
+
+#hide-checkbox label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+
+#hide-checkbox .checkbox-svg {
+    margin-right: 8px;
+    display: flex;
+    align-items: center;
+
+}
+#hide-checkbox .text {
+    color: #8391A1;
+    font-weight: 400;
+    line-height: 1;
+}
+#hide-checkbox input[type="checkbox"]:checked + label .text{
+    color: #000000; /* 글씨 색깔을 검은색으로 변경 */
+}
+
+input[type="checkbox"]:checked + label .checkbox-svg path {
+    fill: rgba(92, 149, 217, 1);
+}
+
+
+
+.filter-select2 select {
+    width: 100%;
+}
+.filter-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 15px;
+    border: 1px solid #5C95D95C;
+    border-radius: 10px;
+    cursor: pointer;
+    position: relative;
+    color: #000000;
+    background: rgba(92, 149, 217, 0.07);
+    font-weight: 300;
+    font-family: Pretendard;
+}
+
+.filter-btn:hover {
+    background-color: #E0E0E0;
+}
+
+.filter-btn .arrow {
+    margin-left: 5px;
+}
+
+.filter-select2 {
+    display: none;
+    position: absolute;
+    top: 35px;
+    left: 0;
+    background: #FFFFFF;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    width: 100%;
+    z-index: 1;
+}
+.filter-btn.show .filter-select2 {
+    display: block; /* .show 클래스가 있을 때 드롭다운 표시 */
+}
+
+.filter-btn.show .arrow {
+    transform: rotate(180deg); /* 필터 버튼이 활성화될 때 화살표를 위로 회전 */
+}
+
+/* Main content adjustments */
+main {
+    flex-grow: 1;
+}
+
+.h-scrollable-table {
+    overflow-x: auto;
+    border-radius: 10px 10px 0 0;
+    border: 1px solid var(--border-color);
+}
+
+/* Table adjustments */
+table.table {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+    margin-bottom: 0 !important;
+    border-right: none;
+}
+
+table.table th, table.table td {
+    padding: 10px;
+    text-align: center;
+    font-family: 'Pretendard';
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 17px;
+    color: #17171B;
+    border-top: 1px solid var(--border-color); /* Add top border for separation */
+    border-bottom: 1px solid var(--border-color); /* Add bottom border for separation */
+    border-right: none;
+}
+
+table.table th {
+    background-color: rgba(255, 255, 255, 1);
+    font-weight: bold;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    border-top: 1px solid var(--border-color);
+    border-top-left-radius: 10px; 
+    border-top-right-radius: 10px; 
+    
+}
+
+.table th {
+    border-style: none !important;
+}
+
+
+table.table tbody tr:last-child td:first-child {
+    border-bottom-left-radius: 10px;
+}
+
+table.table tbody tr:last-child td:last-child {
+    border-bottom-right-radius: 10px;
+}
+
+
+#ticket-list > tbody > tr:nth-child(even) {
+    background: rgba(217, 217, 217, 0.03);
+}
+table.table.striped tr:nth-child(odd) {
+    background: #FFFFFF;
+
+}
+/* Pagination bars */
+.top-pagination-bar, .bottom-pagination-bar {
+    text-align: center;
+    margin: 10px 0;
+}
+
+
+
+</style>
+{% endblock %}
+
+{% block js_media %}
+    <script type="text/javascript">
+        window.filter_user_ids = {{filter_status.user_id}};
+        window.filter_own_id = {{filter_status.own_id}};
+        window.filter_assignee_ids = {{filter_status.assignee_id}};
+    </script>
+    <script type="text/javascript" src="{{ static('event.js') }}"></script>
+    <script type="text/javascript">
+        $(function () {
+            $('input#open, input#own').click(function () {
+                ($('<form>').attr('action', window.location.pathname + '?' + $('form#filter-form').serialize())
+                    .append($('<input>').attr('type', 'hidden').attr('name', 'csrfmiddlewaretoken')
+                        .attr('value', $.cookie('csrftoken')))
+                    .attr('method', 'POST').appendTo($('body')).submit());
+            });
+
+            $('.filter-btn').click(function (event) {
+                event.stopPropagation(); // 이벤트 버블링 중지
+                var sortContent = $(this).find('.filter-select2');
+                // var arrowIcon = $(this).find('.arrow');
+                // if (sortContent.is(':visible')) {
+                //     sortContent.hide();
+                //     arrowIcon.html('&#x2713;'); // 아래로 향하는 화살표
+                // } else {
+                //     $('.filter-select2').hide(); // 다른 모든 드롭다운 숨기기
+                //     $('.arrow').html('&#x2713;'); // 다른 모든 화살표 아래로 향하도록 설정
+                //     sortContent.show();
+                //     arrowIcon.html('&#9650;'); // 위로 향하는 화살표
+                // }
+                $('.filter-select2').not(sortContent).hide(); // 다른 모든 드롭다운 숨기기
+                $('.filter-btn').not(this).removeClass('show'); // 다른 모든 버튼 상태 리셋
+
+                var arrowIcon = $(this).find('.arrow');
+                sortContent.toggle(); // 드롭다운 토글
+                $(this).toggleClass('show'); // 버튼 상태 토글
+            });
+
+            // 클릭 외부 영역 클릭 시 드롭다운 닫기
+            $(document).click(function (event) {
+                if (!$(event.target).closest('.filter-btn').length) {
+                    $('.filter-select2').hide();
+                    // $('.arrow').html('&#x2713;'); // 모든 아이콘을 아래로 향하도록 설정
+                    $('.filter-btn').removeClass('show'); // 모든 버튼 상태 리셋
+                }
+            });
+
+
+            register_notify('ticket', {
+                $checkbox: $('#notification'),
+                change: function (enabled) {
+                    if (!enabled)
+                        for (key in localStorage)
+                            if (key.startsWith('ticket:open:'))
+                                delete localStorage[key];
+                }
+            });
+
+            function main_list_notify(id) {
+                key = 'ticket:open:' + id;
+                return !(key in localStorage) || localStorage[key] == '0';
+            }
+
+            var $tbody = $('#ticket-list').find('tbody');
+
+            function new_ticket(ticket) {
+                console.log('Fetching data for: ' + ticket.id);
+                $.ajax({
+                    url: '{{ url('ticket_ajax') }}',
+                    data: {id: ticket.id},
+                    success: function (data) {
+                        console.log('Got data for: ' + ticket.id);
+                        console.log(data);
+                        $tbody.prepend($(data.row));
+                        notify('ticket', data.notification.title, {
+                            body: data.notification.body
+                        });
+                    },
+                    error: function (data) {
+                        if (data.status === 403)
+                            console.log('No right to see: ' + ticket.id);
+                        else {
+                            console.log('Could not load ticket:');
+                            console.log(data.responseText);
+                        }
+                    }
+                });
+            }
+
+            function ticket_status(ticket) {
+                if (!main_list_notify(ticket.id)) return;
+
+                var $row = $('#ticket-' + ticket.id);
+                console.log('Ticket status change: ' + ticket.id);
+                if ($row.length) {
+                    var $status = $row.find('td').first().find('i');
+                    if (ticket.open) {
+                        $status.removeClass('fa-check-circle-o').addClass('fa-exclamation-circle');
+                        notify('ticket', '{{ _('Reopened: ') }}' + ticket.title);
+                    } else {
+                        $status.removeClass('fa-exclamation-circle').addClass('fa-check-circle-o');
+                        notify('ticket', '{{ _('Closed: ') }}' + ticket.title);
+                    }
+                }
+            }
+
+            window.load_dynamic_update = function (last_msg) {
+                var $assignees = $(filter_assignee_ids);
+
+                return new EventReceiver(
+                    "{{ EVENT_DAEMON_LOCATION }}", "{{ EVENT_DAEMON_POLL_LOCATION }}",
+                    ['tickets'], last_msg, function (message) {
+                        console.log(message);
+                        if (filter_own_id != null && message.user != filter_own_id &&
+                            !~message.assignees.indexOf(filter_own_id))
+                            return;
+                        if (filter_user_ids.length && !~filter_user_ids.indexOf(message.user))
+                            return;
+                        if ($assignees.length && !$assignees.filter(message.assignees).length)
+                            return;
+                        switch (message.type) {
+                            case 'new-ticket':
+                                new_ticket(message);
+                                break;
+                            case 'ticket-status':
+                                ticket_status(message);
+                                break;
+                        }
+                    }
+                );
+            };
+
+            var user_select2 = {
+                templateResult: function (data, container) {
+                    return $('<span>')
+                        .append($('<img>', {
+                            'class': 'user-search-image', src: data.gravatar_url,
+                            width: 24, height: 24
+                        }))
+                        .append($('<span>', {'class': data.display_rank + ' user-search-name'}).text(data.text));
+                },
+                ajax: {
+                    data: function (params) {
+                        return {
+                            term: params.term || '',
+                            page: params.page || 1
+                        }
+                    },
+                    processResults: function (data) {
+                        return {
+                            results: data.results,
+                            pagination: {
+                                more: data.more
+                            }
+                        };
+                    },
+                },
+            };
+
+            $('#filter-user').select2($.extend(true, {}, user_select2,
+                {ajax: {url: '{{ url('ticket_user_select2_ajax') }}'}}));
+            $('#filter-assignee').select2($.extend(true, {}, user_select2,
+                {ajax: {url: '{{ url('ticket_assignee_select2_ajax') }}'}}));
+        });
+    </script>
+
+    {% if last_msg %}
+        <script type="text/javascript">
+            $(function () {
+                load_dynamic_update({{last_msg}});
+            });
+        </script>
+    {% endif %}
+{% endblock %}
+
+{% block body %}
+
+        <h2>이슈 관리</h2>
+        <p class="title-info">등록된 이슈 목록</p>
+    {% if page_obj.has_other_pages() %}
+        <div class="top-pagination-bar">{% include "list-pages.html" %}</div>
+    {% endif %}
+    <div id="ticket-list-container">
+        <!-- <aside> -->
+            <div class="container-box">
+                <!-- <div id="notification-box">
+                    <input id="notification" type="checkbox">
+                    <label for="notification">{{ _('Use desktop notification') }}</label>
+                </div> -->
+
+                <div id="hide-checkbox" class="filter-check">
+                    <input id="hide" type="checkbox">
+                    <label for="hide" type="label">     
+                        <svg class="checkbox-svg" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <mask id="mask0_1776_2065" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="0" width="20" height="20">
+                                <rect width="20" height="20" fill="#94D95C"/>
+                            </mask>
+                            <g mask="url(#mask0_1776_2065)">
+                                <path d="M8.83366 13.8333L14.7087 7.95832L13.542 6.79166L8.83366 11.5L6.45866 9.12499L5.29199 10.2917L8.83366 13.8333ZM10.0003 18.3333C8.84755 18.3333 7.76421 18.1146 6.75033 17.6771C5.73644 17.2396 4.85449 16.6458 4.10449 15.8958C3.35449 15.1458 2.76074 14.2639 2.32324 13.25C1.88574 12.2361 1.66699 11.1528 1.66699 9.99999C1.66699 8.84721 1.88574 7.76388 2.32324 6.74999C2.76074 5.7361 3.35449 4.85416 4.10449 4.10416C4.85449 3.35416 5.73644 2.76041 6.75033 2.32291C7.76421 1.88541 8.84755 1.66666 10.0003 1.66666C11.1531 1.66666 12.2364 1.88541 13.2503 2.32291C14.2642 2.76041 15.1462 3.35416 15.8962 4.10416C16.6462 4.85416 17.2399 5.7361 17.6774 6.74999C18.1149 7.76388 18.3337 8.84721 18.3337 9.99999C18.3337 11.1528 18.1149 12.2361 17.6774 13.25C17.2399 14.2639 16.6462 15.1458 15.8962 15.8958C15.1462 16.6458 14.2642 17.2396 13.2503 17.6771C12.2364 18.1146 11.1531 18.3333 10.0003 18.3333Z" fill="#D9D9D9"/>
+                            </g>
+                        </svg>
+                        <span class="text">{{ _('푼 문제 숨기기') }}</span>
+                    </label>
+                </div>
+                <!-- <form id="filter-form" name="form" action="" method="get"> -->
+                    <!-- <div id="open-box" class="filter-check">
+                        <input id="open" type="checkbox" name="open"{% if filter_status.open %} checked{% endif %} value="1">
+                        <label for="open">{{ _('Hide closed tickets') }}</label>
+                    </div>
+
+                    <div id="own-box" class="filter-check">
+                        <input id="own" type="checkbox" name="own"{% if filter_status.own %} checked{% endif %} value="1">
+                        <label for="own">{{ _('Show my tickets only') }}</label>
+                    </div> -->
+
+                    <div id="user-box" class="filter-btn">
+                        <!-- <label for="filter-user">{{ _('Filing user') }}</label>
+                        <select id="filter-user" style="width: 100%" multiple name="user">
+                            {% for username in filter_status.user %}
+                                <option value="{{ username }}" selected>{{ username }}</option>
+                            {% endfor %}
+                        </select> -->
+                        <span>{{ _('제출자') }}</span>
+                        <span class="arrow">&#9660</span>
+                        <div id="user-dropdown" class="filter-select2">
+                            <select id="filter-user" style="width: 100%" multiple name="user">
+                                {% for username in filter_status.user %}
+                                    <option value="{{ username }}" selected>{{ username }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="assignee-box" class="filter-btn">
+                        <!-- <label for="filter-user">{{ _('Assignee') }}</label>
+                        <select id="filter-assignee" style="width: 100%" multiple name="assignee">
+                            {% for username in filter_status.assignee %}
+                                <option value="{{ username }}" selected>{{ username }}</option>
+                            {% endfor %}
+                        </select> -->
+                        <span>{{ _('Assignee') }}</span>
+                        <span class="arrow">&#9660</span>
+                        <div id="assignee-dropdown" class="filter-select2">
+                            <select id="filter-assignee" style="width: 100%" multiple name="assignee">
+                                {% for username in filter_status.assignee %}
+                                    <option value="{{ username }}" selected>{{ username }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- <button type="submit" style="margin-left: auto" class="submit">{{ _('Go') }}</button> -->
+                <!-- </form> -->
+            </div>
+        <!-- </aside> -->
+
+        <main>
+            <div class="h-scrollable-table">
+                <table id="ticket-list" class="table striped">
+                    <thead>
+                    <tr>
+                        <th>{{ _('ID') }}</th>
+                        <th>{{ _('Title') }}</th>
+                        <th>{{ _('User') }}</th>
+                        <th>{{ _('Assignees') }}</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for ticket in tickets %} 
+                            {% if loop.index0 is even %}
+                                <tr class="even">
+                                    {% include "ticket/row.html" %}
+                                </tr>
+                            {% else %}
+                                <tr class="odd">
+                                    {% include "ticket/row.html" %}
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody> 
+
+
+                    <!-- 지워야 함 -->
+                    <!-- <tr id="ticket-tmp1" class="issue-col-odd">
+                        <td>ID 1</td>
+                        <td>Title 1</td>
+                        <td>User 1</td>
+                        <td>Auth 1</td>
+                    </tr>
+                    <tr id="ticket-tmp2" class="issue-col-even">
+                        <td>ID 2</td>
+                        <td>Title 2</td>
+                        <td>User 2</td>
+                        <td>Auth 2</td>
+                    </tr>
+                    <tr id="ticket-tmp3" class="issue-col-odd">
+                        <td>ID 3</td>
+                        <td>Title 3</td>
+                        <td>User 3</td>
+                        <td>Auth 3</td>
+                    </tr>
+                    <tr id="ticket-tmp4" class="issue-col-even">
+                        <td>ID 4</td>
+                        <td>Title 4</td>
+                        <td>User 4</td>
+                        <td>Auth 4</td>
+                    </tr>
+                    <tr id="ticket-tmp5" class="issue-col-odd">
+                        <td>ID 5</td>
+                        <td>Title 5</td>
+                        <td>User 5</td>
+                        <td>Auth 5</td>
+                    </tr> -->
+                    <!-- 여기까지 지워야 함 -->
+
+
+                </table>
+            </div>
+        </main>
+    </div>
+    {% if page_obj.has_other_pages() %}
+        <div class="bottom-pagination-bar">{% include "list-pages.html" %}</div>
+    {% endif %}
+{% endblock %}

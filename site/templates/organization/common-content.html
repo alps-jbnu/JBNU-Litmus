@@ -1,0 +1,96 @@
+{% extends "organization/base.html" %}
+
+{% block media %}
+    {% block content_media %}{% endblock %}
+{% endblock %}
+
+{% block js_media %}
+    {% compress js %}
+        <script src="{{ static('libs/clipboard/clipboard.js') }}"></script>
+        <script src="{{ static('libs/clipboard/tooltip.js') }}"></script>
+        <script type="text/javascript">
+            $(function () {
+                var info_float = $('.info-float');
+                if (info_float.length) {
+                    var container = $('#content-right');
+                    if (!featureTest('position', 'sticky')) {
+                        fix_div(info_float, 55);
+                        $(window).resize(function () {
+                            info_float.width(container.width());
+                        });
+                        info_float.width(container.width());
+                    }
+                }
+
+                window.add_code_copy_buttons = function ($container) {
+                    $container.find('pre code').each(function () {
+                        var copyButton;
+                        $(this).parent().before($('<div>', {'class': 'copy-clipboard'})
+                            .append(copyButton = $('<span>', {
+                                'class': 'btn-clipboard',
+                                'data-clipboard-text': $(this).text(),
+                                'title': '{{ _('Click to copy') }}'
+                            }).text('{{ _('복사') }}')));
+
+                        $(copyButton.get(0)).mouseleave(function () {
+                            $(this).attr('class', 'btn-clipboard');
+                            $(this).removeAttr('aria-label');
+                        });
+
+                        var curClipboard = new Clipboard(copyButton.get(0));
+
+                        curClipboard.on('success', function (e) {
+                            e.clearSelection();
+                            showTooltip(e.trigger, '{{ _('Copied!') }}');
+                        });
+
+                        curClipboard.on('error', function (e) {
+                            showTooltip(e.trigger, fallbackMessage(e.action));
+                        });
+                    });
+                };
+                window.add_code_copy_buttons($(document));
+            });
+        </script>
+    {% endcompress %}
+    {% block content_js_media %}{% endblock %}
+{% endblock %}
+
+{% block body %}        
+    <div id="content-bg"
+    style="
+        width: 100vw; 
+        height: 300px;
+        background: linear-gradient(180deg, #5C95D9 0%, #9FCDF2 300%);
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: -1;
+    ">
+    </div>
+    <div id="common-content">
+
+        <div id="content-right">
+            <div class="info-float">{% block info_float %}{% endblock %}</div>
+        </div>
+        <div id="content-left" class="split-common-content">
+            <div class="content-description screen">
+            
+
+                <!-- <hr style="margin: 0; margin-bottom: 15px; display: block;"> -->
+                {% block description %}{% endblock %}
+                {% block description_end %}
+                    <!-- <hr> -->
+                {% endblock %}
+                {% block post_description_end %}{% endblock %}
+            </div>
+            {% block comments %}{% endblock %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block bodyend %}
+    {% if REQUIRE_JAX %}
+        {% include "mathjax-load.html" %}
+    {% endif %}
+{% endblock %}

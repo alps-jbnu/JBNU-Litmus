@@ -1,0 +1,176 @@
+form .martor-preview {
+  line-height: 1.5em;
+  font-size: 1em;
+  font-family: "Segoe UI", "Lucida Grande", Arial, sans-serif;
+}
+form .martor-preview p {
+  margin: 1em 0 !important;
+  padding: 0 !important;
+}
+form .martor-preview img {
+  max-width: 100%;
+  height: auto;
+}
+form .martor-preview h1, form .martor-preview h2, form .martor-preview h3, form .martor-preview h4, form .martor-preview h5, form .martor-preview h6 {
+  font-weight: normal;
+  color: #111;
+  margin-bottom: 0.75em;
+  padding: 0;
+  background: 0;
+}
+form .martor-preview h3, form .martor-preview h4, form .martor-preview h5, form .martor-preview h6 {
+  font-weight: bold;
+}
+form .martor-preview h1 {
+  font-size: 2.5em;
+}
+form .martor-preview h2 {
+  font-size: 2em;
+}
+form .martor-preview h3 {
+  font-size: 1.6em;
+  margin: 0;
+  padding: 0;
+}
+form .martor-preview h4 {
+  font-size: 1.4em;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  line-height: 1.225;
+  padding-bottom: 0.3em;
+  padding-top: 0.5em;
+}
+form .martor-preview h5 {
+  font-size: 1.15em;
+  margin-top: 0;
+}
+form .martor-preview h6 {
+  font-size: 0.9em;
+}
+form .martor-preview blockquote {
+  color: #808080;
+  margin: 0;
+  padding-left: 1.5em;
+  border-left: 0.5em #eee solid;
+}
+form .martor-preview hr {
+  display: block;
+  height: 0;
+  border: 0;
+  font-style: italic;
+  border-bottom: 1px solid #ccc;
+  margin: 25px 0 20px 0;
+  padding: 0;
+}
+form .martor-preview pre, form .martor-preview code, form .martor-preview kbd, form .martor-preview samp, form .martor-preview span.code {
+  color: #000;
+  page-break-inside: avoid;
+  font-family: Consolas, "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier, monospace;
+  font-size: 0.98em;
+}
+form .martor-preview code, form .martor-preview span.code {
+  font-family: Consolas, "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier, monospace !important;
+  margin: 0 2px;
+  padding: 0 5px;
+  border: 1px solid #ccc;
+  background-color: #f8f8f8;
+  border-radius: 4px;
+  font-size: 0.95em;
+  color: #3b3b3b;
+}
+form .martor-preview pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin: 1.5em 0 1.5em 0;
+  padding: 1em;
+  border: 1px solid #ccc;
+  background-color: #f8f8f8;
+  color: #000;
+  border-radius: 4px;
+}
+form .martor-preview pre code, form .martor-preview pre div.code {
+  border: 0;
+  line-height: 1em;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  font-size: 1em;
+  color: #000;
+}
+form .martor-preview b, form .martor-preview strong {
+  font-weight: bold;
+}
+form .martor-preview dfn {
+  font-style: italic;
+}
+form .martor-preview ins {
+  background: #ff9;
+  color: #000;
+  text-decoration: none;
+}
+form .martor-preview mark {
+  background: #ff0;
+  color: #000;
+  font-style: italic;
+  font-weight: bold;
+}
+form .martor-preview sub {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+form .martor-preview sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+  top: -0.5em;
+}
+form .martor-preview sub {
+  bottom: -0.25em;
+}
+form .martor-preview ul, form .martor-preview ol {
+  padding: 0 0 0 2em;
+}
+form .martor-preview li p:last-child {
+  margin: 0;
+}
+form .martor-preview dd {
+  margin: 0 0 0 2em;
+}
+form .martor-preview img {
+  border: 0;
+  -ms-interpolation-mode: bicubic;
+  vertical-align: middle;
+}
+form .martor-preview td {
+  vertical-align: top;
+}
+form .martor-preview ul li {
+  list-style: unset !important;
+}
+form .martor-preview ul, form .martor-preview ol {
+  margin-left: 0 !important;
+}
+form .martor-preview h5 {
+  text-transform: none !important;
+}
+
+.main-martor-fullscreen {
+  z-index: 99999 !important;
+}
+
+.section-martor div[data-tab=editor-tab-description] {
+  padding: 0;
+}
+.section-martor .markdown-selector.markdown-emoji {
+  display: none !important;
+}
+.section-martor .tab-martor-menu a.item {
+  font-size: 0.8rem;
+}
+.section-martor .martor-field {
+  height: 400px;
+}
+
+/*# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIi4uL3Jlc291cmNlcy9tYXJ0b3ItZGVzY3JpcHRpb24uc2NzcyIsIi4uL3Jlc291cmNlcy9iYXNlLWRlc2NyaXB0aW9uLnNjc3MiLCIuLi9zYXNzX3Byb2Nlc3NlZC9tYXJ0b3ItZGVzY3JpcHRpb24uY3NzIiwiLi4vcmVzb3VyY2VzL3ZhcnMuc2NzcyIsIi4uL3Jlc291cmNlcy92YXJzLWNvbW1vbi5zY3NzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUVBO0VDQ0ksa0JBQUE7RUFDQSxjQUFBO0VBQ0EsMkRBQUE7QUNESjtBREdJO0VBQ0ksd0JBQUE7RUFDQSxxQkFBQTtBQ0RSO0FESUk7RUFDSSxlQUFBO0VBQ0EsWUFBQTtBQ0ZSO0FEU0k7RUFDSSxtQkFBQTtFQUNBLFdFYlU7RUZjVixxQkFBQTtFQUNBLFVBQUE7RUFDQSxhQUFBO0FDUFI7QURVSTtFQUNJLGlCQUFBO0FDUlI7QURXSTtFQUNJLGdCQUFBO0FDVFI7QURZSTtFQUNJLGNBQUE7QUNWUjtBRGFJO0VBQ0ksZ0JBQUE7RUFDQSxTQUFBO0VBQ0EsVUFBQTtBQ1hSO0FEY0k7RUFDSSxnQkFBQTtFQUNBLDJDQUFBO0VBQ0Esa0JBQUE7RUFDQSxxQkFBQTtFQUNBLGtCQUFBO0FDWlI7QURlSTtFQUNJLGlCQUFBO0VBQ0EsYUFBQTtBQ2JSO0FEZ0JJO0VBQ0ksZ0JBQUE7QUNkUjtBRGlCSTtFQUNJLGNFekRVO0VGMERWLFNBQUE7RUFDQSxtQkFBQTtFQUNBLDZCQUFBO0FDZlI7QURrQkk7RUFDSSxjQUFBO0VBQ0EsU0FBQTtFQUNBLFNBQUE7RUFDQSxrQkFBQTtFQUNBLDZCQUFBO0VBQ0EscUJBQUE7RUFDQSxVQUFBO0FDaEJSO0FEbUJJO0VBQ0ksV0V2RVc7RUZ3RVgsd0JBQUE7RUFDQSxpT0c1RVU7RUg2RVYsaUJBQUE7QUNqQlI7QURvQkk7RUFDSSw0T0FBQTtFQUNBLGFBQUE7RUFDQSxjQUFBO0VBQ0Esc0JBQUE7RUFDQSx5QkV4RlM7RUZ5RlQsa0JHMUZlO0VIMkZmLGlCQUFBO0VBQ0EsY0V2RlU7QURxRWxCO0FEcUJJO0VBV0kscUJBQUE7RUFDQSxxQkFBQTtFQUNBLHVCQUFBO0VBQ0EsWUFBQTtFQUNBLHNCQUFBO0VBQ0EseUJFOUdTO0VGK0dULFdFekdXO0VGMEdYLGtCR2pIZTtBRm9GdkI7QURZUTtFQUNJLFNBQUE7RUFDQSxnQkFBQTtFQUNBLFNBQUE7RUFDQSxVQUFBO0VBQ0EsdUJBQUE7RUFDQSxjQUFBO0VBQ0EsV0VoR087QURzRm5CO0FEdUJJO0VBQ0ksaUJBQUE7QUNyQlI7QUR3Qkk7RUFDSSxrQkFBQTtBQ3RCUjtBRHlCSTtFQUNJLGdCQUFBO0VBQ0EsV0FBQTtFQUNBLHFCQUFBO0FDdkJSO0FEMEJJO0VBQ0ksZ0JBQUE7RUFDQSxXQUFBO0VBQ0Esa0JBQUE7RUFDQSxpQkFBQTtBQ3hCUjtBRDJCSTtFQUNJLGNBQUE7RUFDQSxjQUFBO0VBQ0Esa0JBQUE7RUFDQSx3QkFBQTtBQ3pCUjtBRDRCSTtFQUNJLGNBQUE7RUFDQSxjQUFBO0VBQ0Esa0JBQUE7RUFDQSx3QkFBQTtFQUNBLFdBQUE7QUMxQlI7QUQ2Qkk7RUFDSSxlQUFBO0FDM0JSO0FEOEJJO0VBQ0ksa0JBQUE7QUM1QlI7QUQrQkk7RUFDSSxTQUFBO0FDN0JSO0FEZ0NJO0VBQ0ksaUJBQUE7QUM5QlI7QURpQ0k7RUFDSSxTQUFBO0VBQ0EsK0JBQUE7RUFDQSxzQkFBQTtBQy9CUjtBRGtDSTtFQUNJLG1CQUFBO0FDaENSO0FGOUlJO0VBQ0ksNEJBQUE7QUVnSlI7QUY3SUk7RUFDSSx5QkFBQTtBRStJUjtBRjVJSTtFQUNJLCtCQUFBO0FFOElSOztBRjFJQTtFQUNJLHlCQUFBO0FFNklKOztBRnpJSTtFQUNJLFVBQUE7QUU0SVI7QUZ6SUk7RUFDSSx3QkFBQTtBRTJJUjtBRnhJSTtFQUNJLGlCQUFBO0FFMElSO0FGdklJO0VBQ0ksYUFBQTtBRXlJUiIsImZpbGUiOiJtYXJ0b3ItZGVzY3JpcHRpb24uY3NzIn0= */

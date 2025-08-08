@@ -1,0 +1,5 @@
+{% extends "tabs-base.html" %}
+
+{% block tabs %}
+    {{ make_tab('about', 'fa-arrow-left', url('user_page', user.user.username), '내 프로필로 돌아가기') }}
+{% endblock %}

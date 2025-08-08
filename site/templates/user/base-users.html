@@ -1,0 +1,208 @@
+<!-- users 페이지 -->
+
+{% extends "common-content.html" %}
+
+{# {% block js_media %}
+    {% block users_js_media %}{% endblock %}
+    <script>
+        $(function () {
+            $('#search-handle').replaceWith($('<select>').attr({
+                id: 'search-handle',
+                name: 'handle',
+                onchange: 'form.submit()'
+            }));
+            var in_user_redirect = false;
+            $('#search-handle').select2({
+                theme: '{{ DMOJ_SELECT2_THEME }}',
+                placeholder: '{{ _('사용자 검색') }}',
+                ajax: {
+                    url: '{{ url('user_search_select2_ajax') }}'
+                },
+                minimumInputLength: 1,
+                templateResult: function (data, container) {
+                    return $('<span>')
+                        .append($('<img>', {
+                            'class': 'user-search-image', src: data.gravatar_url,
+                            width: 24, height: 24
+                        }))
+                        .append($('<span>', {'class': data.display_rank + ' user-search-name'}).text(data.text));
+                }
+            }).on('select2:selecting', function () {
+                return !in_user_redirect;
+            });
+
+            var $last = null;
+            $(window).on('hashchange', function () {
+                var hash = window.location.hash;
+                if (hash.startsWith('#!')) {
+                    // 해시 값을 디코딩하여 유효한 CSS 선택자로 변환
+                    var decodedHash = decodeURIComponent(hash.substring(2));
+                    var $user = $('#user-' + decodedHash);
+                    if ($user) {
+                        // 이전 강조 요소의 배경색 초기화
+                        if ($last !== null) $last.css('background-color', '');
+                        
+                        // 현재 요소의 배경색 강조, 하이라이팅 색은 알아서 수정해주세요.
+                        $user.css('background-color', 'lightblue');
+                        $(document).scrollTop($user.position().top - 50);
+                        if ($last !== null) $last.removeClass('highlight');
+                        $last = $user;
+                    }
+                }
+            }).trigger('hashchange');
+        });
+    </script>
+{% endblock %}
+#}
+
+{% block media %}
+    {% block users_media %}{% endblock %}
+    <style>
+        .search-div {
+            margin: 0 auto;
+            display: flex; 
+            justify-content: flex-end;
+        }
+        .search-div .search-user {
+            width: 200px;
+            height: 33px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 21px;
+            margin-top: 21px;
+            padding-left: 15px;
+            font-size: 12px;
+            color: black;
+        }
+        .input-box::placeholder {
+            color: #8391A1;
+            font-size: 12px;
+            /* font-size: 14px; */
+        }
+        .common-content {
+            display: flex;
+            flex-direction: column !important;
+
+        }
+
+        @media (min-width: 700px) {
+            .common-content {
+                display: flex;
+                flex-direction: column !important;
+            }
+        }
+
+        .control-bar {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        /* 네비게이션 바 */
+        .top-pagination-bar {
+            margin: 0;
+            margin-bottom: 1.5em;
+            margin-left: auto;
+            justify-content: right;
+        }
+        .top-pagination-bar .select2 {
+            display: flex;
+            flex-direction: row;
+            justify-content: right;
+        }
+        
+        .top-pagination-bar .select2-selection__rendered {
+            color: #8391A1;
+            font-size: 12px;
+        }
+
+        .select2-search--dropdown .select2-search__field {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+        .select2-search--dropdown {
+            left: 1040px;
+        }
+        .select2-dropdown {
+            width: 250px !important;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-left: -25px;
+            color: var(--font-dark-grey);
+        }
+        ul.select2-results__options {
+            color: var(--font-dark-grey);
+        }
+        .select2-search--dropdown .select2-search__field:focus-visible {
+            outline: 1px solid var(--border-color);
+        }
+        .select2-results__option--highlighted {
+            background-color: #d9d9d956 !important;
+        }
+        .bottom-pagination-bar {
+            margin: 0 auto;
+            margin-bottom: 21px;
+            margin-top: 21px;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+        }
+        .bottom-pagination-bar .pagination {
+            color: #8391A1;
+        }
+        ul.pagination > li > a, ul.pagination > li > span {
+            margin: 0 3px;
+            background: none;
+            border: none;
+            color: #8391A1;
+            border-radius: 20px !important;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        ul.pagination > .active-page > a, ul.pagination > .active-page > span {
+            margin: 0 3px;
+            background: none;
+            color: #5C95D9;
+            border-radius: 20px !important;
+            transition: background-color 0.3s, box-shadow 0.3s;
+            background-color: #f2f3f4;
+        }
+        ul.pagination > li > a:hover {
+            background-color: #f2f3f4;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    {#
+    <!-- {% if page_obj and page_obj.has_other_pages() %}
+        <div class="top-pagination-bar">
+            {% include "list-pages.html" %}
+            {% if not organization %}
+                <form id="search-form" name="form" action="{{ url('user_ranking_redirect') }}" method="get">
+                    <input id="search-handle" type="text" name="search" placeholder="{{ _('Search by handle...') }}">
+                </form>
+            {% endif %}
+        </div>
+    {% endif %} -->
+    #}
+    {% if page_obj %}
+    {# <!-- <div class="control-bar">
+        <div class="top-pagination-bar">
+            <form id="search-form" name="form" action="{{ url('user_ranking_redirect') }}" method="get">
+                <input id="search-handle" type="text" name="search" placeholder="{{ _('Search by handle...') }}">
+            </form>
+        </div>
+    </div> --> #}
+    {% endif %}
+
+    <div id="common-content" style="flex-direction: column;">
+        {% block users_table %}{% endblock %}
+    </div>
+
+    {% if page_obj and page_obj.has_other_pages() %}
+        <div class="bottom-pagination-bar">
+            {% include "list-pages.html" %}
+        </div>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,342 @@
+code { /* Comment */
+  /* Error */
+  /* Escape */
+  /* Generic */
+  /* Keyword */
+  /* Literal */
+  /* Name */
+  /* Operator */
+  /* Other */
+  /* Punctuation */
+  /* Comment.Hashbang */
+  /* Comment.Multiline */
+  /* Comment.Preproc */
+  /* Comment.PreprocFile */
+  /* Comment.Single */
+  /* Comment.Special */
+  /* Generic.Deleted */
+  /* Generic.Emph */
+  /* Generic.Error */
+  /* Generic.Heading */
+  /* Generic.Inserted */
+  /* Generic.Output */
+  /* Generic.Prompt */
+  /* Generic.Strong */
+  /* Generic.Subheading */
+  /* Generic.Traceback */
+  /* Generic.Underline */
+  /* Keyword.Constant */
+  /* Keyword.Declaration */
+  /* Keyword.Namespace */
+  /* Keyword.Pseudo */
+  /* Keyword.Reserved */
+  /* Keyword.Type */
+  /* Literal.Date */
+  /* Literal.Number */
+  /* Literal.String */
+  /* Name.Attribute */
+  /* Name.Builtin */
+  /* Name.Class */
+  /* Name.Constant */
+  /* Name.Decorator */
+  /* Name.Entity */
+  /* Name.Exception */
+  /* Name.Function */
+  /* Name.Label */
+  /* Name.Namespace */
+  /* Name.Other */
+  /* Name.Property */
+  /* Name.Tag */
+  /* Name.Variable */
+  /* Operator.Word */
+  /* Punctuation.Marker */
+  /* Text.Whitespace */
+  /* Literal.Number.Bin */
+  /* Literal.Number.Float */
+  /* Literal.Number.Hex */
+  /* Literal.Number.Integer */
+  /* Literal.Number.Oct */
+  /* Literal.String.Affix */
+  /* Literal.String.Backtick */
+  /* Literal.String.Char */
+  /* Literal.String.Delimiter */
+  /* Literal.String.Doc */
+  /* Literal.String.Double */
+  /* Literal.String.Escape */
+  /* Literal.String.Heredoc */
+  /* Literal.String.Interpol */
+  /* Literal.String.Other */
+  /* Literal.String.Regex */
+  /* Literal.String.Single */
+  /* Literal.String.Symbol */
+  /* Name.Builtin.Pseudo */
+  /* Name.Function.Magic */
+  /* Name.Variable.Class */
+  /* Name.Variable.Global */
+  /* Name.Variable.Instance */
+  /* Name.Variable.Magic */
+  /* Literal.Number.Integer.Long */
+}
+code .hll {
+  background-color: #6e7681;
+}
+code .c {
+  color: #8b949e;
+  font-style: italic;
+}
+code .err {
+  color: #f85149;
+}
+code .esc {
+  color: #c9d1d9;
+}
+code .g {
+  color: #c9d1d9;
+}
+code .k {
+  color: #ff7b72;
+}
+code .l {
+  color: #a5d6ff;
+}
+code .n {
+  color: #c9d1d9;
+}
+code .o {
+  color: #ff7b72;
+  font-weight: bold;
+}
+code .x {
+  color: #c9d1d9;
+}
+code .p {
+  color: #c9d1d9;
+}
+code .ch {
+  color: #8b949e;
+  font-style: italic;
+}
+code .cm {
+  color: #8b949e;
+  font-style: italic;
+}
+code .cp {
+  color: #8b949e;
+  font-weight: bold;
+  font-style: italic;
+}
+code .cpf {
+  color: #8b949e;
+  font-style: italic;
+}
+code .c1 {
+  color: #8b949e;
+  font-style: italic;
+}
+code .cs {
+  color: #8b949e;
+  font-weight: bold;
+  font-style: italic;
+}
+code .gd {
+  color: #ffa198;
+  background-color: #490202;
+}
+code .ge {
+  color: #c9d1d9;
+  font-style: italic;
+}
+code .gr {
+  color: #ffa198;
+}
+code .gh {
+  color: #79c0ff;
+  font-weight: bold;
+}
+code .gi {
+  color: #56d364;
+  background-color: #0f5323;
+}
+code .go {
+  color: #8b949e;
+}
+code .gp {
+  color: #8b949e;
+}
+code .gs {
+  color: #c9d1d9;
+  font-weight: bold;
+}
+code .gu {
+  color: #79c0ff;
+}
+code .gt {
+  color: #ff7b72;
+}
+code .g-Underline {
+  color: #c9d1d9;
+  text-decoration: underline;
+}
+code .kc {
+  color: #79c0ff;
+}
+code .kd {
+  color: #ff7b72;
+}
+code .kn {
+  color: #ff7b72;
+}
+code .kp {
+  color: #79c0ff;
+}
+code .kr {
+  color: #ff7b72;
+}
+code .kt {
+  color: #ff7b72;
+}
+code .ld {
+  color: #79c0ff;
+}
+code .m {
+  color: #a5d6ff;
+}
+code .s {
+  color: #a5d6ff;
+}
+code .na {
+  color: #c9d1d9;
+}
+code .nb {
+  color: #c9d1d9;
+}
+code .nc {
+  color: #f0883e;
+  font-weight: bold;
+}
+code .no {
+  color: #79c0ff;
+  font-weight: bold;
+}
+code .nd {
+  color: #d2a8ff;
+  font-weight: bold;
+}
+code .ni {
+  color: #ffa657;
+}
+code .ne {
+  color: #f0883e;
+  font-weight: bold;
+}
+code .nf {
+  color: #d2a8ff;
+  font-weight: bold;
+}
+code .nl {
+  color: #79c0ff;
+  font-weight: bold;
+}
+code .nn {
+  color: #ff7b72;
+}
+code .nx {
+  color: #c9d1d9;
+}
+code .py {
+  color: #79c0ff;
+}
+code .nt {
+  color: #7ee787;
+}
+code .nv {
+  color: #79c0ff;
+}
+code .ow {
+  color: #ff7b72;
+  font-weight: bold;
+}
+code .pm {
+  color: #c9d1d9;
+}
+code .w {
+  color: #6e7681;
+}
+code .mb {
+  color: #a5d6ff;
+}
+code .mf {
+  color: #a5d6ff;
+}
+code .mh {
+  color: #a5d6ff;
+}
+code .mi {
+  color: #a5d6ff;
+}
+code .mo {
+  color: #a5d6ff;
+}
+code .sa {
+  color: #79c0ff;
+}
+code .sb {
+  color: #a5d6ff;
+}
+code .sc {
+  color: #a5d6ff;
+}
+code .dl {
+  color: #79c0ff;
+}
+code .sd {
+  color: #a5d6ff;
+}
+code .s2 {
+  color: #a5d6ff;
+}
+code .se {
+  color: #79c0ff;
+}
+code .sh {
+  color: #79c0ff;
+}
+code .si {
+  color: #a5d6ff;
+}
+code .sx {
+  color: #a5d6ff;
+}
+code .sr {
+  color: #79c0ff;
+}
+code .s1 {
+  color: #a5d6ff;
+}
+code .ss {
+  color: #a5d6ff;
+}
+code .bp {
+  color: #c9d1d9;
+}
+code .fm {
+  color: #d2a8ff;
+  font-weight: bold;
+}
+code .vc {
+  color: #79c0ff;
+}
+code .vg {
+  color: #79c0ff;
+}
+code .vi {
+  color: #79c0ff;
+}
+code .vm {
+  color: #79c0ff;
+}
+code .il {
+  color: #a5d6ff;
+}
+
+/*# sourceMappingURL=pygment-github.css.map */

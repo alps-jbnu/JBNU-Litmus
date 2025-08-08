@@ -1,0 +1,57 @@
+<head>
+  <link 
+    rel="stylesheet" 
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  >
+</head>
+<form method="get">
+  {% for key, value in request.GET.items %}
+    {% if key not in spec.filter_keys %}
+        <input type="hidden" name="{{ key }}" value="{{ value }}">
+    {% endif %}
+    {% endfor %}
+<label>
+  언어
+<select name="language">
+  <option value="">언어</option>
+  {% for value, label in spec.language_lookups %}
+    <option value="{{ value }}" {% if request.GET.language == value %}selected{% endif %}>
+      {{ label }}
+    </option>
+  {% endfor %}
+</select>
+</label>
+<label>
+  상태
+  <select name="status">
+    <option value="">상태</option>
+    {% for value, label in spec.status_lookups %}
+      <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+</label>
+<label>
+  결과
+  <select name="result">
+    <option value="">결과</option>
+    {% for value, label in spec.result_lookups %}
+      <option value="{{ value }}" {% if request.GET.result == value %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+</label>
+<label>
+  문제 코드
+  <input type="text" name="code" value="{{ request.GET.code }}" placeholder="문제 코드">
+</label>
+<label>
+  문제 이름
+  <input type="text" name="problem_name" value="{{ request.GET.problem_name }}" placeholder="문제 이름">
+</label>
+<label>
+  사용자 이름
+  <input type="text" name="username" value="{{ request.GET.username }}" placeholder="사용자 이름">
+</label>
+  <button type="submit">
+  <i class="fa-solid fa-filter"></i> 필터 적용
+</button>
+</form>

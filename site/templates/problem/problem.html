@@ -1,0 +1,800 @@
+{% extends "common-content.html" %}
+{% block content_media %}
+{% include "comments/media-css.html" %}
+<style>
+    #common-content {
+        background: #FFF;
+    }
+    #page-container {
+        background: #FFF !important;
+    }
+
+    footer {
+        background: #FFF !important;
+    }
+
+    #content-bg {
+        display: none;
+    }
+
+    .problem-title {
+        width: 1040px;
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 20px;
+    }
+
+    .title-state {
+        font-size: 2em;
+        float: left;
+        width: 1.1em;
+        display: block;
+        margin-top: 0.16em;
+    }
+
+    .info-float a {
+        vertical-align: middle;
+    }
+
+    .info-float .fa {
+        color: rgb(159, 202, 242);
+        padding-right: 0.2em;
+    }
+
+    #content-right .info-float {
+        float: none;
+        padding: 0;
+        position: sticky;
+        top: 70px;
+        width: 100%;
+        border: none;
+    }
+
+    .info-float-div {
+        width: 100%;
+        padding: 8px 8px 8px 8px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        border: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .info-float-div-admin {
+        width: 100%;
+        padding: 8px 8px 8px 8px;
+        border: none;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .admin-tool {
+        margin-bottom: 10px;
+        font-size: 18px;
+        text-align: center;
+    }
+
+    .problem-clarification {
+        border-bottom: 1px solid var(--border-color);
+        margin-top: 1em;
+        margin-bottom: 1em;
+    }
+
+    .clarifications-area h2 {
+        margin-bottom: 20px;
+    }
+
+    .problem-clarification .body {
+        display: inline-block;
+        padding-left: 3em;
+    }
+
+    .admin-btn.button {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: auto;
+        height: auto;
+        text-decoration: none !important;
+        cursor: pointer;
+        white-space: nowrap;
+        font-weight: 400;
+        line-height: 1.3;
+        padding: 6px 12px !important;
+        border: none;
+        font-size: 14px;
+        color: var(--font-dark-grey);
+        background: #fff;
+        border-radius: 10px;
+        gap: 10px;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .admin-btn.button:hover {
+        color: var(--font-dark-grey);
+        background: #D9D9D936;
+    }
+    .button,
+    button,
+    input[type=submit] {
+        text-decoration: none !important;
+        cursor: pointer;
+        vertical-align: middle;
+        white-space: nowrap;
+        font-weight: 400;
+        line-height: 1.4;
+        background: var(--LITMUS-Primary, rgba(92, 149, 217, 1));
+        border-radius: 8px;
+        padding: 6px 12px;
+        display: block;
+        border: none;
+        text-align: center;
+        font-size: 14px;
+        margin-bottom: 5px;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .button:hover,
+    button:hover,
+    input[type=submit]:hover {
+        background-color: #5288C8;
+        color: #FAFAFA;
+    }
+
+    .button:active,
+    button:active,
+    input[type=submit]:active {
+        border-color: #245580;
+        background: #265a88;
+    }
+
+    .button.full,
+    button.full,
+    input[type=submit].full {
+        padding: 6px 0;
+    }
+
+    .button.disabled,
+    button.disabled,
+    input[type=submit].disabled {
+        background: linear-gradient(to bottom, darkgray 0, gray 100%) repeat-x !important;
+        border-color: grey !important;
+        cursor: not-allowed;
+    }
+
+    .pi-name {
+        font-weight: normal;
+        margin-left: 6px;
+        margin-right: 3px;
+    }
+
+    .pi-link {
+        text-decoration: underline;
+        color: var(--primary-color);
+        transition: color 0.3s ease;
+    }
+
+    .button-font {
+        font-family: Pretendard;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 17.5px;
+        text-align: center;
+        color: #8391A1;
+    }
+
+    #content {
+        background: #fff;
+        width: 70%;
+    }
+
+    #content-body {
+        display: flex;
+        flex-direction: column;
+    }
+
+    #content-left {
+        padding: 0;
+        margin: 0;
+        margin-top: 10px;
+        margin-right: 20px;
+    }
+
+    #content-right {
+        padding: 0;
+        margin: 0;
+    }
+
+    #content hr {
+        display: none;
+    }
+
+    .title-state {
+        margin-top: 0;
+    }
+
+    .problem-info-entry {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+
+    .problem-description {
+        width: 100%;
+    }
+
+    /* SVG 아이콘 크기 조절 및 스타일 적용 */
+    .solved-problem-icon,
+    .attempted-problem-icon,
+    .lock-icon {
+        width: 24px;
+        height: 24px;
+        vertical-align: middle;
+        /* 아이콘을 텍스트와 수평으로 맞춥니다 */
+    }
+
+    .icon-div svg {
+        padding-top: 3px;
+        margin-right: 5px;
+    }
+
+    /* 각 상태에 따른 아이콘 색상 설정 */
+    .solved-problem-icon {
+        fill: #94D95C;
+        stroke: #94D95C;
+    }
+
+    .attempted-problem-icon {
+        fill: #ffa500;
+        stroke: #ffa500;
+    }
+
+    .lock-icon {
+        fill: #7e7e7e;
+        stroke: #7e7e7e;
+        margin-right: 5px;
+    }
+
+    .attempted-problem-color {
+        color: #D95C5C;
+    }
+
+    .floating-menu-title {
+        display: flex;
+        justify-content: center;
+        align-content: center;
+        border-radius: 10px;
+        background-color: rgba(217, 217, 217, 0.3);
+        margin-bottom: 16px;
+        padding-top: 8px;
+        padding-bottom: 8px;
+    }
+
+    .floating-menu-title-admin {
+        display: flex;
+        justify-content: center;
+        align-content: center;
+        border-radius: 10px;
+        background-color: rgba(92, 149, 217, 0.1);
+        color: var(--primary-color);
+        margin-bottom: 16px;
+        padding-top: 8px;
+        padding-bottom: 8px;
+    }
+
+    .inner-contents {
+        width: 100%;
+        padding-left: 12px;
+    }
+
+    .content-description h4 {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.07) !important;
+    }
+
+    .copy-clipboard {
+        margin-top: 0 !important;
+    }
+
+    .content-description pre {
+        border: none !important;
+        margin-top: 0 !important;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .btn-clipboard {
+        border: none;
+        background: none;
+        transition: color 0.3s ease;
+    }
+
+    .btn-clipboard:hover {
+        color: #17171B;
+    }
+</style>
+{% endblock %}
+
+{% block content_js_media %}
+{% include "comments/media-js.html" %}
+
+{% if vote_perm.can_view() %}
+<script src="{{ static('libs/chart.js/Chart.js') }}" type="text/javascript"></script>
+<script src="{{ static('problem-vote.js') }}" type="text/javascript"></script>
+{% endif %}
+<!-- 암호화 관련 JavaScript 추가 -->
+{% if problem.is_encrypted %}
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('#check-password').click(function () {
+            // XSS 방지: 입력값 검증
+            var password = $('#problem-password').val();
+
+            // 빈 값 검증
+            if (!password) {
+                alert('비밀번호를 입력해주세요.');
+                return;
+            }
+
+            // 길이 검증 - 클라이언트 측에서도 철저히 검증
+            if (password.length < 4) {
+                alert('비밀번호는 최소 4자 이상이어야 합니다.');
+                return;
+            }
+
+            if (password.length > 50) {
+                alert('비밀번호는 최대 50자까지 입력 가능합니다.');
+                return;
+            }
+
+            // 이상한 문자 검증 추가
+            if (/[<>]/.test(password)) {
+                alert('비밀번호에 허용되지 않는 문자가 포함되어 있습니다.');
+                return;
+            }
+
+            var currentPath = window.location.pathname;
+            if (!currentPath.endsWith('/')) {
+                currentPath += '/';
+            }
+
+            // 버튼 비활성화 (중복 제출 방지)
+            $('#check-password').prop('disabled', true).text('확인 중...');
+
+            $.ajax({
+                url: currentPath + 'check-password/',
+                type: 'POST',
+                headers: {
+                    "X-CSRFToken": '{{ csrf_token }}'
+                },
+                data: {
+                    'password': password
+                },
+                success: function (response) {
+                    if (response.status === 'success') {
+                        // 암호화된 문제 폼 숨기기
+                        $('.encrypted-problem').hide();
+
+                        // 복호화된 내용 표시
+                        var $problemContent = $('#problem-content');
+                        if ($problemContent.length === 0) {
+                            $problemContent = $('<div id="problem-content"></div>');
+                            $('.encrypted-problem').after($problemContent);
+                        }
+
+                        $problemContent.html(response.description);
+
+                        // MathJax가 있는 경우에만 실행
+                        if (typeof MathJax !== 'undefined') {
+                            try {
+                                MathJax.typesetPromise && MathJax.typesetPromise();
+                            } catch (e) {
+                                console.error('MathJax error:', e);
+                            }
+                        }
+                    } else {
+                        alert(response.message || '올바르지 않은 비밀번호입니다.');
+                    }
+                },
+                error: function (xhr, status, error) {
+                    var errorMsg = '서버 오류가 발생했습니다. 다시 시도해주세요.';
+                    try {
+                        var response = JSON.parse(xhr.responseText);
+                        if (response.message) {
+                            errorMsg = response.message;
+                        }
+                    } catch (e) { }
+                    alert(errorMsg);
+                },
+                complete: function () {
+                    // 버튼 재활성화
+                    $('#check-password').prop('disabled', false).text('확인');
+                    // 비밀번호 필드 초기화 (보안)
+                    $('#problem-password').val('');
+                }
+            });
+        });
+
+        // 엔터키 처리
+        $('#problem-password').keypress(function (e) {
+            if (e.which == 13) {
+                e.preventDefault();
+                $('#check-password').click();
+            }
+        });
+    });
+</script>
+{% endif %}
+{% endblock %}
+
+{% block title_row %}
+<div class="problem-title">
+    {% if request.user.is_authenticated %}
+    {% if problem.id in completed_problem_ids %}
+    <!-- <a href="{{ url('user_submissions', problem.code, request.user.username) }}"> -->
+    <div class="icon-div">
+        {% if problem.is_public or request.in_contest or request.is_staff %}
+        <!-- <i class="solved-problem-color title-state fa fa-check-circle"></i> -->
+        <svg class="solved-problem-icon" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <g stroke-width="0" />
+            <g stroke-linecap="round" stroke-linejoin="round" />
+            <g>
+                <path
+                    d="M100,15a85,85,0,1,0,85,85A84.93,84.93,0,0,0,100,15Zm0,150a65,65,0,1,1,65-65A64.87,64.87,0,0,1,100,165Zm25-91.5-29,35L76,94c-4.5-3.5-10.5-2.5-14,2s-2.5,10.5,2,14c6,4.5,12.5,9,18.5,13.5,4.5,3,8.5,7.5,14,8,1.5,0,3.5,0,5-1l3-3,22.5-27c4-5,8-9.5,12-14.5,3-4,4-9,.5-13L138,71.5c-3.5-2.5-9.5-2-13,2Z" />
+            </g>
+        </svg>
+        {% else %}
+        <!-- <i class="solved-problem-color title-state fa fa-lock"></i> -->
+        <svg class="lock-icon" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <g stroke-width="0" />
+            <g stroke-linecap="round" stroke-linejoin="round" />
+            <g>
+                <path
+                    d="M85,100a15,15,0,1,0,15-15A15,15,0,0,0,85,100Zm-55,0A15,15,0,1,0,45,85,15,15,0,0,0,30,100Zm110,0a15,15,0,1,0,15-15,15,15,0,0,0-15,15Z" />
+            </g>
+        </svg>
+        {% endif %}
+        <!-- </a> -->
+    </div>
+    {% elif problem.id in attempted_problems %}
+    <!-- <a href="{{ url('user_submissions', problem.code, request.user.username) }}"> -->
+    <div>
+        {% if problem.is_public or request.in_contest %}\
+        <!-- <i class="attempted-problem-color title-state fa fa-minus-circle"></i> -->
+        <svg class="attempted-problem-icon" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <g stroke-width="0" />
+            <g stroke-linecap="round" stroke-linejoin="round" />
+            <g>
+                <path
+                    d="M100,15a85,85,0,1,0,85,85A84.93,84.93,0,0,0,100,15Zm0,150a65,65,0,1,1,65-65A64.87,64.87,0,0,1,100,165Zm30-72.5H70a10,10,0,0,0,0,20h60a10,10,0,0,0,0-20Z" />
+            </g>
+        </svg>
+        {% else %}
+        <!-- <i class="attempted-problem-color title-state fa fa-lock"></i> -->
+        {% endif %}
+        <!-- </a> -->
+    </div>
+    {% endif %}
+    {% endif %}
+    <h2 style="
+            display: inline-block;
+            font-family: Pretendard;
+            font-size: 24px;
+            font-weight: 400;
+            line-height: 28.8px;
+            text-align: center;
+            color: var(--Blackfont, #17171B);
+        ">{{ title }}</h2>
+    {#
+    <!-- {% if problem.is_organization_private %}
+    <span class="organization-tags">
+        {% for org in problem.organizations.all() %}
+        <span class="organization-tag">
+            <a href="{{ org.get_absolute_url() }}">
+                <i class="fa fa-lock"></i> {{ org.name }}
+            </a>
+        </span>
+        {% endfor %}
+    </span>
+    {% endif %} -->
+    #}
+    {#
+    <!-- {% if has_pdf_render %}
+            <span class="spacer"></span>
+            <a href="{{ url('problem_pdf', problem.code) }}" class="view-pdf">
+                <span class="pdf-icon">
+                    <span class="fa fa-file-pdf-o pdf-icon-logo"></span>
+                    <span class="pdf-icon-bar"></span>
+                </span>
+                {{ _('View as PDF') }}
+            </a>
+        {% endif %} -->
+    #}
+</div>
+{% endblock %}
+
+{% block info_float %}
+
+<!-- 답안 제출 부분 -->
+<div class="info-float-div">
+    <hr style="padding-top: 0.3em">
+    <div class="floating-menu-title">문제 정보</div>
+    <div class="inner-contents">
+        <div class="problem-info-entry">
+            <span class="material-symbols-outlined md-dark-grey md-18">check</span><span class="pi-name">{{ _('포인트 : ')
+                }}</span>
+            <span class="pi-value">
+                {% if contest_problem %}
+                {{ contest_problem.points }}{% if contest_problem.partial %} {{ _('(부분 점수)') }}{% endif %}
+                {% else %}
+                {{ problem.points|floatformat }}{% if problem.partial %} {{ _('(부분 점수)') }}{% endif %}
+                {% endif %}
+            </span>
+        </div>
+        <div class="problem-info-entry">
+            <span class="material-symbols-outlined md-dark-grey md-18">schedule</span><span class="pi-name">{{ _('시간 제한
+                : ') }}</span>
+            <span class="pi-value">{{ problem.time_limit }}s</span>
+        </div>
+        <div class="problem-lang-limits">
+            {% for name, limit in problem.language_time_limit %}
+            <div class="lang-limit">
+                <span class="lang-name">{{ name }}</span>
+                <span class="lang-tl">{{ limit }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="problem-info-entry">
+            <span class="material-symbols-outlined md-dark-grey md-18">storage</span></i><span class="pi-name">{{ _('메모리
+                제한 : ') }}</span>
+            <span class="pi-value">{{ problem.memory_limit|kbsimpleformat }}</span>
+        </div>
+        <div class="problem-lang-limits">
+            {% for name, limit in problem.language_memory_limit %}
+            <div class="lang-limit">
+                <span class="lang-name">{{ name }}</span>
+                <span class="lang-ml">{{ limit|kbsimpleformat }}</span>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if not contest_problem or not contest_problem.contest.hide_problem_authors %}
+        {% cache 86400 'problem_authors' problem.id LANGUAGE_CODE %}
+        {% with authors=problem.authors.all() %}
+        {% if authors %}
+        <div class="problem-info-entry">
+            <span class="material-symbols-outlined md-dark-grey md-18">edit_square</span><span class="pi-name">{% trans
+                trimmed count=authors|length %}
+                출제자:
+                {% pluralize count %}
+                출제자:
+                {% endtrans %}</span>
+            <div class="pi-value authors-value">{{ link_users(authors) }}</div>
+        </div>
+        {% endif %}
+        {% endwith %}
+        {% endcache %}
+        {% endif %}
+
+        <!-- 모든 제출물 보기 -->
+        {% if request.user.is_authenticated and has_submissions %}
+        <div class="problem-info-entry">
+            <span class="material-symbols-outlined md-dark-grey md-18">note_stack</span>
+            <span class="pi-name">
+                <a href="{{ url('user_submissions', problem.code, request.user.username) }}" class="pi-link">{{ _('내 제출물 보기') }}</a>
+            </span>
+        </div>
+        {% endif %}
+
+        {% if can_edit_problem %}
+        <div class="problem-info-entry">
+            <span class="material-symbols-outlined md-dark-grey md-18">note_stack</span>
+            <span class="pi-name">
+                <a href="{{ url('chronological_submissions', problem.code) }}" class="pi-link">{{ _('모든 제출물 보기') }}</a>
+            </span>
+        </div>
+        {% endif %}
+
+
+        <!-- 문제 유형
+                {% if not contest_problem or not contest_problem.contest.hide_problem_tags %}
+                <div id="problem-types">
+                    {% with types=problem.types_list %}
+                        <div class="toggle closed unselectable">
+                            <i class="fa fa-chevron-right fa-fw"></i>{% trans trimmed count=problem.types_list|length %}
+                            Problem type
+                            {% pluralize count %}
+                            Problem types
+                        {% endtrans %}
+                        </div>
+                        <div style="display:none" class="toggled">{{ problem.types_list|join(", ") }}</div>
+                    {% endwith %}
+                </div>
+                -->
+        {% endif %}
+        <!-- 허용된 언어 - 삭제됨 -->
+        <a>&nbsp;</a>
+        <!-- 내 답안들 
+            {% if request.user.is_authenticated and has_submissions %}
+                <div>
+                    <a href="{{ url('user_submissions', problem.code, request.user.username) }}" class="admin-btn unselectable button full button-font">{{ _('My submissions') }}</a>
+                </div>
+            {% endif %}
+            <div><a href="{{ url('chronological_submissions', problem.code) }}" class="admin-btn unselectable button full button-font">{{ _('All submissions') }}</a></div>
+            -->
+
+    </div>
+    <!-- 해설 보기 버튼 -->
+    {% if (editorial and editorial.is_accessible_by(request.user)) and not request.in_contest %}
+    <a href="{{ url('problem_editorial', problem.code) }}" class="unselectable button full">
+        {{ _('해설 보기') }}
+    </a>
+    {% endif %}
+    
+    <!-- 답안 제출 -->
+    {% if request.user.is_authenticated and request.in_contest and submission_limit %}
+    {% if submissions_left > 0 %}
+    <a href="{{ url('problem_submit', problem.code) }}" class="unselectable button full">
+        {{ _('Submit solution') }}
+    </a>
+    <div class="submissions-left">
+        {% trans trimmed counter=submissions_left %}
+        {{ counter }} submission left
+        {% pluralize %}
+        {{ counter }} submissions left
+        {% endtrans %}
+    </div>
+    {% else %}
+    <a class="unselectable button full disabled">{{ _('Submit solution') }}</a>
+    <div class="no-submissions-left submissions-left">{{ _('0 submissions left') }}</div>
+    {% endif %}
+    {% else %}
+    <a href="{{ url('problem_submit', problem.code) }}" class="unselectable button full">
+        {{ _('Submit solution') }}
+    </a>
+    {% endif %}
+</div>
+
+<!-- 관리자 도구 -->
+{% if can_edit_problem %}
+<div class="info-float-div-admin">
+    <div class="floating-menu-title-admin">관리자 도구</div>
+    {% if can_edit_problem %}
+    <hr>
+    <!-- 이슈 관리 -->
+    {# <!-- <div>
+        <a href="{{ url('problem_ticket_list', problem.code) }}" class="admin-btn unselectable button full">
+            {{ _('Manage tickets') }}
+            {% if num_open_tickets %}<span class="badge">{{ num_open_tickets }}</span>{% endif %}
+            <span class="material-symbols-outlined md-dark-grey md-18">chevron_right</span>
+        </a>
+    </div> --> #}
+    <!-- 문제 수정 -->
+    <div><a href="{{ url('admin:judge_problem_change', problem.id) }}" class="admin-btn unselectable button full">{{
+            _('Edit problem') }}
+            <span class="material-symbols-outlined md-dark-grey md-18">chevron_right</span>
+        </a></div>
+    <!-- 문제 세팅 (테스트 케이스 수정) -->
+    {% if not problem.is_manually_managed %}
+    <div><a href="{{ url('problem_data', problem.code) }}" class="admin-btn unselectable button full">{{ _('Edit test
+            data') }}
+            <span class="material-symbols-outlined md-dark-grey md-18">chevron_right</span>
+        </a></div>
+    {% endif %}
+    {% elif request.user.is_authenticated and has_tickets %}
+    <hr>
+    <div>
+        <a href="{{ url('problem_ticket_list', problem.code) }}" class="admin-btn unselectable button full">{{ _('My
+            tickets') }}
+            {% if num_open_tickets %}<span class="badge">{{ num_open_tickets }}</span>{% endif %}
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% elif request.user.is_staff %}
+
+<!-- 교수자 -->
+<div class="info-float-div-admin">
+    <div class="floating-menu-title-admin">교수자 도구</div>
+    <hr>
+    <!-- 테스트 케이스 확인 -->
+    <div>
+        <a href="{{ url('testcase_preview', problem.code) }}" class="admin-btn unselectable button full">테스트 케이스 확인
+            <span class="material-symbols-outlined md-dark-grey md-18">chevron_right</span>
+        </a>
+    </div>
+</div>
+{% endif %}
+
+
+{% endblock %}
+
+{% block problem_title %}
+<h2 style="
+            display: inline-block;
+            font-family: Pretendard;
+            font-size: 24px;
+            font-weight: 400;
+            line-height: 28.8px;
+            text-align: center;
+            color: var(--Blackfont, #17171B);
+            margin: 0;
+            ">{{ title }}</h2>
+{% endblock %}
+
+{% block description %}
+
+{% if problem.is_encrypted and need_password %}
+<div class="encrypted-problem">
+    <div class="alert alert-info">
+        <h4 class="text-center">이 문제는 암호화되어 있습니다.</h4>
+        <div class="password-form text-center">
+            <input type="password" id="problem-password" class="form-control" style="width: 300px; margin: 10px auto;"
+                placeholder="암호를 입력하세요" maxlength="50" minlength="4" required autocomplete="off">
+            <button id="check-password" class="button">확인</button>
+        </div>
+    </div>
+</div>
+<div id="decrypted-description" style="display: none;"></div>
+{% else %}
+{% cache 86400 'problem_html' problem.id MATH_ENGINE LANGUAGE_CODE %}
+{{ description|markdown(problem.markdown_style, MATH_ENGINE)|reference|str|safe }}
+{% endcache %}
+
+{% with license=problem.license %}
+{% if license %}
+<span class="license">
+    <a href="{{ url('license', license.key) }}">{{ license.display or license.name }}</a>
+</span>
+{% endif %}
+{% endwith %}
+{% endif %}
+{% endblock %}
+
+{% block comments %}
+{% if request.user.is_superuser or (contest_problem and contest_problem.contest.use_clarifications) %}
+
+
+
+<div class="clarifications-area">
+    <h2><i class="fa fa-question-circle"></i> {{ _('Clarifications') }}</h2>
+    {% if has_clarifications %}
+    {% for clarification in clarifications %}
+    <div class="problem-clarification">
+        <div class="time">{{ relative_time(clarification.date) }}</div>
+        <span class="body">
+            {{ clarification.description|markdown('problem', MATH_ENGINE)|reference }}
+        </span>
+    </div>
+    {% endfor %}
+    {% else %}
+    <p class="no-comments-message">{{ _('No clarifications have been made at this time.') }}</p>
+    {% endif %}
+    
+    <!-- Request clarification 버튼 추가 -->
+    {# 
+    <!--
+    {% if request.user.is_authenticated %}
+        <div style="margin-top: 20px; text-align: center;">
+            <a href="{{ url('new_problem_ticket', problem.code) }}" class="button" style="background-color: #2196F3; border-color: #2196F3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">
+                <i class="fa fa-question-circle" style="margin-right: 5px;"></i>
+                {{ _('Request clarification') }}
+            </a>
+            <br>
+            <a href="{{ url('problem_ticket_list', problem.code) }}" class="button" style="background-color: #888; color: white; margin-top: 10px; padding: 10px 20px; border-radius: 4px; display: inline-block;">
+                <i class="fa fa-list" style="margin-right: 5px;"></i>
+                {{ _('My tickets for this problem') }}
+            </a>
+        </div>
+    {% endif %}
+    -->
+    #}
+</div>
+
+{% endif %}
+{% include "comments/list.html" %}
+
+{% endblock %}
+
+{% block bodyend %}
+{{ super() }}
+{% include "comments/math.html" %}
+{% endblock %}

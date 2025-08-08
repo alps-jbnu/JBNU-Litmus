@@ -1,0 +1,25 @@
+<head>
+  <link 
+    rel="stylesheet" 
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  >
+</head>
+<form method="get">
+  {% for key, value in request.GET.items %}
+      {% if key != 'is_public'%}
+      <input type="hidden" name="{{ key }}" value="{{ value }}">
+      {% endif %}
+  {% endfor %}
+<label>
+  공개 여부
+  <select name="is_public">
+    <option value="">전체</option>
+    <option value="True" {% if request.GET.is_public == 'True' %}selected{% endif %}>공개</option>
+    <option value="False" {% if request.GET.is_public == 'False' %}selected{% endif %}>비공개</option>
+  </select>
+</label>
+  
+  <button type="submit">
+  <i class="fa-solid fa-filter"></i> 필터 적용
+</button>
+</form>

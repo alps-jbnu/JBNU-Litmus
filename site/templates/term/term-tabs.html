@@ -1,0 +1,10 @@
+{% extends "tabs-base.html" %}
+
+{% block tabs %}
+    {{ make_tab('term-one', 'fa-info-circle', url('term_one'), '제1장') }}
+    {{ make_tab('term-two', 'fa-info-circle', url('term_two'), '제2장') }}
+    {{ make_tab('term-three', 'fa-info-circle', url('term_three'), '제3장') }}
+    {{ make_tab('term-four', 'fa-info-circle', url('term_four'), '제4장') }}
+    {{ make_tab('term-five', 'fa-info-circle', url('term_five'), '제5장') }}
+    {{ make_tab('term-six', 'fa-info-circle', url('term_six'), '제6장') }}
+{% endblock %}

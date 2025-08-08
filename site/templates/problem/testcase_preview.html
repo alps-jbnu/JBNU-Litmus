@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Cases Display</title>
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #f4f4f4;
+            padding: 20px;
+            margin: 0;
+            box-sizing: border-box;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 10px;
+            background-color: #F9FAFB;
+            border-radius: 10px;
+        }
+        .testcase-container {
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+            position: relative;
+            
+        }
+        ul.errorlist {
+            border: 1px #FD9199 solid;
+            border-radius: 5px;
+            padding-top: 1em;
+            padding-bottom: 1em;
+            background: #FAD4D7;
+        }
+        .testcase {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .filename {
+            font-weight: 500;
+            font-size: 15px;
+            color: #5C95D9;
+            margin-bottom: 5px;
+            align-items: left;
+        }
+        .filebody {
+            white-space: pre-wrap;
+            font-family: Pretendard;
+            font-size: 14px;
+            font-weight: 400;
+            color: #262627;
+            background-color: #D9D9D92E;
+            padding: 5px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .collapsed .filebody {
+            max-height: 200px; 
+            max-width: 250px;
+            overflow: hidden;
+        }
+        .expanded .filebody {
+            max-height: none;
+            max-width: none;
+        }
+        .subtitle {
+            font-weight: 600;
+            font-size: 18px;
+            margin-bottom: 15px;
+            line-height: 22.5px;
+            color: #495057;
+            background-color: #D9D9D936;
+            border-radius: 50px;
+            padding: 8px 16px;
+            text-align: center;
+            display: inline-block;
+            justify-content: flex-start; /* 왼쪽 정렬 */
+            width: hug(128px);
+
+        }
+        .toggle-container {
+            visibility: hidden;
+            display: none;
+            height: 0;
+            overflow: hidden;
+            transition: visibility 0s, height 0.3s ease-in-out;
+        }
+        .toggle-container.visible {
+            visibility: visible;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 10px;
+            height: auto;
+
+        }
+        .toggle-btn {
+            margin-top: 5px;
+            padding: 5px;
+            background: none;
+            border: none;
+            color: rgba(73, 80, 87, 1);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            width: 100%;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            display: flex;
+            gap: 5px;
+        }
+        
+    </style>
+</head>
+<body>
+    {% if errors %}
+        <ul class="errorlist">
+            <ul>
+                {% for error in errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </ul>
+    {% endif %}
+
+<div class="container" id="testcase-container">
+    <!-- 테스트케이스가 여기에 동적으로 추가됩니다 -->
+</div>
+
+<script>
+    // JSON 데이터를 직접 정의
+    // const testCasesData = {
+    //     "testcases": [
+    //         {
+    //             "inputFileName": "tc.1.in",
+    //             "inputFileBody": "1, 2",
+    //             "outputFileName": "tc.1.out",
+    //             "outputFileBody": "3"
+    //         },
+    //         {
+    //             "inputFileName": "tc.2.in",
+    //             "inputFileBody": "4, 5",
+    //             "outputFileName": "tc.2.out",
+    //             "outputFileBody": "9"
+    //         },
+    //     ]
+    // };
+
+    
+    const testCasesData = JSON.parse('{{ json|escapejs }}');
+    console.log(testCasesData)
+
+    // 테스트케이스를 화면에 표시하는 함수
+    function displayTestCases(testcases) {
+        const container = document.getElementById('testcase-container');
+
+        testcases.forEach((testcase, index) => {
+            // 각 테스트 케이스를 위한 컨테이너 생성
+            const testcaseContainer = document.createElement('div');
+            testcaseContainer.className = 'testcase-container';
+
+            // 소제목 생성
+            const subtitle = document.createElement('div');
+            subtitle.className = 'subtitle';
+            subtitle.innerText = `Test Case ${index + 1}`;
+
+            // Input & Output column 생성
+            const testcaseDiv = document.createElement('div');
+            testcaseDiv.className = 'testcase';
+
+            const inputDiv = document.createElement('div');
+            isBinary = testcase.inputFileName.endsWith('.bin');
+            inputDiv.innerHTML = `
+                <div>
+                    <div class="filename">
+                        <i class="fa-regular fa-file" style="color: #5c95d9;"></i>
+                        ${testcase.inputFileName}</div>
+                    <div class="filebody">${ isBinary? "지원하지 않는 input 파일 형식입니다." : testcase.inputFileBody}</div>
+                </div>
+            `;
+            const outputDiv = document.createElement('div');
+            outputDiv.innerHTML = `
+                <div>
+                    <div class="filename">
+                        <i class="fa-regular fa-file" style="color: #5c95d9;"></i>
+                        ${testcase.outputFileName}</div>
+                    <div class="filebody">${testcase.outputFileBody}</div>
+                </div>
+            `;
+            testcaseDiv.appendChild(inputDiv);
+            testcaseDiv.appendChild(outputDiv);
+
+            const toggleContainer = document.createElement('div');
+            toggleContainer.className = 'toggle-container';
+
+            const toggleButton = document.createElement('button');
+            toggleButton.className = 'toggle-btn';
+
+            const iconElement = document.createElement("i");
+            iconElement.className = "fa-solid fa-chevron-down";
+            
+            const textElement = document.createElement("span");
+            textElement.innerText = "더보기";
+
+            toggleButton.appendChild(iconElement);
+            toggleButton.appendChild(textElement);
+            toggleContainer.appendChild(toggleButton);
+            testcaseContainer.appendChild(subtitle);
+            testcaseContainer.appendChild(testcaseDiv);
+            testcaseContainer.appendChild(toggleContainer);
+            container.appendChild(testcaseContainer);
+        
+
+            // 파일 내용 높이 기준으로 자동 접힘 처리
+            requestAnimationFrame(() => {
+                const inputBody = inputDiv.querySelector('.filebody');
+                const outputBody = outputDiv.querySelector('.filebody');
+                const MAX_HEIGHT = 200;
+                const MAX_WIDTH = 254;
+
+                
+                const exceedsLimit = inputBody.scrollHeight > MAX_HEIGHT || inputBody.scrollWidth > MAX_WIDTH || 
+                                     outputBody.scrollHeight > MAX_HEIGHT || outputBody.scrollWidth > MAX_WIDTH;
+
+               
+                if (exceedsLimit) {
+                    testcaseContainer.classList.add("collapsed");
+                    toggleContainer.style.display = "flex";
+                    toggleContainer.classList.add("visible"); // 필요할 때만 보이도록 변경
+                } else {
+                    toggleContainer.classList.remove("visible"); // 필요할 때만 보이도록 변경
+                    toggleContainer.style.display = "none";
+                }
+
+                toggleButton.onclick = () => {
+                    const isCollapsed = testcaseContainer.classList.contains("collapsed");
+                    if (isCollapsed) {
+                        testcaseContainer.classList.remove("collapsed");
+                        testcaseContainer.classList.add("expanded");
+                        iconElement.className = "fa-solid fa-chevron-up";
+                        textElement.innerText = "접기";
+                    } else {
+                        testcaseContainer.classList.remove("expanded");
+                        testcaseContainer.classList.add("collapsed");
+                        iconElement.className = "fa-solid fa-chevron-down";
+                        textElement.innerText = "더보기";
+                    }
+                };
+            });
+
+            
+        });
+    }
+
+    // 페이지 로드 시 JSON 데이터를 사용하여 테스트케이스를 화면에 표시
+    document.addEventListener('DOMContentLoaded', () => {
+        displayTestCases(testCasesData.testcases);
+    });
+
+
+</script>
+
+</body>
+</html>

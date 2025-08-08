@@ -1,0 +1,29 @@
+<head>
+  <link 
+    rel="stylesheet" 
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  >
+</head>
+
+<form method="get">
+  {% for key, value in request.GET.items %}
+      {% if key != 'username' and key != 'email' and key != 'first_name' and key != 'is_active' %}
+      <input type="hidden" name="{{ key }}" value="{{ value }}">
+      {% endif %}
+  {% endfor %}
+<label>
+  사용자명
+  <input type="text" name="username" value="{{ request.GET.username }}" placeholder="사용자명">
+</label>
+<label>
+  이메일
+  <input type="text" name="email" value="{{ request.GET.email }}" placeholder="이메일">
+</label>
+<label>
+  이름
+  <input type="text" name="first_name" value="{{ request.GET.first_name }}" placeholder="이름">
+</label>
+  <button type="submit">
+  <i class="fa-solid fa-filter"></i> 필터 적용
+</button>
+</form> 

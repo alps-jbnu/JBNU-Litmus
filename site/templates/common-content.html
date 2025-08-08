@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block media %}
+    {% block content_media %}{% endblock %}
+{% endblock %}
+
+{% block js_media %}
+    {% compress js %}
+        <script src="{{ static('libs/clipboard/clipboard.js') }}"></script>
+        <script src="{{ static('libs/clipboard/tooltip.js') }}"></script>
+        <script type="text/javascript">
+            $(function () {
+                var info_float = $('.info-float');
+                if (info_float.length) {
+                    var container = $('#content-right');
+                    if (!featureTest('position', 'sticky')) {
+                        fix_div(info_float, 55);
+                        $(window).resize(function () {
+                            info_float.width(container.width());
+                        });
+                        info_float.width(container.width());
+                    }
+                }
+
+                window.add_code_copy_buttons = function ($container) {
+                    $container.find('pre code').each(function () {
+                        var copyButton;
+                        $(this).parent().before($('<div>', {'class': 'copy-clipboard'})
+                            .append(copyButton = $('<span>', {
+                                'class': 'btn-clipboard',
+                                'data-clipboard-text': $(this).text(),
+                                'title': '{{ _('Click to copy') }}'
+                            }).text('{{ _('복사') }}')));
+
+                        $(copyButton.get(0)).mouseleave(function () {
+                            $(this).attr('class', 'btn-clipboard');
+                            $(this).removeAttr('aria-label');
+                        });
+
+                        var curClipboard = new Clipboard(copyButton.get(0));
+
+                        curClipboard.on('success', function (e) {
+                            e.clearSelection();
+                            showTooltip(e.trigger, '{{ _('Copied!') }}');
+                        });
+
+                        curClipboard.on('error', function (e) {
+                            showTooltip(e.trigger, fallbackMessage(e.action));
+                        });
+                    });
+                };
+                window.add_code_copy_buttons($(document));
+            });
+        </script>
+    {% endcompress %}
+    {% block content_js_media %}{% endblock %}
+{% endblock %}
+
+{% block body %}   
+    <style>
+        .content-description {
+            line-height: 1.5em;
+            font-size: 1.2em;
+            font-family: "Pretendard","Segoe UI", "Lucida Grande", Arial, sans-serif;
+            color: #373D47;
+        }
+
+        .content-description p {
+            margin: 1em 0 !important;
+            padding: 0 !important;
+            color: #373D47;
+        }
+        .content-description img {
+        max-width: 100%;
+        height: auto;
+        }
+        .content-description h1, .content-description h2, .content-description h3, .content-description h4, .content-description h5, .content-description h6 {
+        font-weight: normal;
+        color: #373D47;
+        margin-bottom: 0.75em;
+        padding: 0;
+        background: 0;
+        }
+        .content-description h4 {
+        margin-top: 24px;
+        }
+        .content-description h3, .content-description h4, .content-description h5, .content-description h6 {
+        font-weight: bold;
+        }
+        .content-description h1 {
+        font-size: 2.5em;
+        }
+        .content-description h2 {
+        font-size: 2em;
+        }
+        .content-description h3 {
+        font-size: 1.6em;
+        margin: 0;
+        padding: 0;
+        }
+        .content-description h4 {
+        font-size: 18px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        line-height: 1.225;
+        padding-bottom: 0.3em;
+        padding-top: 0.5em;
+        color: #373D47;
+        }
+        .content-description h5 {
+        font-size: 1.15em;
+        margin-top: 0;
+        }
+        .content-description h6 {
+        font-size: 0.9em;
+        }
+        .content-description blockquote {
+        color: #808080;
+        margin: 0;
+        padding-left: 1.5em;
+        border-left: 0.5em #eee solid;
+        }
+        .content-description hr {
+        display: block;
+        height: 0;
+        border: 0;
+        font-style: italic;
+        border-bottom: 1px solid #ccc;
+        margin: 25px 0 20px 0;
+        padding: 0;
+        }
+        .content-description pre, .content-description code, .content-description kbd, .content-description samp, .content-description span.code {
+        color: #000;
+        page-break-inside: avoid;
+        font-family: Consolas, "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier, monospace;
+        font-size: 0.98em;
+        }
+        .content-description code, .content-description span.code {
+        font-family: Consolas, "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier, monospace !important;
+        margin: 0 2px;
+        padding: 0 5px;
+        border: 1px solid #ccc;
+        background-color: #f8f8f8;
+        border-radius: 4px;
+        font-size: 0.95em;
+        color: #3b3b3b;
+        }
+        .content-description pre {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        margin: 1.5em 0 1.5em 0;
+        padding: 1em;
+        border: 1px solid #ccc;
+        background-color: #f8f8f8;
+        color: #000;
+        border-radius: 4px;
+        }
+        .content-description pre code, .content-description pre div.code {
+        border: 0;
+        line-height: 1em;
+        margin: 0;
+        padding: 0;
+        background: transparent;
+        font-size: 1em;
+        color: #000;
+        }
+        .content-description b, .content-description strong {
+        font-weight: bold;
+        }
+        .content-description dfn {
+        font-style: italic;
+        }
+        .content-description ins {
+        background: #ff9;
+        color: #000;
+        text-decoration: none;
+        }
+        .content-description mark {
+        background: #ff0;
+        color: #000;
+        font-style: italic;
+        font-weight: bold;
+        }
+        .content-description sub {
+        font-size: 75%;
+        line-height: 0;
+        position: relative;
+        vertical-align: baseline;
+        }
+        .content-description sup {
+        font-size: 75%;
+        line-height: 0;
+        position: relative;
+        vertical-align: baseline;
+        top: -0.5em;
+        }
+        .content-description sub {
+        bottom: -0.25em;
+        }
+        .content-description ul, .content-description ol {
+        padding: 0 0 0 2em;
+        }
+        .content-description li p:last-child {
+        margin: 0;
+        }
+        .content-description dd {
+        margin: 0 0 0 2em;
+        }
+        .content-description img {
+        border: 0;
+        -ms-interpolation-mode: bicubic;
+        vertical-align: middle;
+        }
+        .content-description td {
+        vertical-align: top;
+        }
+
+        .display-math {
+        display: block;
+        text-align: center;
+        margin-left: auto;
+        margin-right: auto;
+        }
+    </style>     
+    <div id="content-bg"
+    style="
+        width: 100vw; 
+        height: 300px;
+        background: linear-gradient(180deg, #5C95D9 0%, #9FCDF2 300%);
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: -1;
+    ">
+    </div>
+    <div id="common-content">
+
+        <div id="content-right">
+            <div class="info-float">{% block info_float %}{% endblock %}</div>
+        </div>
+        <div id="content-left" class="split-common-content">
+            <div class="content-description screen">
+                {% block description %}{% endblock %}
+                {% block description_end %}
+                {% endblock %}
+                {% block post_description_end %}{% endblock %}
+            </div>
+            {% block comments %}{% endblock %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block bodyend %}
+    {% if REQUIRE_JAX %}
+        {% include "mathjax-load.html" %}
+    {% endif %}
+{% endblock %}

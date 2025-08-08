@@ -1,0 +1,192 @@
+footer {
+  background: #FFF !important;
+}
+
+/* .title-div {
+  visibility: hidden;
+}
+
+#page-container {
+  display: flex;
+  background: #fff !important;
+}
+
+#content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 90vh !important;
+  margin-top: 0px !important;
+  margin: auto;
+  width: 1040px;
+}
+
+.content-body-box {
+  min-height: 100% !important;
+  margin-bottom: 50px;
+}
+
+#content-body {
+  padding-bottom: 0px;
+}
+
+.title-box {
+  display: none;
+}
+
+.auth-flow-form {
+  max-width: 100%;
+  margin: 50px auto;
+  padding: 20px;
+  background-color: white;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.auth-flow-form h2 {
+  margin-bottom: 20px;
+  font-size: 24px;
+  font-weight: 400;
+}
+
+.form-area {
+  width: 354px;
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  border: none;
+  gap: 10px;
+  margin: 0 auto;
+}
+
+.jedutools-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 60px;
+  border: 1px solid #D9D9D999;
+  border-radius: 8px;
+  background-color: #FFFFFF;
+  color: #495057;
+  box-shadow: #959DA533;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  text-decoration: none;
+  box-shadow: 0px 8px 24px #959DA533;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.jedutools-button:hover {
+  background-color: #FAFAFA;
+  box-shadow: 0px 10px 28px rgba(149, 157, 165, 0.25);
+}
+
+.admin-button {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  height: 40px;
+  border-radius: 8px;
+  background-color: #5C95D9;
+  font-family: "Pretendard";
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: 600;
+  align-items: center;
+  margin-bottom: 5px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.admin-button:hover {
+  background-color: #5288C8;
+  color: #FAFAFA;
+}
+
+.register-button {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  width: 100%;
+  height: 38px;
+  border-radius: 8px;
+  background-color: #FFF;
+  font-family: "Pretendard";
+  color: #5C95D9 !important;
+  font-size: 14px;
+  font-weight: 600;
+  align-items: center;
+  margin-bottom: 5px;
+  border: 1px solid #D9D9D9;
+  padding: 0;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.register-button:hover {
+  background-color: #FAFAFA;
+  color: #5487C5;
+}
+
+.form-links {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-bottom: 10px;
+  color: #8391A1;
+}
+
+.form-links a {
+  text-decoration: none;
+  color: #8391A1;
+}
+
+.form-links a:hover {
+  text-decoration: underline;
+}
+
+footer {
+  margin-top: 30px;
+}
+
+.footer-content {
+  text-align: center;
+  color: #808080;
+}
+
+.form-area input[type="text"],
+.form-area input[type="password"] {
+  height: 46px;
+  padding: 10px 10px 10px 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: "Pretendard";
+  transition: border-color 0.15s ease-in-out 0s, box-shadow 0.15s ease-in-out 0s;
+  box-sizing: border-box;
+}
+
+input[type=text]:hover,
+input[type=password]:hover,
+input[type=email]:hover,
+input[type=number]:hover {
+  box-shadow: none;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset;
+}
+
+input[type=text]:focus,
+input[type=password]:focus,
+input[type=email]:focus,
+input[type=number]:focus {
+  box-shadow: none;
+  border-color: #9FCDF2;
+  outline: 0;
+}
+
+input[type=number] {
+  padding: 2px 0 2px 5px;
+}
+
+input[type=checkbox] {
+  vertical-align: middle;
+} */

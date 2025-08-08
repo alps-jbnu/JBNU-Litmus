@@ -1,0 +1,38 @@
+<style>
+    .pagination .page-arrow i {
+        font-size: 14px;
+    }
+    .pagination .disabled-page .page-arrow i {
+        opacity: 0.5;
+    }
+    
+</style>
+<ul class="pagination">
+    {% if page_obj %}
+        {% if page_obj.number > 1 %}
+            {% if page_obj.previous_page_number() == 1 and first_page_href != None %}
+                <li><a href="{{ first_page_href }}" class="page-arrow"><i class="fa-solid fa-chevron-left"></i></a></li>
+            {% else %}
+                <li><a href="{{ page_prefix or '' }}{{ page_obj.previous_page_number() }}{{ page_suffix or '' }}" class="page-arrow"><i class="fa-solid fa-chevron-left"></i></a></li>
+            {% endif %}
+        {% endif %}
+
+        {% for page in page_obj.page_range %}
+            {% if not page %}
+                <li class="disabled-page"><span>...</span></li>
+            {% else %}
+                <li{% if page == page_obj.number %} class="active-page"{% endif %}><a href="
+                    {%- if page == 1 and first_page_href != None -%}
+                        {{ first_page_href }}
+                    {%- else -%}
+                        {{ page_prefix or '' }}{{ page }}{{ page_suffix or '' }}
+                    {%- endif -%}
+                ">{{ page }}</a></li>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.number < page_obj.paginator.num_pages %}
+            <li><a href="{{ page_prefix or '' }}{{ page_obj.next_page_number() }}{{ page_suffix or '' }}" class="page-arrow"><i class="fa-solid fa-chevron-right"></i></a></li>
+        {% endif %}
+    {% endif %}
+</ul>

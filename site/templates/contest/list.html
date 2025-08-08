@@ -1,0 +1,806 @@
+{% extends "common-content.html" %}
+{% block meta %}
+    <meta name="description" content="The {{ SITE_NAME }}'s contest list - past, present, and future.">
+{% endblock %}
+
+{% block js_media %}
+    <style>
+        .content-body-box {
+            background-color: #f9fafb;
+            font-family: "Pretendard";
+            width: 100%;
+        }
+        #content-body {
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+        }
+    
+        .contest-head-block {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 8px;
+        }
+        .contest-contents {
+            display: flex;
+            flex-direction: column;
+        }
+        .contest-list-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .contest-time {
+            display: flex;
+            color: var(--font-grey);
+            margin-left: 4px;
+            padding-top: 0.5em;
+        }
+        .text-align {
+            padding-top: 2px;
+            font-size: 18px;
+            color: var(--font-basic-black);
+        }
+
+        .text-align a {
+            color: var(--font-basic-black);
+            text-decoration: none; 
+            transition: color 0.3s ease;
+        }
+
+        .text-align a:hover {
+            color: var(--primary-color);
+        }
+
+        .contest-div {
+            background: none;
+            background-color: white;
+            border-radius: 10px;
+            padding: 18px 24px 12px 24px;
+            margin: 0 0 20px 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .content-description {
+            width: 80%;
+            flex: 1;
+        }
+        .contest-group-container {
+            width: 200px;
+            display: flex;
+            flex-direction: row;
+            padding: 0;
+            margin: 0;
+            color: #8391A1;
+            list-style-type: none;
+            border-radius: 10px;
+            visibility: hidden;
+        }
+        .contest-group-list {
+            width: 100%;
+
+        }
+    
+        .contest-group-item {
+            height: 40px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            font-size: 16px;
+            font-weight: 400;
+            padding-left: 10px;
+            border-radius: 8px;
+            transition: background-color 0.3s ease;
+        }
+
+        .contest-group-item:hover {
+            background-color: #D9D9D936;
+            transition: background-color 0.3s ease;
+        }
+
+        .contest-group-item input[type="checkbox"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        label .material-symbols-outlined {
+            display: inline-block;
+            border-radius: 50%;
+            vertical-align: middle;
+            padding: 0; /* 패딩 없음 */
+            box-sizing: border-box; /* 크기 계산 방식 고정 */
+            margin-right: 10px;
+            font-size: 24px;
+            color: #D9D9D9;
+        }
+
+        .contest-group-item input[type="checkbox"]:checked + label .material-symbols-outlined {
+            font-size: 24px;
+            border: none; 
+            background: #FFFFFF;
+            color: var(--LITMUS-primary, #5C95D9);
+            border-radius: 50%;
+        }
+        
+        .contest-group-item input[type="checkbox"]:checked + label .fa-regular.fa-circle::before {
+            content: "\f058"; /* fa-circle-check 아이콘 코드 */
+            font-weight: 900; /* solid 스타일 */
+        }
+
+        .contest-group-item label {
+            cursor: pointer;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .contest-group-item.active {
+            background: none;
+            background-color: #D9D9D936;
+            color: #373D47;
+        }
+
+        .contest-group-item.active label {
+            color: #373D47;
+        }
+       
+        .content-description h4 {
+            border-bottom: none;
+            margin: 0;
+            padding: 0 0 0 0;
+            font-family: "Pretendard";
+            font-size: 18px;
+            font-weight: 500;
+            line-height: 24px;
+            text-align: left;
+            color: var(--font-basic-black);
+        }
+        .table td {
+            border-top: 1px solid rgba(217, 217, 217, 0.5);        
+            border-right: none;    
+            border-left: none;      
+            border-bottom: none; 
+        }
+        .table tr:first-child td {
+            border: none; 
+        }
+        .table {
+            border-spacing: 0;
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+            margin-bottom: 0.5em;
+            background: rgba(255,255,255,1.0);
+        }
+        .table.striped tr:nth-child(even) {
+            background: none;
+            border-left: var(--border-color);
+        }
+        table.active tr td {
+            background: linear-gradient(90deg, rgba(159, 205, 242, 0.2) 0.62%, rgba(167, 231, 244, 0) 100.62%);
+        }
+        .contest-list tbody tr {
+            height: 100px;
+        }
+        .event-bar {
+            width: 8px;
+            height: 42px;
+            margin-right: 8px;
+        }
+        .contest-block {
+            display: flex;
+            font-family: "Pretendard";
+            padding: 0.5em 0.5em 0.5em 1em;
+        }
+        .activity {
+            background: linear-gradient(180deg, #9fcdf2 0%, #a7e7f4 100%);
+        }
+        .upcoming {
+            background: linear-gradient(360deg, #FFD9A0 0%, #9FCDF2 100%);
+        }
+        .past {
+            background: linear-gradient(360deg, #123B63 0%, #9FCDF2 100%);
+        }
+
+        .button, button, input[type=submit] {
+            width: 100px;
+            height: 32px;
+            color: white;
+            text-decoration: none !important;
+            cursor: pointer;
+            vertical-align: middle;
+            white-space: nowrap;
+            font-weight: normal;
+            background: var(--LITMUS-Primary, #5C95D9);
+            border-radius: 10px;
+            padding: 6px 12px;
+            display: block;
+            border: none;
+            text-align: center;
+            font-size: 14px;
+            font-family: Pretendard;
+            line-height: 17.5px;
+            margin: 0 auto;
+        }
+        .contest-list td {
+            padding: 7px 5px;
+            vertical-align: middle;
+        }
+        .contest-list td:last-child {
+            width: 150px;
+        }
+        .button.full, button.full, input[type=submit].full {
+            padding: 6px 0;
+        }
+        .button.disabled, button.disabled, input[type=submit].disabled {
+            /* background: linear-gradient(to bottom, darkgray 0, gray 100%) repeat-x !important; */
+            background: none !important;
+            background-color: darkgray !important;
+            border-color: grey !important;
+            cursor: not-allowed;
+        }
+        .modal_overlay {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(1px);
+            -webkit-backdrop-filter: blur(1px);
+        }
+        .modal_window {
+            background: white;
+            backdrop-filter: blur(13.5px);
+            -webkit-backdrop-filter: blur(13.5px);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            width: 380px;
+            height: 210px;
+            position: relative;
+            padding: 10px;
+        }
+        .modal_title{
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            font-size: 20px;
+        }
+        .modal_title_side{
+            flex: 0 0 20px;
+            text-align: center;
+            font-size: 30px;
+        }
+        #contest-code, #contest-code-button {
+            width: 266px;
+            height: 40px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        #contest-code-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        .modal_content {
+            width: 266px;
+            margin: 0 auto;
+        }
+        .contest-entry{
+            display: none;
+        }
+        #close_modal{
+            cursor:pointer;
+        }
+        #contest-modal{
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 10000;
+            text-align: center;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+    </style>
+    <script src="{{ static('libs/featherlight/featherlight.min.js') }}" type="text/javascript"></script>
+    <script>
+        function openModal(contestKey) {
+            const modal = document.getElementById("contest-modal");
+            modal.setAttribute('data-contest-key', contestKey);
+            modal.style.display = "flex";
+        }
+    
+        document.addEventListener("DOMContentLoaded", function() {
+            const groupContainer = document.querySelector('.contest-group-container');
+            if (groupContainer) {
+                groupContainer.style.visibility = 'visible';
+            }
+            
+            const buttonCloseModal = document.getElementById("close_modal");
+            buttonCloseModal.addEventListener("click", function(e) {
+                const modal = document.getElementById("contest-modal");
+                modal.style.display = "none";
+            });
+    
+            const submitButton = document.getElementById("contest-code-button");
+            submitButton.addEventListener("click", function(e) {
+                // e.preventDefault(); // 기본 동작 방지 
+                submitContestCode();
+            });
+
+            document.getElementById("all_subjects").addEventListener('change', function() {
+                if (this.checked) {
+                    document.querySelectorAll('input[name="subject_id"]').forEach(function(checkbox) {
+                        checkbox.checked = false;
+                        checkbox.closest('.contest-group-item').classList.remove('active');
+                    });
+                    this.closest('.contest-group-item').classList.add('active');
+                    $('input[type="checkbox"]').change(function(){
+                        if($(this).is(':checked')){
+                            $(this).next('label').find('.material-symbols-outlined')
+                        }
+                    });
+
+                    // Reset to initial URL by removing all subject_id parameters
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete('subject_id');
+                    window.location.href = url.toString(); // Reload the page with the updated URL
+                }
+            });
+            document.querySelectorAll('input[name="subject_id"]').forEach(function(checkbox) {
+                checkbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        document.getElementById("all_subjects").checked = false;
+                        document.getElementById("all_subjects").closest('.contest-group-item').classList.remove('active');
+                        this.closest('.contest-group-item').classList.add('active');  // active 클래스 추가
+                    } else {
+                        this.closest('.contest-group-item').classList.remove('active');  // active 클래스 제거
+                    }
+                    applyFilter();  // Checkbox state changed, apply filter immediately
+                });
+            });
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const selectedSubjects = urlParams.getAll('subject_id');  // 모든 subject_id 값 가져오기
+
+            if (selectedSubjects.length > 0) {
+                document.getElementById("all_subjects").checked = false;
+                document.getElementById("all_subjects").closest('.contest-group-item').classList.remove('active');
+            } else {
+                document.getElementById("all_subjects").checked = true;
+                document.getElementById("all_subjects").closest('.contest-group-item').classList.add('active');
+            }
+            selectedSubjects.forEach(function(subjectId) {
+                const checkbox = document.querySelector(`input[name="subject_id"][value="${subjectId}"]`);
+                if (checkbox) {
+                    checkbox.checked = true;  // 해당하는 체크박스를 체크 상태로 만듦
+                    checkbox.closest('.contest-group-item').classList.add('active');  // 해당 항목에 active 클래스 추가
+                }
+
+            });
+
+            
+
+        });
+    
+        function submitContestCode() {
+            const contestKey = document.getElementById("contest-modal").getAttribute('data-contest-key');
+            const enteredCode = document.getElementById("contest-code").value;
+    
+            fetch(`/api/contest/${contestKey}/verify-code/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken') // CSRF 토큰 설정
+                },
+                body: JSON.stringify({ code: enteredCode })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.valid) {
+                    window.location.href = `/contest/${contestKey}/`;
+                } else {
+                    alert("잘못된 코드입니다. 다시 시도해 주세요.");
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function applyFilter() {
+            const selectedSubjects = [];
+            document.querySelectorAll('input[name="subject_id"]:checked').forEach(function(checkbox) {
+                if (checkbox.value) {
+                    selectedSubjects.push(checkbox.value);
+                }
+            });
+
+            const url = new URL(window.location.href);
+            url.searchParams.delete('subject_id');  // 기존 subject_id 파라미터를 삭제하고
+
+            // 새롭게 선택된 subject_id를 추가
+            selectedSubjects.forEach(function(subjectId) {
+                url.searchParams.append('subject_id', subjectId);
+            });
+
+            window.location.href = url.toString();
+        }
+
+    </script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('.time-remaining').each(function () {
+                count_down($(this));
+            });
+
+            $('.contest-tag').find('a[data-featherlight]').featherlight();
+
+            $('.join-warning').click(function () {
+                return confirm('{{ _('Are you sure you want to join?') }}\n' +
+                    '{{ _('Joining a contest for the first time starts your timer, after which it becomes unstoppable.') }}');
+            });
+
+            // var tooltip_classes = 'tooltipped tooltipped-e';
+            //
+            // $('.contest-tag').each(function () {
+            //     var link = $(this);//
+            //     link.mouseenter(function (e) {
+            //         link.addClass(tooltip_classes).attr('aria-label', link.attr('data-description'));
+            //     }).mouseleave(function (e) {
+            //         link.removeClass(tooltip_classes).removeAttr('aria-label');
+            //     });
+            // });
+        });
+    </script>
+    <script>
+        window.onpageshow = function(event) {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        };
+    </script>
+{% endblock %}
+
+{% block title_ruler %}{% endblock %}
+
+{% block title_row %}
+    {% set tab = 'list' %}
+    {% include "contest/contest-list-tabs.html" %}
+{% endblock %}
+
+{% macro contest_head(contest) %}
+    {% spaceless %}
+        <a href="{{ url('contest_view', contest.key) }}" class="contest-list-title">
+            {{- contest.name -}}
+        </a>
+        
+    {% endspaceless %}
+{% endmacro %}
+
+{% macro time_left(contest) %}
+    <div class="time time-left">
+        {% if contest.time_limit %}
+            시작: {{ contest.start_time|date(_("Y년 M j일 G:i")) }}&nbsp
+            종료: {{ contest.end_time|date(_("Y년 M j일 G:i")) }} 
+        {% else %}
+            시작: {{ contest.start_time|date(_("Y년 M j일 G:i")) }}&nbsp
+            종료: {{ contest.end_time|date(_("Y년 M j일 G:i")) }}
+        {% endif %}
+        <br>
+        {% if contest.time_limit %}
+            
+        {% else %}
+            
+        {% endif %}
+    </div>
+{% endmacro %}
+
+{% macro user_count(contest, user) %}
+    {% if contest.can_see_own_scoreboard(user) %}
+        <a href="{{ url('contest_ranking', contest.key) }}">{{ contest.user_count }}</a>
+    {% else %}
+        {{ contest.user_count }}
+    {% endif %}
+{% endmacro %}
+
+{% macro contest_join(contest, request, finished_contests) %}
+    <td>
+        {% if contest.is_live_joinable_by(request.user) %}
+            <button class="unselectable button full participate-button join-warning" 
+                    onclick="openModal('{{ contest.key }}')">
+                {{ _('Join') }}
+            </button>
+        {% elif contest.is_spectatable_by(request.user) %}
+            {#
+            <!--
+            <form action="{{ url('contest_join', contest.key) }}" method="post">
+                {% csrf_token %}
+                <input type="submit" class="unselectable button full participate-button"
+                        value="{{ _('Spectate') }}">
+            </form>
+            -->
+            #}
+        {% else %}
+            <button class="unselectable button full participate-button disabled"
+                    disabled title="{{ _('You cannot join this contest.') }}">
+                {{ _('Join') }}
+            </button>
+        {% endif %}
+    </td>
+{% endmacro %}
+
+{% block body %}
+    {% if is_practice %}
+        <div class="contest-group-container">
+            <div class="contest-group-list">
+                <li class="contest-group-item {% if not request.GET.subject_id %}active{% endif %}">
+                    <input type="checkbox" id="all_subjects" name="subjects" value="" >
+                    <label for="all_subjects">
+                        <i class="fa-regular fa-circle material-symbols-outlined"></i>
+                        모든 과목
+                    </label>
+                </li>
+                {% for subject in subjects %}
+                    <li class="contest-group-item {% if request.GET.subject_id and subject.id|string in request.GET.subject_id %}active{% endif %}">
+                        <input type="checkbox" id="subject_{{ subject.id }}" name="subject_id" value="{{ subject.id }}" >
+                        <label for="subject_{{ subject.id }}">
+                            <i class="fa-regular fa-circle material-symbols-outlined"></i>
+                             {{  subject.name }}
+                        </label>
+                    </li>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+    <div class="content-description">
+        <button id="contest-entry" style="display:none">modal test</button>
+        <div id="contest-modal" class="modal_overlay">
+            <div class="modal_window">
+                <div class="modal_title">
+                    <div class="modal_title_side"></div>
+                    <div></div>
+                    <div class="modal_title_side">
+                        <span id="close_modal" class="material-icons-outlined">
+                            ×
+                        </span>
+                    </div>
+                </div>
+                <div class="modal_content">
+                    <div id="contest-code-title">대회 참여 코드</div>
+                    <input type="text" id="contest-code" name="contest-code" maxlength="100" required placeholder="대회 참여 코드를 입력해 주세요">
+                    <button id="contest-code-button" type="submit">대회 입장하기</button>
+                </div>
+            </div>
+        </div>
+        
+        {% if spectate_contests %}
+            <div class="contest-div">
+                <!-- <h4>{{ _('Active contests') }}</h4> -->
+                {% if request.path == '/contests/1/' %}
+                    <h4>개설한 과제</h4>
+                {% else %}
+                    <h4>개최한 대회</h4>
+                {% endif %}
+                <table class="active contest-list table striped">
+                    <tbody>
+                    <!-- currently, here shows problems that can be spectated -->
+                    {% for contest in spectate_contests %}
+                    <tr>
+                        <td>
+                            <div class="contest-block">
+                                <!-- <div class="activity event-bar"></div> --> 
+                                
+                                <div class="contest-contents">
+                                    <div class="contest-head-block">
+                                        {% if request.path == '/contests/1/' %}
+                                            <span class="material-symbols-outlined md-contest-grad md-24">book_2</span>
+                                        {% else %}
+                                            <span class="material-symbols-outlined md-class-grad md-24">trophy</span>
+                                        {% endif %}
+                                        <div class="text-align">
+                                            {{ contest_head(contest) }}
+                                        </div>
+                                    </div>
+ 
+                                    <div class="contest-time">
+                                        {% if contest.start_time %}
+                                            <br>
+                                            {% if contest.time_before_end %}
+                                                
+                                            {% endif %}
+                                            {{ time_left(contest) }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                            {# {{ contest_join(contest, request, finished_contests) }} #}
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+
+
+        {% if active_participations %}
+            <div class="contest-div">
+                <!-- <h4>{{ _('Active contests') }}</h4> -->
+                {% if request.path == '/contests/1/' %}
+                    <h4>참여 중인 과제</h4>
+                {% else %}
+                    <h4>참여 중인 대회</h4>
+                {% endif %}
+                <table class="active contest-list table striped">
+                    <tbody>
+                    {% for participation in active_participations %}
+                        {% with contest=participation.contest %}
+                            <tr>
+                                <td>
+                                    <div class="contest-block">
+                                        <!-- <div class="activity event-bar"></div> -->
+
+                                        <div class = "contest-contents">
+                                            <div class="contest-head-block">
+                                                    {% if request.path == '/contests/1/' %}
+                                                        <span class="material-symbols-outlined md-class-grad md-24">book_2</span>
+                                                    {% else %}
+                                                        <span class="material-symbols-outlined md-contest-grad md-24">trophy</span>
+                                                    {% endif %}
+                                                <div class="text-align">
+                                                    {{ contest_head(contest) }}
+                                                </div>
+                                            </div>
+                                            <div class = "contest-time">
+                                                {% if contest.start_time %}
+                                                    <br>
+                                                {% if contest.time_before_end %}
+                                                {% endif %}
+                                                    {{ time_left(contest) }}
+                                                {% endif %}
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endwith %}
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+
+        <!-- 진행 중인 대회 -->
+        
+            <div class="contest-div">
+                {% if request.path == '/contests/1/' %}
+                    <h4>진행 중인 과제</h4>
+                {% else %}
+                    <h4>진행 중인 대회</h4>
+                {% endif %}
+                {% if current_contests %}
+                    <table class="contest-list table striped">
+                        <tbody>
+                        {% for contest in current_contests %}
+                            <tr>
+                                <td>
+                                    <div class="contest-block">
+
+                                        <!-- <div class="activity event-bar"></div> -->
+                                        
+                                        <div class = "contest-contents">
+                                            <div class="contest-head-block">
+                                                    {% if request.path == '/contests/1/' %}
+                                                        <span class="material-symbols-outlined md-class-grad md-24">book_2</span>
+                                                    {% else %}
+                                                        <span class="material-symbols-outlined md-contest-grad md-24">trophy</span>
+                                                    {% endif %}
+                                                <div class="text-align">
+                                                    {{ contest_head(contest) }}
+                                                </div>
+                                            </div>
+                                            <div class = "contest-time">
+                                                {% if contest.start_time %}
+                                                    <br>
+                                                {% if contest.time_before_end %}
+                                                {% endif %}
+                                                    {{ time_left(contest) }}
+                                                {% endif %}
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </td>
+                                
+                                {{ contest_join(contest, request, finished_contests) }}
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <i class="no-contest">진행 중인 대회가 없습니다.</i>
+                {% endif %}
+            </div>
+
+        <!-- 진행 예정 대회 -->
+        <div class="contest-div">
+            {% if request.path == '/contests/1/' %}
+                <h4>진행 예정 과제</h4>
+            {% else %}
+                <h4>진행 예정 대회</h4>
+            {% endif %}
+            {% if future_contests %}
+                <table class="contest-list table striped">
+                    <tbody>
+                    {% for contest in future_contests %}
+                        <tr>
+                            <td>
+                                <div class="contest-block">
+                                    <!-- <div class="upcoming event-bar"></div> -->
+                                    
+                                    <div class="contest-contents">
+
+                                        <div class="contest-head-block">
+                                            {% if request.path == '/contests/1/' %}
+                                                <span class="material-symbols-outlined md-deactivate-grey md-24">book_2</span>
+                                            {% else %}
+                                                <span class="material-symbols-outlined md-deactivate-grey md-24">trophy</span>
+                                            {% endif %}
+                                            <div class="text-align">
+                                                {{ contest_head(contest) }}
+                                            </div>
+                                        </div>
+
+                                        <div class="contest-time">
+                                            {% if contest.start_time %}
+                                                <br>
+                                                {% if contest.time_before_start %}
+                                                {% endif %}
+                                            {% endif %}
+                                            {{ time_left(contest) }}
+                                        </div>
+
+                                    </div>
+                                </div>
+                                
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <i class="no-contest">{{ _('There are no scheduled contests at this time.') }}</i>
+            {% endif %}
+        </div>
+        
+    </div>
+{% endblock %}

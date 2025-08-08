@@ -1,0 +1,58 @@
+<style>
+	#adminmenu .wp-submenu-wrap ul li {
+		width: 180px;
+	}
+	.wp-submenu .wp-submenu-wrap  ul {
+		padding: 7px 0 8px;
+	}
+	.wp-menu .wp-submenu .wp-submenu-wrap ul li a {
+		padding: 6px 0px;
+		padding-left: 25px;
+	}
+	#adminmenu .wp-submenu {
+		left: 180px;
+	}
+	
+</style>
+
+{% load i18n wpadmin_menu_tags %}
+{% spaceless %}
+{% if is_user_allowed and not item.is_empty %}
+	<li class="wp-menu-top{% if is_first %} wp-menu-top-first{% endif %}{% if is_last %} wp-menu-top-last{% endif %}{% if item.children %} wp-has-submenu{% endif %}{% if not item.enabled %} wp-disabled{% endif %}{% if not item.url %} wp-no-url{% endif %}{% if is_selected %} wp-menu-open{% else %} wp-menu-not-open{% endif %}{% if item.add_url %} wp-has-add-url{% endif %}" {% if item.css_styles %}style="{{ item.css_styles }}"{% endif %}>
+		<div class="wp-menu-image">
+			<a aria-label="{{ item.title }}" title="{{ item.description|default:'' }}" href="{% if item.url and item.enabled %}{{ item.url }}{% else %}javascript:;{% endif %}">
+				{% if item.title == "Litmus" %}
+                    <img src="/favicon-32x32.png" alt="Litmus" style="width:25px; height:25px; vertical-align:-3.5px;">
+				{% elif item.title == "문제" %}
+					<i class="fa fa-puzzle-piece"></i>
+				{% else %}
+					<i class="fa fa-fw {{ icon }}"></i>
+				{% endif %}
+			</a>
+		</div>
+		
+		<a href="{% if item.url and item.enabled %}{{ item.url }}{% else %}javascript:;{% endif %}"{% if item.description %} title="{{ item.description }}"{% endif %}{% if item.accesskey %} accesskey="{{ item.accesskey }}"{% endif %}>
+			{% if item.title == "대회" %}
+				과제/대회 개설
+			{% elif item.title == "DMOJ: Modern Online Judge"%}
+				Litmus
+			{% else %}
+				{{ item.title }}
+			{% endif %}
+		</a>
+		{% if item.add_url and item.title != "제출" %}<a title="{% trans "Add" %}" class="wp-add-url{% if request.path == item.add_url %} wp-current{% endif %}" href="{{ item.add_url }}">+</a>{% endif %}
+		{% if item.children and item.enabled %}
+		<div class="wp-submenu">
+			<div class="wp-submenu-wrap">
+				<div class="wp-submenu-head">{{ item.title }}</div>
+				<ul>
+					{% for child_item in item.children %}
+						{% wpadmin_render_menu_item child_item forloop.first forloop.last %}
+					{% endfor %}
+				</ul>
+			</div>
+		</div>
+		{% endif %}
+	</li>
+{% endif %}
+{% endspaceless %}

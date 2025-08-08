@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <title>Error - Litmus</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <style>
+        :root {
+            --primary-color: #5C95D9;
+            --secondary-color: #9FCDF2;
+            --primary-hover-color: #5288C8;
+            --font-black: #17171B;
+            --font-basic-black: #373D47;
+            --font-dark-grey: #495057;
+            --font-grey: #8391A1;
+            --border-color: rgba(217, 217, 217, 0.7);
+            --border-secondary: #e5e5e5;
+            --background-second: #f9fafb;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Pretendard", "Segoe UI", "Lucida Grande", Arial, sans-serif;
+            background: var(--background-second);
+            color: var(--font-basic-black);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .error-container {
+            text-align: center;
+            width: 90%;
+            max-width: 500px;
+            padding: 30px;
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .error-icon {
+            color: var(--primary-color);
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: var(--font-black);
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        
+        .error-message {
+            color: var(--font-dark-grey);
+            font-size: 16px;
+            margin-bottom: 25px;
+        }
+        
+        .error-code {
+            font-size: 14px;
+            color: var(--font-grey);
+            margin-bottom: 20px;
+        }
+        
+        .home-button {
+            display: inline-block;
+            padding: 10px 25px;
+            background-color: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+        
+        .home-button:hover {
+            background-color: var(--primary-hover-color);
+        }
+        
+        footer {
+            margin-top: 40px;
+            color: var(--font-grey);
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <span class="material-symbols-outlined error-icon">error</span>
+        <h1>문제가 발생했습니다</h1>
+        <p class="error-message">요청하신 페이지를 표시할 수 없습니다.<br>잠시 후 다시 시도해주세요.</p>
+        <p class="error-code">Error code: <!--# echo var="status" default="Unknown" --></p>
+        <a href="/" class="home-button">홈으로 돌아가기</a>
+    </div>
+    
+    <footer>
+        <a href="https://sites.google.com/view/jbnu-alps" target="_blank" rel="noopener noreferrer">Copyright @ JBNU and ALPS All rights reserved.</a>
+    </footer>
+</body>
+</html>

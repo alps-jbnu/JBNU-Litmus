@@ -1,0 +1,390 @@
+<!-- 유저 마이페이지의 기본 html -->
+
+{% extends "base.html" %}
+
+{% block media %}
+    {% block user_media %}{% endblock %}
+{% endblock %}
+
+{% block js_media %}
+    {% block user_js_media %}{% endblock %}
+{% endblock %}
+
+{% block body %}
+    <style>
+        #content {
+            width: 100%;
+            margin: 0;
+        }
+        #content-body {
+            width: 100%;
+        }
+        .title-div {
+            display: none;
+        }
+        .tabs {
+            width: 100%;
+            margin: 0 auto;
+        }
+        .user-content {
+            width: 100%;
+            margin: 0 auto;
+        }
+        .user-info-page {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            margin-top: 20px;
+        }
+        .user-sidebar {
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+            padding-bottom: 30px;
+            padding-top: 20px;
+            padding-left: 0;
+        }
+        img.user-gravatar {
+            display: block;
+            border-radius: 50%;
+            border: 2px solid var(--border-color);
+            width: 130px;  
+            height: auto;
+            background-color: white;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .user-content {
+            flex: 1 1;
+            overflow: visible;
+            word-wrap: break-word;
+        }
+        .user-sidebar-area {
+            width: 100%;
+            background-color: #FFF
+        }
+        .user-sidebar-div {
+            width: 1040px;
+            margin: 0 auto;
+            justify-content: center;
+            align-items: center;
+            background-color: #FFF;
+        }
+        .user-info-text {
+            display: flex;
+            flex-direction: column;
+            /* align-items: center; */
+            justify-content: center;
+            margin-left: 35px;
+        }
+        .user-info-text .num-style {
+            font-size: 22px;
+            color: #5C95D9;
+        }
+        .user-info-text .semibold {
+            font-size: 15px;
+            color: #8391A1;
+        }
+        .user-info-text .button-sub {
+            background-color: #EBEFF3;
+            color: #5C95D9;
+            border-radius: 10px;
+            font-size: 13px;
+            width: 100px;
+            /* height: 35px; */
+            text-align: center;
+            line-height: 2.8;
+            margin-top: 5px;
+        }
+        .user-info-text-1 {
+            display: flex;
+            flex-direction: column;
+        }
+        .user-info-text-1 h3 {
+            font-size: 14px;
+            font-weight: 400;
+            margin-bottom: 5px;
+            margin-right: 10px;
+            color: #8391A1;
+        }
+        .user-info-text-1 p { 
+            font-size: 28px;
+            font-weight: 500;
+            color: #000000;
+            margin-top: 3px;
+            margin-bottom: 10px !important;
+        }
+        .user-info-text-1 h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #8391A1;
+        }
+        .user-info-text-2 {
+            display: flex;
+            flex-direction: row;
+            gap: 4vw;
+        }
+        .user-info-btn {
+            margin-top: 0 auto;
+            margin-bottom: 0 auto;
+            margin-left: auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .user-info-btn-1 {
+            padding: 10px;
+            margin-left: auto;
+        }
+        
+        .user-info-btn-1 a {
+            display:block;
+            height: 35px;
+            width: 110px;
+            background-color: #f4f4f4;
+            color: #8391a1;
+            border-radius: 10px;
+            margin-left: 10px;
+            line-height: 2.3em;
+            font-size: 14px;
+            font-weight: 500;
+            text-align: center;
+            align-items: center;
+            transition: background-color 0.3s ease;
+        }
+        .user-info-btn-1 a:hover {
+            background-color: #ececec; 
+            color: #6a7a8a; 
+        }
+            
+        .user-info-btn-1 a i {
+            font-size: 14px;
+            margin-right: 5px; /* 아이콘과 텍스트 사이 간격 조정 */
+        }
+        .user-info-btn-2 {
+            height: 35px;
+            padding: 10px;
+            margin-left: auto;
+            display: flex;
+            flex-direction: row;
+        }
+        .user-info-btn-2 a {
+            display:block;
+            height: 35px;
+            width: 110px;
+            background-color: #edf3fb;
+            color: #5285c4;
+            border-radius: 10px;
+            margin-left: 10px;
+            line-height: 2.3em;
+            font-size: 14px;
+            font-weight: 500;
+            text-align: center;
+            transition: background-color 0.3s ease;
+        }
+        .user-info-btn-2 a:hover {
+            background-color: #e3eaf6; 
+            color: #6291d0; 
+        }
+        .user-content-area {
+            background-color: #f9fafb;
+        }
+        .user-content-div {
+            width: 1040px;
+            margin: 0 auto;
+        }
+        .user-custom-tabs ul {
+            display: flex;
+            margin-top: 15px;
+            gap: 10px;
+            padding: 0;
+        }
+        .user-custom-tabs ul li {
+            height: 35px;
+            border-radius: 20px;
+            list-style-type: none;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        .user-custom-tabs ul li a {
+            margin-left: 15px;
+            margin-right: 15px;
+            line-height: 2.3em;
+            font-size: 15px;
+            font-weight: 500;
+            color: #8391A1;
+        }
+        .user-custom-tabs ul li.active {
+            background-color: #f2f3f4;
+        }
+        .user-custom-tabs ul li a.active {
+            color: #5C95D9;
+        }
+        .user-custom-tabs ul li:hover {
+            background-color: #f2f3f4;
+        }
+    </style>
+    <div class="user-info-page">
+        <div class="user-sidebar-area">
+            <div class="user-sidebar-div">
+                <div class="user-sidebar">
+                    <img src="{{ gravatar(user, 135) }}" class="user-gravatar">
+                    <br>
+                    <div class="user-info-text">
+                        <div class="user-info-text-1">
+                            <!-- <div style="display: flex;"> -->
+                                
+                                {% if object.user == request.user %} 
+                                <!-- 자기 자신의 경우 -->
+                                    {% if request.user.is_superuser or request.user.is_staff %}
+                                        <p>{{ object.user.username }}</p> <!-- 교수/관리자 - 학번(사번) 표기 -->
+                                    {% else %}
+                                        <p>{{object.user.first_name}}</p> <!-- 학생 - 이름 표기 -->
+                                        <h4>
+                                            {% if object.department.name %}
+                                                {{ object.department.name }}
+                                            {% else %}
+                                                소속된 학과 없음
+                                            {% endif %}
+                                        </h4> <!-- 학과 -->
+                                        <h3>{{ object.user.username }}</h3> <!-- 학번 -->
+                                    {% endif %}
+                                {% elif request.user.is_superuser %}
+                                <!-- 관리자의 경우 -->
+                                    {% if object.user.is_superuser or object.user.is_staff %}
+                                        <p>
+                                            {{ object.user.first_name}}
+                                        </p>
+                                        <h3>
+                                            {{ object.user.username }}
+                                        </h3>
+                                            
+                                    {% else %}
+                                        <p>{{object.user.first_name}}</p> <!-- 학생 - 이름 표기 -->
+                                        <h4>
+                                            {% if object.department.name %}
+                                                {{ object.department.name }}
+                                            {% else %}
+                                                소속된 학과 없음
+                                            {% endif %}
+                                        </h4> <!-- 학과 -->
+                                        <h3>{{ object.user.username }}</h3> <!-- 학번 -->
+                                    {% endif %}
+                                {% elif request.user.is_staff %} 
+                                <!-- 교수의 경우 -->
+                                    {% if object.user.is_superuser or object.user.is_staff %} 
+                                    <!-- 교수, 관리자의 학번(사번)은 표기하지 않음 -->
+                                        <p>{{object.user.first_name}}</p> <!-- 교수자나 관리자 - 이름 표기 -->
+                                    {% else %} 
+                                        <p>{{object.user.first_name}}</p> <!-- 학생 - 이름 표기 -->
+                                        <h4>
+                                            {% if object.department.name %}
+                                                {{ object.department.name }}
+                                            {% else %}
+                                                소속된 학과 없음
+                                            {% endif %}
+                                        </h4> <!-- 학과 -->
+                                        <h3>{{ object.user.username }}</h3> <!-- 학번 -->
+                                    <!-- 학생의 경우 -->
+                                    {% endif %}
+                                {% else %}
+                                    <!-- 일반 사용자가 다른 사용자의 페이지를 보는 경우 -->
+                                    <p>{{ object.user.username }}</p>       <!-- 학번 --> 
+                                    <h4>
+                                        {% if object.department.name %}
+                                            {{ object.department.name }}
+                                        {% else %}
+                                            소속된 학과 없음
+                                        {% endif %}
+                                    </h4> <!-- 학과 -->
+                                {% endif %}          
+                        </div>
+                        <!-- <div class="user-info-text-2">
+                            <div>
+                                <span class="num-style">
+                                    {%- trans trimmed counter=user.problem_count %}
+                                        {{ counter }}
+                                    {% pluralize %}
+                                        {{ counter }}
+                                    {% endtrans -%}
+                                </span>
+                                <span class="semibold">문제해결</span>
+                            </div>
+                            <div>
+                                <span class="num-style" title="{{ user.performance_points|floatformat(2) }}">
+                                    {{ user.performance_points|floatformat(0) }}
+                                </span>
+                                <b class="semibold">{{ _('포인트') }}</b>
+                            </div>
+                            {% if not user.is_unlisted %}
+                                <div><span class="num-style">#{{ rank }}</span><b class="semibold">&nbsp{{ _('등') }}</b></div>
+                            {% endif %}
+                            
+                        </div> -->
+                    </div>
+                    <div class="user-info-btn">
+                        {% if user.user == request.user %}
+                        <div class="user-info-btn-1">
+                            
+                            <a href="{{ url('user_edit_profile') }}">
+                                <i class="fas fa-pen fa-rotate-by" style="color: #8391a1;"></i>
+                                프로필 수정
+                            </a>
+                        </div>
+                        {% endif %}
+                        <div class="user-info-btn-2">
+                            {% if perms.auth.change_user %}
+                                <a href="{{ url('admin:auth_user_change', user.user.id) }}">계정 관리</a>
+                            {% endif %}
+                            {% if perms.judge.change_profile %}
+                                <a href="{{ url('admin:judge_profile_change', user.id) }}">프로필 관리</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <br>
+        
+                    {% if ratings %}
+                        <br>
+                        <div><b>
+                            {%- trans trimmed counter=ratings|length %}
+                                {{ counter }} contest written
+                            {% pluralize %}
+                                {{ counter }} contests written
+                            {% endtrans -%}
+                        </b></div>
+                        {% if not user.is_unlisted %}
+                            <div><b class="semibold">{{ _('Rank by rating:') }}</b> #{{ rating_rank }}</div>
+                        {% endif %}
+                        <div><b class="semibold">{{ _('Rating:') }}</b> {{ rating_number(rating) }}</div>
+                        <div><b class="semibold">{{ _('Min. rating:') }}</b> {{ rating_number(min_rating) }}</div>
+                        <div><b class="semibold">{{ _('Max rating:') }}</b> {{ rating_number(max_rating) }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="user-content-area">
+            <div class="user-content-div">
+                <div class="user-custom-tabs">
+                    <ul>
+                        <li class="{{ 'active' if active_tab == 'info' else '' }}">
+                            <a href="{{ url('user_page', user.user.username) }}" class="{{ 'active' if active_tab == 'info' else '' }}">정보</a>
+                        </li>
+                        <li class="{{ 'active' if active_tab == 'contests' else '' }}">
+                            <a href="{{ url('user_contests', user.user.username) }}" class="{{ 'active' if active_tab == 'contests' else '' }}">과제/대회</a>
+                        </li>
+                        {% if request.user.is_staff %}
+                            <li class="{{ 'active' if active_tab == 'problems' else '' }}">
+                                <a href="{{ url('user_problems', user.user.username) }}" class="{{ 'active' if active_tab == 'problems' else '' }}">해결한 문제</a>
+                            </li>
+                        {% endif %}
+                        {% if user.user == request.user or request.user.is_staff %}
+                            <li class="{{ 'active' if active_tab == 'submissions' else '' }}">
+                                <a href="{{ url('all_user_submissions', user.user.username) }}" class="{{ 'active' if active_tab == 'submissions' else '' }}">제출 목록</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+                <div class="user-content">{% block user_content %}{% endblock %}</div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

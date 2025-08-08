@@ -1,0 +1,36 @@
+<!-- 각 유저의 제출 기록 탭 한 줄 -->
+<div class="sub-result">
+    <div class="sub-result-color {{ breakdown.sub_result_class }}"></div>
+    <div class="sub-result-info">
+        <div class="score">{{ breakdown.sub_points|floatformat(0) }} / {{ breakdown.sub_total|floatformat(0) }}</div>
+        <div class="state">
+            <span title="{{ breakdown.sub_long_status }}" class="status">{{ breakdown.sub_long_status }}</span>
+            |
+            <span class="language">{{ breakdown.sub_lang }}</span>
+        </div>
+        {#
+        <!-- <div class="sub-result-info-box"></div> -->
+         #}
+    </div>
+</div>
+
+<div class="sub-main">
+    <div class="sub-info">
+        <div class="name">
+            <a href="{{ url('problem_detail', breakdown.problem_code) }}">{{ breakdown.problem_name }}</a>
+        </div>
+        <div class="time">{{ breakdown.sub_date.strftime('%Y-%m-%d %H:%M') }}</div>
+    </div>
+</div>
+
+<div class="sub-pp sub-usage">
+    <div class="pp-weighted">
+        {% with percent='<b>%s%%</b>'|safe|format(breakdown.weight|floatformat(0)),
+                pp=breakdown.scaled_points|floatformat(1 if breakdown.scaled_points < 10 else 0) %}
+            {{ _('가중치 %(percent)s (%(pp)sPP)', percent=percent, pp=pp) }}
+        {% endwith %}
+    </div>
+    <div class="pp">
+        <a href="{{ url('submission_status', breakdown.sub_id) }}">{{ breakdown.points|floatformat(0) }}</a>
+    </div>
+</div>

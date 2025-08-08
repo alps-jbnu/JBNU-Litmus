@@ -1,0 +1,35 @@
+<div style="border:2px solid #fd0;margin:4px 0;">
+    <div style="background:#000;border:6px solid #000;">
+        <a href="{{ request.scheme }}://{{ site.domain }}"><img
+                src="{{ request.scheme }}://{{ site.domain }}/static/icons/logo.svg" alt="{{ SITE_NAME }}" width="160"
+                height="44"></a>
+    </div>
+</div>
+
+<div style="border:2px solid #337ab7;margin:4px 0;">
+    <div
+        style="background:#fafafa;border:12px solid #fafafa;font-family:segoe ui,lucida grande,Arial,sans-serif;font-size:14px;">
+        <strong>{{ _("%(site_name)s에 등록해주셔서 감사합니다! 만나서 반가워요.", site_name=SITE_NAME) }}</strong>
+        <br><br>
+        {% trans trimmed count=expiration_days, site_name=SITE_NAME %}
+        계정 활성화 단계가 남았습니다. {{ site_name }} 계정을 다음 {{ count }} 일 내에 활성화해주세요.
+        {% pluralize %}
+        계정 활성화 단계가 남았습니다. {{ site_name }} 계정을 다음 {{ count }} 일 내에 활성화해주세요.
+        {% endtrans %}
+        <br><br>
+        {{ _('계정을 활성화하려면 다음 링크를 클릭하세요:') }}
+        <br>
+        <a href="{{ request.scheme }}://{{ site.domain }}/accounts/activate/{{ activation_key }}/">{{ request.scheme
+            }}://{{ site.domain }}/accounts/activate/{{ activation_key }}/</a>
+        <br><br>
+        {{ _('또는 이 메시지에 답장하여 계정을 활성화할 수도 있습니다. 이 기능을 사용하려면 답장에 다음 텍스트가 그대로 포함되어야 합니다.:') }}
+        <p style="font-family:monospace;">{{ activation_key }}</p>
+        {% if SITE_ADMIN_EMAIL %}
+        {% with link='<a href="mailto:%(email)s">%(email)s</a>'|safe|format(email=SITE_ADMIN_EMAIL) %}
+        {{ _('만약 계정을 활성화하는 데에 문제가 있는 경우, 언제든지 %(email)s 로 이메일을 보내주세요.', email=link) }}
+        {% endwith %}
+        {% else %}
+        {{ _('See you soon!') }}
+        {% endif %}
+    </div>
+</div>

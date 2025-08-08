@@ -1,0 +1,376 @@
+{% extends "user/base-users.html" %}
+
+{% block title_ruler %}{% endblock %}
+
+{% block title_row %}
+    {% set title = contest.name %}
+    {% include "contest/contest-tabs.html" %}
+{% endblock %}
+
+{% block users_media %}
+    <style>
+        .title-area {
+            margin-bottom: 28px;
+        }
+
+        #users-table .username {
+            min-width: 20em;
+        }
+
+        #users-table .rating-column {
+            min-width: 3em;
+        }
+
+        #users-table td {
+            height: 2.5em;
+        }
+
+        #users-table a {
+            display: block;
+        }
+
+        .userinfo a, .user-name a, .user-name form {
+            display: inline-block !important;
+        }
+
+        /* Make problem table headers green on hover */
+        #users-table th a:hover {
+            color: #0F0;
+        }
+
+        #users-table td a:hover {
+            text-decoration: underline;
+        }
+
+        .rank {
+            min-width: 2.5em
+        }
+
+        .points {
+            min-width: 3em;
+        }
+
+        .disqualified {
+            background-color: #ffa8a8 !important;
+        }
+
+        .full-score, .full-score a {
+            font-weight: 600;
+            font-size: 16px;
+            color: green;
+        }
+
+        .partial-score, .partial-score a {
+            font-weight: 600;
+            font-size: 16px;
+            color: #ffa500;
+        }
+
+        .failed-score, .failed-score a {
+            font-weight: 600;
+            font-size: 16px;
+            color: red;
+        }
+
+        .pretest-full-score, .pretest-full-score a {
+            font-weight: bold;
+            color: #2980b9;
+        }
+
+        .pretest-partial-score, .pretest-partial-score a {
+            color: yellow;
+        }
+
+        .pretest-failed-score, .pretest-failed-score a {
+            font-weight: bold;
+            color: red;
+        }
+
+        .user-points, .user-points a {
+            font-weight: bold;
+            color: black;
+        }
+
+        .solving-time {
+            color: #8391A1;
+            font-weight: 400;
+            font-size: 10px;
+            padding-bottom: -0.75em;
+        }
+
+        .point-denominator {
+            
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .start-time {
+            display: none;
+        }
+
+        .user-name {
+            position: relative;
+        }
+
+        .organization-column {
+            display: none;
+            text-align: left !important;
+            border-right: none !important;
+        }
+
+        .organization-column a {
+            color: gray !important;
+            font-weight: 600;
+        }
+
+        .select2-selection__arrow {
+            display: none;
+        }
+
+        .select2-selection__rendered {
+            cursor: text;
+            overflow: initial !important
+        }
+
+        .select2-results__option--highlighted {
+            background-color: #DEDEDE !important;
+        }
+
+        .select2-results__option {
+            white-space: nowrap;
+        }
+
+        #search-contest, #search-contest + .select2 {
+            margin-top: 0.5em;
+        }
+
+        #search-contest {
+            width: 250px;
+            height: 35px;
+        }
+
+        .users-table .header.first_name {
+            text-align: center !important;
+            width: 10% !important;
+        }
+        .users-table .user-first_name {
+            text-align: center !important;
+        }
+        .users-table .header.rank {
+            width: 5% !important;
+        }
+        
+        .balloon-header {
+            width: 16%;
+            text-align: center;
+        }
+
+        .balloon-cell {
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: middle;
+            overflow: hidden;
+        }
+        .top-pagination-bar .select2 {
+            display: flex;
+            flex-direction: row;
+            justify-content: right;
+        }
+        .select2-selection__placeholder {
+            color: var(--font-grey);
+        }
+        .top-pagination-bar .select2-selection {
+            width: 250px !important;
+            height: 35px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: none !important;
+            border-radius: 8px;
+            padding-left: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            background-color: #fff !important;
+            transition: box-shadow 0.2s ease;
+        }
+        .top-pagination-bar .select2-selection:hover {
+            transition: box-shadow 0.2s ease;
+            box-shadow: 0 4px 6px rgba(82, 168, 236, 0.15);
+        }
+        .select2-container .select2-selection--single .select2-selection__rendered {
+            padding-left: 0;
+        }
+        .top-pagination-bar input[type="text"] {
+            background-color: #fff !important;
+        }
+        .users-table tbody .user-information {
+            display: none;
+        }
+        .h-scrollable-table {
+            overflow: auto !important;
+        }
+        
+        /* contest ranking에서만 테이블 레이아웃 고정 */
+        .contest-ranking .users-table,
+        #users-table {
+            table-layout: fixed;
+        }
+    </style>
+{% endblock %}
+
+{% block users_js_media %}
+    {% if can_edit %}
+        <script type="text/javascript">
+            $(function () {
+                $('a.disqualify-participation').click(function (e) {
+                    e.preventDefault();
+                    if (e.ctrlKey || e.metaKey || confirm("{{ _('Are you sure you want to disqualify this participation?') }}"))
+                        $(this).closest('form').submit();
+                })
+                $('a.un-disqualify-participation').click(function (e) {
+                    e.preventDefault();
+                    if (e.ctrlKey || e.metaKey || confirm("{{ _('Are you sure you want to un-disqualify this participation?') }}"))
+                        $(this).closest('form').submit();
+                })
+            });
+        </script>
+    {% endif %}
+    {% if not contest.ended %}
+        <script type="text/javascript">
+            $(function () {
+                window.install_tooltips = function () {
+                    $('td.user-name').find('> span:first-child').each(function () {
+                        var link = $(this);
+                        link.mouseenter(function (e) {
+                            var start_time = link.siblings('.start-time').text().trim();
+                            link.addClass('tooltipped tooltipped-e').attr('aria-label', start_time);
+                        }).mouseleave(function (e) {
+                            link.removeClass('tooltipped tooltipped-e').removeAttr('aria-label');
+                        });
+                    });
+                };
+
+                install_tooltips();
+            });
+        </script>
+    {% endif %}
+    <script type="text/javascript">
+        $(function () {
+            var url = '{{ url('contest_participation', contest.key, '__username__') }}';
+            var placeholder = $('#search-contest').replaceWith($('<select>').attr({
+                id: 'search-contest'
+            })).attr('placeholder');
+
+            $('#search-contest').select2({
+                placeholder: placeholder,
+                ajax: {
+                    url: '{{ url('contest_user_search_select2_ajax', contest.key) }}'
+                },
+                minimumInputLength: 1,
+                templateResult: function (data) {
+                    return $('<span>')
+                        .append($('<img>', {
+                            class: 'user-search-image',
+                            src: data.gravatar_url,
+                            width: 24,
+                            height: 24,
+                        }))
+                        .append($('<span>', {
+                            class: data.display_rank + ' user-search-name',
+                        }).text(data.text));
+                }
+            }).on('change', function () {
+                window.location.href = url.replace('__username__', $(this).val());
+            });
+
+            // $('#show-organizations-checkbox').click(function () {
+            //     $('.organization-column').toggle();
+            //     localStorage.setItem('show-organizations', $('.organization-column').is(':visible') ? 'true' : 'false');
+            // });
+            
+            // if (localStorage.getItem('show-organizations') == 'true') {
+            //     $('.organization-column').show();
+            //     $('#show-organizations-checkbox').prop('checked', true);
+            // }
+        });
+    </script>
+    {% include "contest/media-js.html" %}
+{% endblock %}
+
+
+{# <!-- {% block before_users_table %}
+    <div style="margin-bottom: 0.5em">
+        {% if tab == 'participation' %}
+            {% if contest.can_see_full_scoreboard(request.user) %}
+                <input id="search-contest" type="text" placeholder="{{ _('View user participation') }}">
+            {% endif %}
+        {% endif %}
+        <input id="show-organizations-checkbox" type="checkbox" style="vertical-align: bottom">
+        <label for="show-organizations-checkbox" style="vertical-align: bottom">{{ _('Show organizations') }}</label>
+    </div>
+{% endblock %} --> #}
+
+{% block users_table %}
+    <script>
+        $(function () {
+            $('#search-handle').replaceWith($('<select>').attr({
+                id: 'search-handle',
+                name: 'handle',
+                onchange: 'form.submit()'
+            }));
+            var in_user_redirect = false;
+            $('#search-handle').select2({
+                theme: '{{ DMOJ_SELECT2_THEME }}',
+                placeholder: '{{ _('사용자 검색') }}',
+                ajax: {
+                    url: '{{ url('contest_user_search_select2_ajax', contest.id) }}'
+                },
+                minimumInputLength: 1,
+                templateResult: function (data, container) {
+                    return $('<span>')
+                        .append($('<img>', {
+                            'class': 'user-search-image', src: data.gravatar_url,
+                            width: 24, height: 24
+                        }))
+                        .append($('<span>', {'class': data.display_rank + ' user-search-name'}).text(data.text));
+                }
+            }).on('select2:selecting', function () {
+                return !in_user_redirect;
+            });
+
+            var $last = null;
+            function highlightUser(handle) {
+                var $user = $('#user-' + handle);
+                if ($user.length) {
+                    if ($last !== null) $last.css('background-color', '');
+                    $user.css('background-color', 'lightblue');
+                    $(document).scrollTop($user.position().top - 50);
+                    if ($last !== null) $last.removeClass('highlight');
+                    $last = $user;
+                }
+            }
+
+            $(window).on('hashchange', function () {
+                var hash = window.location.hash;
+                if (hash.startsWith('#!')) {
+                    var decodedHash = decodeURIComponent(hash.substring(2));
+                    highlightUser(decodedHash);
+                }
+            }).trigger('hashchange');
+
+            // URL에서 handle 쿼리 파라미터를 가져와서 하이라이팅
+            var urlParams = new URLSearchParams(window.location.search);
+            var handle = urlParams.get('handle');
+            if (handle) {
+                highlightUser(handle);
+            }
+        });
+    </script>
+
+    <!-- <div class="top-pagination-bar">
+        <form id="search-form" name="form" action="" method="get">
+            <input id="search-handle" type="text" name="search" placeholder="{{ _('Search by handle...') }}">
+        </form>
+    </div> -->
+    {% include "contest/ranking-table.html" %}
+{% endblock %}
