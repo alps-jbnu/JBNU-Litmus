@@ -138,7 +138,7 @@ class CombinedSubmissionFilter(FieldListFilter):
             queryset = queryset.filter(problem__name__icontains=problem_name)
 
         if username:
-            queryset = queryset.filter(user__username__icontains=username)
+            queryset = queryset.filter(user__user__username__icontains=username)
 
         return queryset
 

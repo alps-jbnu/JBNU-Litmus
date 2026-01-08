@@ -45,7 +45,8 @@ class CombinedCommnetFilter(FieldListFilter):
         is_public = request.GET.get('is_public')
         
         if is_public in ['True', 'False']:
-            queryset = queryset.filter(is_public=(is_public == 'True'))
+            # Comment uses `hidden`; public means hidden=False.
+            queryset = queryset.filter(hidden=(is_public == 'False'))
             
         return queryset
 
