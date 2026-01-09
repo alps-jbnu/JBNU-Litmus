@@ -173,11 +173,17 @@ class CombinedContestFilter(FieldListFilter):
         if contest_name:
             queryset = queryset.filter(name__icontains=contest_name)
 
-        if is_public in ['True', 'False']:
-            queryset = queryset.filter(is_public=(is_public == 'True'))
+        # 공개 / 비공개
+        if is_public == 'True':
+            queryset = queryset.filter(is_visible=True)
+        elif is_public == 'False':
+            queryset = queryset.filter(is_visible=False)
 
-        if is_assignment in ['True', 'False']:
-            queryset = queryset.filter(is_assignment=(is_assignment == 'True'))
+        # 과제 / 대회
+        if is_assignment == 'True':
+            queryset = queryset.filter(is_practice=True)
+        elif is_assignment == 'False':
+            queryset = queryset.filter(is_practice=False)
 
         return queryset
     
@@ -619,16 +625,16 @@ class ContestParticipationForm(ModelForm):
 
 class CombinedContestParticipationFilter(FieldListFilter):
     title = ' '
-    template = 'admin/input_filter/input_filter_contest_participation.html'  # 템플릿 따로 필요
+    template = 'admin/input_filter/input_filter_contest_participation.html'
     
     def __init__(self, field, request, params, model, model_admin, field_path):
         super().__init__(field, request, params, model, model_admin, field_path)
         self.request = request
         self.params = params
-        
+
     def expected_parameters(self):
-        return ['contest_name','user_name']
-    
+        return ['contest_name', 'is_public', 'is_assignment']
+
     def choices(self, changelist):
         yield {
             'selected': False,
@@ -638,14 +644,22 @@ class CombinedContestParticipationFilter(FieldListFilter):
 
     def queryset(self, request, queryset):
         contest_name = request.GET.get('contest_name')
-        user_name=request.GET.get('user_name')
+        is_public = request.GET.get('is_public')
+        is_assignment = request.GET.get('is_assignment')
 
         if contest_name:
             queryset = queryset.filter(contest__name__icontains=contest_name)
 
-        if user_name:
-            queryset=queryset.filter(user__user__username__icontains=user_name)
-        
+        if is_public == 'True':
+            queryset = queryset.filter(contest__is_visible=True)
+        elif is_public == 'False':
+            queryset = queryset.filter(contest__is_visible=False)
+
+        if is_assignment == 'True':
+            queryset = queryset.filter(contest__is_practice=True)
+        elif is_assignment == 'False':
+            queryset = queryset.filter(contest__is_practice=False)
+
         return queryset
 
 class ContestParticipationAdmin(admin.ModelAdmin):
