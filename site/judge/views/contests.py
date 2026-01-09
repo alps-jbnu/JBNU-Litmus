@@ -1254,14 +1254,16 @@ def base_contest_ranking_list(contest, problems, queryset):
 def contest_ranking_list(contest, problems):
     return base_contest_ranking_list(contest, problems, contest.users.filter(virtual=0)
                                     #  .prefetch_related('user__organizations')
-                                    .order_by('is_disqualified', '-score', 'cumtime', 'tiebreaker'))
+                                    .order_by('is_disqualified', '-score', 'cumtime', 'tiebreaker', 'user__user__username'))
 
 
 def get_contest_ranking_list(request, contest, participation=None, ranking_list=contest_ranking_list,
                              show_current_virtual=True, ranker=ranker):
     problems = list(contest.contest_problems.select_related('problem').defer('problem__description').order_by('order'))
 
-    users = ranker(ranking_list(contest, problems), key=attrgetter('points', 'cumtime', 'tiebreaker'))
+    # 순위 번호를 연속적으로 부여 (같은 점수여도 각각 다른 번호)
+    ranked_users = ranking_list(contest, problems)
+    users = ((i + 1, user) for i, user in enumerate(ranked_users))
 
     if show_current_virtual:
         if participation is None and request.user.is_authenticated:
@@ -1513,3 +1515,4 @@ class ContestDetailCodeDownload(View):
 
         except Exception as e:
             return HttpResponseServerError(f"An error occurred: {str(e)}")
+        

@@ -81,6 +81,7 @@ hcpark_log_temp/
 .claude.json
 .claude.json.backup
 
+
 site/resources/icons/problems_images/
 
 #settings.py (dev/service)
