@@ -692,14 +692,6 @@
             <span class="material-symbols-outlined md-dark-grey md-18">chevron_right</span>
         </a></div>
     {% endif %}
-    {% elif request.user.is_authenticated and has_tickets %}
-    <hr>
-    <div>
-        <a href="{{ url('problem_ticket_list', problem.code) }}" class="admin-btn unselectable button full">{{ _('My
-            tickets') }}
-            {% if num_open_tickets %}<span class="badge">{{ num_open_tickets }}</span>{% endif %}
-        </a>
-    </div>
     {% endif %}
 </div>
 {% elif request.user.is_staff %}
