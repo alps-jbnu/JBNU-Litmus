@@ -26,7 +26,7 @@ from judge.models import BlogPost, Comment, CommentLock, Contest, ContestPartici
     PatchNote
 
 # admin.site.register(BlogPost, BlogPostAdmin)``
-admin.site.register(Comment, CommentAdmin)
+# admin.site.register(Comment, CommentAdmin) # 260112 댓글 기능 비활성화
 # admin.site.register(CommentLock)
 admin.site.register(Contest, ContestAdmin)
 admin.site.register(ContestParticipation, ContestParticipationAdmin)
