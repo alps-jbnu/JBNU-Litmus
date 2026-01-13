@@ -13,7 +13,6 @@ from judge.admin.users import UserAdmin
 from judge.admin.runtime import JudgeAdmin, LanguageAdmin
 from judge.admin.submission import SubmissionAdmin
 from judge.admin.taxon import ProblemGroupAdmin, ProblemTypeAdmin
-from judge.admin.ticket import TicketAdmin
 from judge.admin.patch_note import PatchNoteAdmin
 # from judge.models import BlogPost, Class, Comment, CommentLock, Contest, ContestParticipation, \
 #     ContestTag, Judge, Language, License, MiscConfig, NavigationBar, Organization, \
@@ -22,7 +21,7 @@ from judge.admin.patch_note import PatchNoteAdmin
 
 from judge.models import BlogPost, Comment, CommentLock, Contest, ContestParticipation, \
     ContestTag, Judge, Language, License, MiscConfig, NavigationBar, \
-    Problem, ProblemGroup, ProblemPointsVote, ProblemType, Profile, Submission, Ticket, Department, Subject, \
+    Problem, ProblemGroup, ProblemPointsVote, ProblemType, Profile, Submission, Department, Subject, \
     PatchNote
 
 # admin.site.register(BlogPost, BlogPostAdmin)``
@@ -50,7 +49,6 @@ admin.site.register(Profile, ProfileAdmin)
 admin.site.register(Department,DepartmentAdmin)
 admin.site.register(Subject,SubjectAdmin)
 admin.site.register(Submission, SubmissionAdmin)
-admin.site.register(Ticket, TicketAdmin)
 
 #유저가 생성될때, 프로필도 같이 생성
 admin.site.unregister(User)
