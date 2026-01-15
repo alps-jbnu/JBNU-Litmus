@@ -30,7 +30,11 @@
     .status-card.card-other {
         border-left: 5px solid #FFB300;
     }
-    
+
+    .status-card.card-ce {
+        border-left: 5px solid #424242;
+    }
+
     .card-header {
         padding-bottom: 10px;
         border-bottom: 1px solid var(--border-color);
@@ -71,6 +75,12 @@
         background: #FFF4E5;
         color: #856404;
         border: 1px solid #FFE0B2;
+    }
+
+    .badge-ce {
+        background: #F5F5F5;
+        color: #424242;
+        border: 1px solid #9E9E9E;
     }
 
     .result-summary {
@@ -353,15 +363,6 @@ function confirm_rejudge() {
                     </div>
                 </div>
             </div>
-        {% elif submission.status == 'CE' %}
-            <div class="status-card">
-                <div class="card-header">
-                    <h3 class="card-title">{{ _('Compilation Error') }}</h3>
-                </div>
-                <div class="card-content">
-                    <div class="warning-text">{{ submission.error|replace('You are a troll. Trolls are not welcome. As a judge, I sentence your code to death.','컴파일 에러: 제출한 코드가 리트머스 서버에서 지원하는 제출 코드 형식에 해당하지 않아 컴파일할 수 없습니다.')|ansi2html }}</div>
-                </div>
-            </div>
         {% else %}
             <!-- 제출 중단 메시지 -->
             {% if submission.status == 'AB' %}
@@ -378,13 +379,17 @@ function confirm_rejudge() {
             {% endif %}
             
             <!-- 제출 결과 요약 카드 -->
-            <div class="status-card {% if submission.result == 'AC' %}card-success{% elif submission.result in ['WA', 'TLE', 'MLE', 'RTE', 'OLE', 'IR'] %}card-failure{% else %}card-other{% endif %}">
+            <div class="status-card {% if submission.result == 'AC' %}card-success{% elif submission.status == 'CE' %}card-ce{% elif submission.result in ['WA', 'TLE', 'MLE', 'RTE', 'OLE', 'IR'] %}card-failure{% else %}card-other{% endif %}">
                 <div class="card-header">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div style="display: flex; align-items: center; gap: 12px;">
                             {% if submission.result == 'AC' %}
                                 <span class="result-badge badge-success">
                                     <i class="fa fa-check-circle"></i> 정답
+                                </span>
+                            {% elif submission.status == 'CE' %}
+                                <span class="result-badge badge-ce">
+                                    <i class="fa fa-exclamation-circle"></i> 컴파일 에러
                                 </span>
                             {% elif submission.result in ['WA', 'TLE', 'MLE', 'RTE', 'OLE', 'IR'] %}
                                 <span class="result-badge badge-failure">
@@ -431,7 +436,9 @@ function confirm_rejudge() {
                         <div class="summary-item">
                             <span class="summary-label">{{ _('총 자원:') }}</span>
                             <span class="summary-value">
-                                {% if submission.result == "TLE" %}
+                                {% if submission.status == "CE" %}
+                                    0.000s
+                                {% elif submission.result == "TLE" %}
                                     ---
                                 {% else %}
                                     {{ submission.time|floatformat(3) }}s
@@ -522,19 +529,26 @@ function confirm_rejudge() {
                 </div>
             </div>
 
-            <!-- 컴파일 경고 카드 -->
+            <!-- 컴파일 경고/오류 카드 -->
             {% if submission.error %}
             <div class="status-card">
                 <div class="card-header">
-                    <h3 class="card-title">{{ _('컴파일 경고') }}</h3>
+                    <h3 class="card-title">
+                        {% if submission.status == 'CE' %}
+                            {{ _('컴파일 에러 메시지') }}
+                        {% else %}
+                            {{ _('컴파일 경고') }}
+                        {% endif %}
+                    </h3>
                 </div>
                 <div class="card-content">
-                    <div class="warning-text">{{ submission.error|ansi2html }}</div>
+                    <div class="warning-text">{{ submission.error|replace('You are a troll. Trolls are not welcome. As a judge, I sentence your code to death.','컴파일 에러: 제출한 코드가 리트머스 서버에서 지원하는 제출 코드 형식에 해당하지 않아 컴파일할 수 없습니다.')|ansi2html }}</div>
                 </div>
             </div>
             {% endif %}
 
-                                    <!-- 실행 결과 카드 -->
+            <!-- 실행 결과 카드 -->
+            {% if submission.status != 'CE' %}
                         <div class="status-card">
                             <div class="card-header">
                                 <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -656,6 +670,7 @@ function confirm_rejudge() {
                     {% endif %}
                 </div>
             </div>
+            {% endif %}
         {% endif %}
     {% else %}
         {% include "submission/internal-error-message.html" %}
