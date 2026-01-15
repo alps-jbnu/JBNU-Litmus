@@ -18,6 +18,18 @@
         overflow: hidden;
         padding: 20px 30px;
     }
+
+    .status-card.card-success {
+        border-left: 5px solid #4CAF50;
+    }
+
+    .status-card.card-failure {
+        border-left: 5px solid #F44336;
+    }
+
+    .status-card.card-other {
+        border-left: 5px solid #FFB300;
+    }
     
     .card-header {
         padding-bottom: 10px;
@@ -31,7 +43,59 @@
         margin: 0;
         font-family: Pretendard, sans-serif;
     }
-    
+
+    .result-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 15px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .badge-success {
+        background: #E6F4EA;
+        color: #1E7F3E;
+        border: 1px solid #A8DAB5;
+    }
+
+    .badge-failure {
+        background: #FDECEC;
+        color: #B42318;
+        border: 1px solid #F5C2C7;
+    }
+
+    .badge-other {
+        background: #FFF4E5;
+        color: #856404;
+        border: 1px solid #FFE0B2;
+    }
+
+    .result-summary {
+        padding: 12px 16px;
+        margin-bottom: 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .result-summary.success {
+        background: #E6F4EA;
+        color: #1E7F3E;
+        border: 1px solid #A8DAB5;
+    }
+
+    .result-summary.failure {
+        background: #FDECEC;
+        color: #B42318;
+        border: 1px solid #F5C2C7;
+    }
+
     .card-content {
         padding-top: 10px;
     }
@@ -314,10 +378,25 @@ function confirm_rejudge() {
             {% endif %}
             
             <!-- 제출 결과 요약 카드 -->
-            <div class="status-card">
+            <div class="status-card {% if submission.result == 'AC' %}card-success{% elif submission.result in ['WA', 'TLE', 'MLE', 'RTE', 'OLE', 'IR'] %}card-failure{% else %}card-other{% endif %}">
                 <div class="card-header">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <h3 class="card-title">{{ _('제출 결과 요약') }}</h3>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            {% if submission.result == 'AC' %}
+                                <span class="result-badge badge-success">
+                                    <i class="fa fa-check-circle"></i> 정답
+                                </span>
+                            {% elif submission.result in ['WA', 'TLE', 'MLE', 'RTE', 'OLE', 'IR'] %}
+                                <span class="result-badge badge-failure">
+                                    <i class="fa fa-times-circle"></i> 오답
+                                </span>
+                            {% else %}
+                                <span class="result-badge badge-other">
+                                    <i class="fa fa-info-circle"></i> {{ submission.result }}
+                                </span>
+                            {% endif %}
+                            <h3 class="card-title">{{ _('제출 결과 요약') }}</h3>
+                        </div>
                         <div class="action-buttons">
                             <a href="{{ url('submission_source', submission.id) }}" class="action-btn btn-view-source">
                                 <i class="fa fa-code"></i>
@@ -340,6 +419,10 @@ function confirm_rejudge() {
                                 {{ _('다시 제출하기') }}
                             </a>
                             {% endif %}
+                            <a href="{{ url('user_submissions', submission.problem.code, request.user.username) }}" class="action-btn btn-my-submissions">
+                                <i class="fa fa-list"></i>
+                                {{ _('내 제출물 보기') }}
+                            </a>
                         </div>
                     </div>
                 </div>
