@@ -180,12 +180,9 @@ class ProfileAdmin(NoBatchDeleteMixin, VersionAdmin):
                     'date_joined_display', 'last_access_display', 'ip', 'show_public')
     ordering = ('user__username',)
     search_fields = ('user__username', 'ip', 'user__email')
+    # 커스텀 필터만 사용 - Django 기본 필터들 제거
     list_filter = [
         ('id', CombinedProfileFilter),
-        'user__is_staff',
-        'user__is_superuser', 
-        'user__is_active',
-        'user__groups',
     ]
     actions = ('recalculate_points',)
     actions_on_top = True
