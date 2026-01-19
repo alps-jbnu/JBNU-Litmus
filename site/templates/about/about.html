@@ -137,6 +137,17 @@
     color: #8391A1;
   }
 
+  .info2 a,
+  .subinfo a {
+    color: #5C95D9;
+    text-decoration: none;
+  }
+
+  .info2 a:hover,
+  .subinfo a:hover {
+    text-decoration: underline;
+  }
+
   .project-info-container {
     display: flex;
     justify-content: center;
@@ -361,6 +372,45 @@
     margin: 0;
     font-size: 16px;
   }
+
+  .open-source-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+    width: 620px;
+    margin: 0 auto;
+  }
+
+  .open-source-card {
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    background: #FFFFFF;
+    padding: 16px 18px;
+    text-align: left;
+  }
+
+  .open-source-title {
+    color: #5C95D9;
+    font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 10px;
+  }
+
+  .open-source-meta {
+    font-size: 14px;
+    line-height: 20px;
+    color: #495057;
+  }
+
+  .open-source-meta a {
+    color: #5C95D9;
+    text-decoration: none;
+  }
+
+  .open-source-meta a:hover {
+    text-decoration: underline;
+  }
+
 </style>
 <script>
   function downloadFile(fileName) {
@@ -437,13 +487,20 @@ Developer
     <div class="menu">
       <h3>LITMUS : JBNU Online Judge from ALPS@JBNU</h3>
       <div class="info2">
-        Litmus는 ALPS에서 제작한 Online Judge Platform 이며, 오픈소스 기반으로 제작되었습니다.<br>
+        Litmus는 ALPS에서 제작한 Online Judge Platform 이며,<br>
+        <a href="https://github.com/DMOJ/online-judge" target="_blank" rel="noopener noreferrer">DMOJ</a>와
+        <a href="https://github.com/jplag/JPlag" target="_blank" rel="noopener noreferrer">JPlag</a>를 활용한 오픈소스 기반 플랫폼입니다.<br>
         교과목 실습 및 대회 운영에 활용 가능하며, 여러 언어 옵션을 활용하여 문제를 해결할 수 있습니다.
       </div>
       <div class="subinfo">
-        Litmus is an Online Judge Platform by ALPS@JBNU, based on Open-Source(DMOJ).<br>
+        Litmus is an Online Judge Platform by ALPS@JBNU, based on Open-Source
+        (<a href="https://github.com/DMOJ/online-judge" target="_blank" rel="noopener noreferrer">DMOJ</a>).<br>
         The platform can be utilized for coursework labs and competitions, and can utilize multiple language options to
         solve problems.
+        <br>
+        Built with open-source software including
+        <a href="https://github.com/DMOJ/online-judge" target="_blank" rel="noopener noreferrer">DMOJ</a> and
+        <a href="https://github.com/jplag/JPlag" target="_blank" rel="noopener noreferrer">JPlag</a>.
       </div>
     </div>
 
@@ -501,7 +558,6 @@ Developer
         </a>
       </div>
     </div>
-
     <div class="patch-note-container">
       <div class="title">
         <h1 style="margin: 100px 0">Patch Note</h1>
@@ -610,7 +666,6 @@ Developer
           Business Group</b> for the period 2024.04 - 2024.08.
       </div>
     </div>
-  
   
     <div class="title">
       <h1>Copyright</h1>

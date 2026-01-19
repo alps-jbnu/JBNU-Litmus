@@ -19,7 +19,7 @@ Litmus는 [DMOJ](https://github.com/DMOJ/online-judge) 기반으로 개발된 �
 ### 주요 기능
 
 - **프로그래밍 언어 지원**: C, C++14/17/20, Java 8, Python 3, Text
-- **과제 및 대회 관리**: 실시간 채점, 순위표, 시간 제한
+- **과제 및 대회 관리**: 실시간 채점, 순위표, 시간 제한, [표절 검사](https://github.com/jplag/JPlag)
 - **문제 관리**: 채점 데이터 파일 업로드, 테스트 케이스 관리
 - **통합 로그인**: ID/PW 방식 및 JEduTools 연동
 
