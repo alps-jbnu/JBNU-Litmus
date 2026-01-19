@@ -4382,7 +4382,7 @@ msgstr "정말로 이 MOSS 결과를 삭제하겠습니까?"
 #, python-format
 msgid "%(count)s submission"
 msgid_plural "%(count)s submissions"
-msgstr[0] "%(count)s개의 제출이"
+msgstr[0] "%(count)s개의 제출"
 
 #: templates/contest/moss.html:62
 msgid "No submissions"

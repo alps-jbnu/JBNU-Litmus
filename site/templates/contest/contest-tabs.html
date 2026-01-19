@@ -282,9 +282,7 @@
 
         {% if can_edit %}
             {{ make_tab('stats', 'fa-pie-chart', url('contest_stats', contest.key), _('Statistics')) }}
-            {% if has_moss_api_key %}
-                {{ make_tab('moss', 'fa-gavel', url('contest_moss', contest.key), '표절 검사') }}
-            {% endif %}
+            {{ make_tab('jplag', 'fa-gavel', url('contest_jplag', contest.key), '표절 검사') }}
         {% endif %}
     {% endif %}
     {% if request.user.is_authenticated %}

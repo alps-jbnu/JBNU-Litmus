@@ -25,7 +25,6 @@ django-fernet-fields @ git+https://github.com/DMOJ/django-fernet-fields.git
 pyotp
 qrcode[pil]
 jsonfield @ git+https://github.com/DMOJ/jsonfield.git
-pymoss
 packaging<22
 celery
 ansi2html @ git+https://github.com/DMOJ/ansi2html.git

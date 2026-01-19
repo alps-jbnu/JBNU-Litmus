@@ -1,0 +1,175 @@
+{% extends "common-content.html" %}
+
+{% block title_ruler %}{% endblock %}
+
+{% block title_row %}
+{% set tab = 'jplag' %}
+{% set title = contest.name %}
+{% include "contest/contest-tabs.html" %}
+{% endblock %}
+
+{% block content_media %}
+<style>
+    .title-area {
+        margin-bottom: 28px;
+    }
+    .button, input[type="submit"].contest-jplag {
+        width: auto;
+        background: none;
+        background-color: #5C95D9;
+        border: none;
+        border-radius: 8px;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    .button, input[type="submit"].contest-jplag:hover {
+        background: none;
+        background-color: #5288C8;
+        color: #FAFAFA;
+    }
+    input[type="submit"].contest-jplag-delete {
+        width: auto;
+    }
+    .panes {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .pane {
+        padding: 20px;
+    }
+    .table {
+        box-sizing: border-box;
+        width: 100%;
+        background: #FFFFFF;
+        border-radius: 10px 10px 0px 0px;
+        border: 1px solid var(--border-color);
+    }
+    .table thead th {
+        height: 25px;
+        background-color: white;
+        color: black;
+        padding: 7px 10px;
+        font-weight: normal;
+    }
+    .table th, .table td {
+        height: 25px;
+        border: none;
+        border-radius: 0;
+        border-top: 1px solid var(--border-color);
+        vertical-align: middle;
+        text-align: center;
+    }
+    .table thead th.header {
+        border: none;
+    }
+    .table th:first-child {
+        border-top-left-radius: 10px !important; /* 테이블의 왼쪽 위 모서리 */
+        padding-left: 3px;
+    }
+    .table th:last-child {
+        border-top-right-radius: 10px !important; /* 테이블의 오른쪽 위 모서리 */
+    }
+    .jplag-tooltip {
+        position: relative;
+    }
+    .jplag-tooltip::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        left: 50%;
+        bottom: 100%;
+        transform: translate(-50%, -6px);
+        background: #222;
+        color: #fff;
+        padding: 4px 6px;
+        border-radius: 4px;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.15s ease;
+        z-index: 10;
+        font-size: 12px;
+    }
+    .jplag-tooltip:hover::after {
+        opacity: 1;
+    }
+</style>
+{% endblock %}
+
+{% block content_js_media %}
+<script type="text/javascript">
+    $(function () {
+        $('.contest-jplag').click(function () {
+            return confirm('{{ _('Are you sure you want to run JPlag for the contest?') }}');
+        });
+        $('.contest-jplag-delete').click(function () {
+            return confirm('{{ _('Are you sure you want to delete the JPlag results?') }}');
+        });
+    });
+</script>
+{% endblock %}
+{% block body %}
+{% if has_results %}
+<table class="table striped">
+    <thead>
+        <tr>
+            <th class="header">{{ _('Problem') }}</th>
+            {% for lang in languages %}
+            <th class="header">{{ lang }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for problem, results in jplag_results %}
+        <tr id="problem-{{ problem.code }}">
+            <td>
+                <a href="{{ url('problem_detail', problem.code) }}">{{ problem.name }}</a>
+            </td>
+            {% for result in results %}
+            <td{% if result.submission_count == 1 %} class="jplag-tooltip" data-tooltip="제출자가 2명 이상일 때만 표절 검사가 가능합니다."{% endif %}>
+                {% if result.submission_count and result.submission_count >= 2 and result.url %}
+                <a href="{{ result.url }}">{% trans trimmed count=result.submission_count %}
+                    {{ count }} submission
+                    {% pluralize %}
+                    {{ count }} submissions
+                    {% endtrans %}</a>
+                {% elif result.submission_count == 1 %}
+                {% trans trimmed count=result.submission_count %}
+                    {{ count }} submission
+                    {% pluralize %}
+                    {{ count }} submissions
+                {% endtrans %}
+                {% elif result.submission_count %}
+                {% trans trimmed count=result.submission_count %}
+                    {{ count }} submission
+                    {% pluralize %}
+                    {{ count }} submissions
+                    {% endtrans %}
+                {% else %}
+                {{ _('No submissions') }}
+                {% endif %}
+            </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+<div class="panes">
+    <div class="pane">
+        <form method="post" action="{{ url('contest_jplag', contest.key) }}">
+            {% csrf_token %}
+            <input type="submit" class="unselectable button full contest-jplag" style="padding: 10px;"
+                value="{% if has_results %} 제출물 표절 검사 다시 하기 {% else %} 제출물 표절 검사 하기 {% endif %}">
+        </form>
+    </div>
+    {% if has_results %}
+    <div class="pane">
+        <form method="post" action="{{ url('contest_jplag_delete', contest.key) }}">
+            {% csrf_token %}
+            <input type="submit" class="unselectable button full contest-jplag-delete" style="padding: 10px;"
+                value="표절 검사 결과 삭제">
+        </form>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

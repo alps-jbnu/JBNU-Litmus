@@ -222,8 +222,8 @@ urlpatterns = [
     # ])),
     # path('practice/<str:contest>', include([
     #     path('', practices.ContestDetail.as_view(), name='practice_view'),
-    #     path('/moss', practices.ContestMossView.as_view(), name='practice_moss'),
-    #     path('/moss/delete', practices.ContestMossDelete.as_view(), name='practice_moss_delete'),
+    #     path('/jplag', practices.ContestJplagView.as_view(), name='practice_jplag'),
+    #     path('/jplag/delete', practices.ContestJplagDelete.as_view(), name='practice_jplag_delete'),
     #     path('/clone', practices.ContestClone.as_view(), name='practice_clone'),
     #     path('/ranking/', practices.ContestRanking.as_view(), name='practice_ranking'),
     #     path('/ranking/ajax', practices.contest_ranking_ajax, name='practice_ranking_ajax'),
@@ -275,8 +275,8 @@ urlpatterns = [
 
     path('contest/<str:contest>', include([
         path('', contests.ContestDetail.as_view(), name='contest_view'),
-        path('/moss', contests.ContestMossView.as_view(), name='contest_moss'),
-        path('/moss/delete', contests.ContestMossDelete.as_view(), name='contest_moss_delete'),
+        path('/jplag', contests.ContestJplagView.as_view(), name='contest_jplag'),
+        path('/jplag/delete', contests.ContestJplagDelete.as_view(), name='contest_jplag_delete'),
         path('/clone', contests.ContestClone.as_view(), name='contest_clone'),
         path('/ranking/', contests.ContestRanking.as_view(), name='contest_ranking'),
         path('/ranking/ajax', contests.contest_ranking_ajax, name='contest_ranking_ajax'),

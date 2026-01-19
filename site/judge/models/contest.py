@@ -8,7 +8,11 @@ from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 from jsonfield import JSONField
 from lupa import LuaRuntime
-from moss import MOSS_LANG_C, MOSS_LANG_CC, MOSS_LANG_JAVA, MOSS_LANG_PYTHON
+
+JPLAG_LANG_C = 'c'
+JPLAG_LANG_CC = 'cpp'
+JPLAG_LANG_JAVA = 'java'
+JPLAG_LANG_PYTHON = 'python3'
 
 from judge import contest_format
 from judge.models.problem import Problem
@@ -496,7 +500,7 @@ class Contest(models.Model):
             ('edit_own_contest', _('Edit own contests')),
             ('edit_all_contest', _('Edit all contests')),
             ('clone_contest', _('Clone contest')),
-            ('moss_contest', _('MOSS contest')),
+            ('jplag_contest', _('JPlag contest')),
             ('contest_rating', _('Rate contests')),
             ('contest_access_code', _('Contest access codes')),
             ('create_private_contest', _('Create private contests')),
@@ -669,22 +673,22 @@ class Rating(models.Model):
         verbose_name_plural = _('contest ratings')
 
 
-class ContestMoss(models.Model):
+class ContestJplag(models.Model):
     LANG_MAPPING = [
-        ('C', MOSS_LANG_C),
-        ('C++', MOSS_LANG_CC),
-        ('Java', MOSS_LANG_JAVA),
-        ('Python', MOSS_LANG_PYTHON),
+        ('C', JPLAG_LANG_C),
+        ('C++', JPLAG_LANG_CC),
+        ('Java', JPLAG_LANG_JAVA),
+        ('Python', JPLAG_LANG_PYTHON),
     ]
 
-    contest = models.ForeignKey(Contest, verbose_name=_('contest'), related_name='contest_moss', on_delete=CASCADE)
-    problem = models.ForeignKey(Problem, verbose_name=_('problem'), related_name='contest_moss', on_delete=CASCADE)
+    contest = models.ForeignKey(Contest, verbose_name=_('contest'), related_name='contest_jplag', on_delete=CASCADE)
+    problem = models.ForeignKey(Problem, verbose_name=_('problem'), related_name='contest_jplag', on_delete=CASCADE)
     language = models.CharField(max_length=10)
     submission_count = models.PositiveIntegerField(default=0)
     url = models.URLField(null=True, blank=True)
 
     class Meta:
         unique_together = ('contest', 'problem', 'language')
-        verbose_name = _('contest moss result')
-        verbose_name_plural = _('contest moss results')
+        verbose_name = _('contest jplag result')
+        verbose_name_plural = _('contest jplag results')
     

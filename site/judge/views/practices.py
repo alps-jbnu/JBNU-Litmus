@@ -32,9 +32,10 @@ from reversion import revisions
 from judge import event_poster as event
 from judge.comments import CommentedDetailView
 from judge.forms import ContestCloneForm
-from judge.models import Contest, ContestMoss, ContestParticipation, ContestProblem, ContestTag, \
+from judge.models import Contest, ContestJplag, ContestParticipation, ContestProblem, ContestTag, \
     Problem, Profile, Submission
-from judge.tasks import run_moss
+from judge.tasks import run_jplag
+from judge.utils.jplag import build_jplag_viewer_url
 from judge.utils.celery import redirect_to_task_status
 from judge.utils.opengraph import generate_opengraph
 from judge.utils.problems import _get_result_data
@@ -44,7 +45,7 @@ from judge.utils.views import DiggPaginatorMixin, QueryStringSortMixin, SingleOb
     generic_message
 
 __all__ = ['ContestList', 'ContestDetail', 'ContestRanking', 'ContestJoin', 'ContestLeave', 'ContestCalendar',
-           'ContestClone', 'ContestStats', 'ContestMossView', 'ContestMossDelete', 'contest_ranking_ajax',
+           'ContestClone', 'ContestStats', 'ContestJplagView', 'ContestJplagDelete', 'contest_ranking_ajax',
            'ContestParticipationList', 'ContestParticipationDisqualify', 'get_contest_ranking_list',
            'base_contest_ranking_list']
 
@@ -217,7 +218,8 @@ class ContestMixin(object):
                                           self.object.description, 'contest')
         context['meta_description'] = self.object.summary or metadata[0]
         context['og_image'] = self.object.og_image or metadata[1]
-        context['has_moss_api_key'] = settings.MOSS_API_KEY is not None
+        # MOSS_API_KEY 는 더이상 사용하지 않음 -> 표절 검사를 JPlag로 대체
+        # context['has_moss_api_key'] = settings.MOSS_API_KEY is not None
         context['logo_override_image'] = self.object.logo_override_image
         # if not context['logo_override_image'] and self.object.organizations.count() == 1:
         #     context['logo_override_image'] = self.object.organizations.first().logo_override_image
@@ -830,57 +832,63 @@ class ContestParticipationDisqualify(ContestMixin, SingleObjectMixin, View):
         return HttpResponseRedirect(reverse('contest_ranking', args=(self.object.key,)))
 
 
-class ContestMossMixin(ContestMixin, PermissionRequiredMixin):
-    permission_required = 'judge.moss_contest'
+class ContestJplagMixin(ContestMixin, PermissionRequiredMixin):
+    permission_required = 'judge.jplag_contest'
+
+    def has_permission(self):
+        # Accept legacy permission to keep compatibility during migration.
+        user = self.request.user
+        return user.has_perm('judge.jplag_contest') or user.has_perm('judge.moss_contest')
 
     def get_object(self, queryset=None):
         contest = super().get_object(queryset)
-        if settings.MOSS_API_KEY is None or not contest.is_editable_by(self.request.user):
-            raise Http404()
+        # if settings.MOSS_API_KEY is None or not contest.is_editable_by(self.request.user):
+        #     raise Http404()
         return contest
 
 
-class ContestMossView(ContestMossMixin, TitleMixin, DetailView):
-    template_name = 'practice/moss.html'
+class ContestJplagView(ContestJplagMixin, TitleMixin, DetailView):
+    template_name = 'practice/jplag.html'
 
     def get_title(self):
-        return _('%s MOSS Results') % self.object.name
+        return _('%s JPlag Results') % self.object.name
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
         problems = list(map(attrgetter('problem'), self.object.contest_problems.order_by('order')
                                                               .select_related('problem')))
-        languages = list(map(itemgetter(0), ContestMoss.LANG_MAPPING))
+        languages = list(map(itemgetter(0), ContestJplag.LANG_MAPPING))
 
-        results = ContestMoss.objects.filter(contest=self.object)
-        moss_results = defaultdict(list)
+        results = ContestJplag.objects.filter(contest=self.object)
+        jplag_results = defaultdict(list)
         for result in results:
-            moss_results[result.problem].append(result)
+            result.url = build_jplag_viewer_url(self.request, result.url)
+            jplag_results[result.problem].append(result)
 
-        for result_list in moss_results.values():
+        for result_list in jplag_results.values():
             result_list.sort(key=lambda x: languages.index(x.language))
 
         context['languages'] = languages
         context['has_results'] = results.exists()
-        context['moss_results'] = [(problem, moss_results[problem]) for problem in problems]
+        context['jplag_results'] = [(problem, jplag_results[problem]) for problem in problems]
 
         return context
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        status = run_moss.delay(self.object.key)
+        status = run_jplag.delay(self.object.key)
         return redirect_to_task_status(
-            status, message=_('Running MOSS for %s...') % (self.object.name,),
-            redirect=reverse('practice_moss', args=(self.object.key,)),
+            status, message=_('Running JPlag for %s...') % (self.object.name,),
+            redirect=reverse('practice_jplag', args=(self.object.key,)),
         )
 
 
-class ContestMossDelete(ContestMossMixin, SingleObjectMixin, View):
+class ContestJplagDelete(ContestJplagMixin, SingleObjectMixin, View):
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        ContestMoss.objects.filter(contest=self.object).delete()
-        return HttpResponseRedirect(reverse('practice_moss', args=(self.object.key,)))
+        ContestJplag.objects.filter(contest=self.object).delete()
+        return HttpResponseRedirect(reverse('practice_jplag', args=(self.object.key,)))
 
 
 class ContestTagDetailAjax(DetailView):
