@@ -2,9 +2,64 @@
 {% load i18n %}
 
 {% block extrastyle %}
+{{ block.super }}
     <style>
         .button {
             background-color: red;
+        }
+
+        /* Keep group/permission selectors on a single row */
+        .form-row .selector {
+            display: flex;
+            gap: 16px;
+            align-items: stretch;
+            width: 100%;
+            max-width: 100%;
+            float: none;
+        }
+        .form-row .selector-available,
+        .form-row .selector-chosen {
+            float: none;
+            flex: 1 1 0;
+            min-width: 0;
+            box-sizing: border-box;
+            padding: 0;
+            text-align: left;
+        }
+        .form-row .selector-chooser {
+            float: none;
+            flex: 0 0 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 0;
+        }
+        .form-row .selector-chooser li {
+            margin: 6px 0;
+        }
+        .form-row .selector select {
+            width: 100%;
+            min-height: 240px;
+            box-sizing: border-box;
+            padding: 0 8px;
+        }
+        .form-row .selector .selector-filter {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 6px 8px;
+        }
+        .form-row .selector .selector-filter input {
+            width: 100%;
+            margin: 0;
+            box-sizing: border-box;
+        }
+        .form-row .selector-available h2,
+        .form-row .selector-chosen h2 {
+            margin: 0;
+            text-align: center;
+            padding: 8px 10px;
+            box-sizing: border-box;
         }
     </style>
 {% endblock %}
