@@ -251,7 +251,16 @@ class SimpleCSPMiddleware:
 
     def __call__(self, request):
         response = self.get_response(request)
-        response['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline' cdnjs.cloudflare.com ajax.googleapis.com; style-src 'self' 'unsafe-inline' cdnjs.cloudflare.com maxcdn.bootstrapcdn.com fonts.googleapis.com; font-src 'self' fonts.gstatic.com maxcdn.bootstrapcdn.com cdnjs.cloudflare.com; img-src 'self' data: www.gravatar.com gravatar.com; frame-ancestors 'none'; object-src 'none'"
+        # unsafe-inline 제거
+        response['Content-Security-Policy'] = (
+            "default-src 'self'; "
+            "script-src 'self' cdnjs.cloudflare.com ajax.googleapis.com; "
+            "style-src 'self' 'unsafe-inline' cdnjs.cloudflare.com maxcdn.bootstrapcdn.com; "
+            "font-src 'self' maxcdn.bootstrapcdn.com cdnjs.cloudflare.com; "
+            "img-src 'self' data: www.gravatar.com gravatar.com; "
+            "frame-ancestors 'none'; "
+            "object-src 'none'"
+        )
         return response
     
 class NoCacheMiddleware:
