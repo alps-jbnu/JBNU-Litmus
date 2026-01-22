@@ -259,7 +259,9 @@ class SimpleCSPMiddleware:
             "font-src 'self' maxcdn.bootstrapcdn.com cdnjs.cloudflare.com; "
             "img-src 'self' data: www.gravatar.com gravatar.com; "
             "frame-ancestors 'none'; "
-            "object-src 'none'",
+            "object-src 'none'; "
+            "require-trusted-types-for 'script'; "
+            "trusted-types *",
         )
         self.csp_report_only_value = getattr(settings, 'CSP_REPORT_ONLY_VALUE', '')
 
