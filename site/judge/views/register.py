@@ -101,11 +101,11 @@ class CustomRegistrationForm(RegistrationForm):
     )
 
     password1 = forms.CharField(
-        widget=forms.PasswordInput(attrs={'placeholder': _('비밀번호'), 'maxlength': '100'}),
+        widget=forms.PasswordInput(attrs={'placeholder': _('비밀번호'), 'maxlength': '100', 'autocomplete': 'off'}),
         label=_('Password')
     )
     password2 = forms.CharField(
-        widget=forms.PasswordInput(attrs={'placeholder': _('비밀번호 확인'), 'maxlength': '100'}),
+        widget=forms.PasswordInput(attrs={'placeholder': _('비밀번호 확인'), 'maxlength': '100', 'autocomplete': 'off'}),
         label=_('Password Confirmation')
     )
     ## html에서 쓰이지 않을 필드는 주석처리 필요
