@@ -68,7 +68,7 @@
     {% endif %}
     {% block media %}{% endblock %}
     {% if not INLINE_JQUERY %}
-        <script src="{{ JQUERY_JS }}"></script>
+        <script nonce="{{ request.csp_nonce }}" src="{{ JQUERY_JS }}"></script>
     {% endif %}
 
     {% compress js %}

@@ -1,7 +1,9 @@
 import base64
+import secrets
 import hmac
 import re
 import struct
+import secrets
 from urllib.parse import quote
 
 from django.conf import settings
@@ -248,19 +250,57 @@ class KeycloakSSOMiddleware(MiddlewareMixin):
 class SimpleCSPMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
-
-    def __call__(self, request):
-        response = self.get_response(request)
-        # unsafe-inline 제거
-        response['Content-Security-Policy'] = (
+        self.csp_value = getattr(
+            settings,
+            'CSP_HEADER_VALUE',
             "default-src 'self'; "
-            "script-src 'self' cdnjs.cloudflare.com ajax.googleapis.com; "
+            "script-src 'self' 'nonce-{nonce}' 'strict-dynamic' cdnjs.cloudflare.com ajax.googleapis.com; "
             "style-src 'self' 'unsafe-inline' cdnjs.cloudflare.com maxcdn.bootstrapcdn.com; "
             "font-src 'self' maxcdn.bootstrapcdn.com cdnjs.cloudflare.com; "
             "img-src 'self' data: www.gravatar.com gravatar.com; "
             "frame-ancestors 'none'; "
-            "object-src 'none'"
+            "object-src 'none'",
         )
+        self.csp_report_only_value = getattr(settings, 'CSP_REPORT_ONLY_VALUE', '')
+
+    def __call__(self, request):
+        request.csp_nonce = secrets.token_urlsafe(16)
+        response = self.get_response(request)
+        if '{nonce}' in self.csp_value:
+            csp_value = self.csp_value.format(nonce=request.csp_nonce)
+        else:
+            csp_value = self.csp_value
+        response['Content-Security-Policy'] = csp_value
+        if self.csp_report_only_value:
+            if '{nonce}' in self.csp_report_only_value:
+                csp_ro_value = self.csp_report_only_value.format(nonce=request.csp_nonce)
+            else:
+                csp_ro_value = self.csp_report_only_value
+            response['Content-Security-Policy-Report-Only'] = csp_ro_value
+        # Inject nonce into script tags (inline and external) for HTML responses.
+        content_type = response.get('Content-Type', '')
+        if (not response.streaming and 'text/html' in content_type and hasattr(response, 'content')):
+            try:
+                content = response.content
+                if isinstance(content, bytes):
+                    pattern = re.compile(br'<script(?![^>]*\bnonce=)([^>]*)>')
+                    replacement = br'<script nonce="' + request.csp_nonce.encode() + br'"\1>'
+                    new_content = pattern.sub(replacement, content)
+                    if new_content != content:
+                        response.content = new_content
+                        if response.has_header('Content-Length'):
+                            response['Content-Length'] = str(len(response.content))
+                else:
+                    pattern = re.compile(r'<script(?![^>]*\bnonce=)([^>]*)>')
+                    replacement = r'<script nonce="' + request.csp_nonce + r'"\1>'
+                    new_content = pattern.sub(replacement, content)
+                    if new_content != content:
+                        response.content = new_content
+                        if response.has_header('Content-Length'):
+                            response['Content-Length'] = str(len(response.content))
+            except Exception:
+                # If anything goes wrong, leave the response unchanged.
+                pass
         return response
     
 class NoCacheMiddleware:
