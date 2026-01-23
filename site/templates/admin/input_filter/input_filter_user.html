@@ -6,7 +6,6 @@
     crossorigin="anonymous"
   >
 </head>
-
 <form method="get">
   {% for key, value in request.GET.items %}
     {% if key not in spec.filter_keys %}
@@ -29,4 +28,4 @@
   <button type="submit" style="font-size: 14px;">
   <i class="fa-solid fa-filter"></i> 필터 적용
 </button>
-</form> 
+</form>

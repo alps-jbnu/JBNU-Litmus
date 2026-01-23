@@ -3,7 +3,9 @@ import re
 import json
 from operator import itemgetter
 from django import forms
+from django.http import HttpResponseRedirect
 from django.shortcuts import render
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import User
 from social_core.pipeline.partial import partial
@@ -27,5 +29,5 @@ def check_existing_user(backend, user, *args, **kwargs):
     if user is None:
         request = backend.strategy.request
         request.session.flush()
-        raise AuthException(backend, "최초 JEduTools 통합 로그인 시 Litmus 회원가입 후 로그인 해주세요.")
+        return HttpResponseRedirect(reverse('registration_register'))
     return {}
