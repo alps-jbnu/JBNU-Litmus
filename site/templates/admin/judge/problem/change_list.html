@@ -3,7 +3,12 @@
 
 {% block object-tools-items %}
     <li>
+        <!-- (구버전/참고) CSP에서 inline onclick이 차단될 수 있음
         <a href="#" class="delete-link" onclick="event.preventDefault(); document.getElementById('delete-form').submit();">
+            <span class="text">선택 삭제</span>
+        </a>
+        -->
+        <a href="#" class="delete-link" id="delete-selected-link">
             <span class="text">선택 삭제</span>
         </a>
         <form method="post" action="{% url opts|admin_urlname:'changelist' %}" id="delete-form" style="display: none;">
@@ -47,6 +52,14 @@
 
         // 초기화 및 이벤트 리스너 설정
         window.onload = function() {
+            var deleteLink = document.getElementById('delete-selected-link');
+            if (deleteLink) {
+                deleteLink.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.getElementById('delete-form').submit();
+                });
+            }
+
             var toggleAll = document.getElementById('action-toggle');
             toggleAll.addEventListener('change', function() {
                 toggleSelectAll(this);

@@ -19,6 +19,7 @@
 <script>
     // DOM이 로드된 후 이벤트 리스너 추가
     document.addEventListener("DOMContentLoaded", function() {
+<<<<<<< HEAD
         document.querySelectorAll('.contest-join-trigger').forEach(function(button) {
             button.addEventListener("click", function() {
                 const contestKey = this.getAttribute('data-contest-key');
@@ -27,6 +28,11 @@
                 modal.setAttribute('data-contest-key', contestKey);
                 modal.style.display = "flex";
             });
+=======
+        // "대회 참가" 버튼(인라인 onclick 금지: CSP 대응)
+        document.querySelectorAll('[data-open-join-contest-modal="1"]').forEach((btn) => {
+            btn.addEventListener("click", () => openModal(btn.dataset.contestKey));
+>>>>>>> 7dbdb84 (fix:CSP onclick issue completed)
         });
 
         // 모달 닫기 버튼 이벤트 리스너
@@ -34,7 +40,10 @@
         if (buttonCloseModal) {
             buttonCloseModal.addEventListener("click", function(e) {
                 const modal = document.getElementById("join-contest-modal");
+<<<<<<< HEAD
                 if (!modal) return;
+=======
+>>>>>>> 7dbdb84 (fix:CSP onclick issue completed)
                 modal.style.display = "none";
             });
         }
@@ -340,6 +349,15 @@
                             data-contest-key="{{ contest.key }}">
                             {{ _('대회 참가') }}
                         </button>
+                    -->
+                    <button
+                        type="button"
+                        class="contest-join-pseudotab unselectable button"
+                        data-open-join-contest-modal="1"
+                        data-contest-key="{{ contest.key }}"
+                    >
+                        {{ _('대회 참가') }}
+                    </button>
                     
                     {% elif contest.is_spectatable_by(request.user) %}
                         <!-- {# <form action="{{ url('contest_join', contest.key) }}" method="post"

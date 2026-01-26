@@ -418,6 +418,16 @@
             border-radius: 10px;
             padding: 8px 30px !important;
         }
+        /* (추가) CSP-safe 버전에서 <button> 사용 */
+        .form-submit-group button {
+            background-color: #5C95D9;
+            color: #fff;
+            font-size: 14px;
+            border-radius: 10px;
+            padding: 8px 30px !important;
+            border: none;
+            cursor: pointer;
+        }
         .filter-form-group label {
             margin: 0 5px;
         }
@@ -603,7 +613,10 @@
                                 </select>
                             </div>
                             <div class="form-submit-group">
+                                <!-- (구버전/참고) CSP에서 inline onclick이 차단될 수 있음
                                 <a id="go" onclick="form.submit()">{{ _('Go') }}</a>
+                                -->
+                                <button id="go" type="submit">{{ _('Go') }}</button>
                             </div>
                         </form>
                     </div>
