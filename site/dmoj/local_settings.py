@@ -146,6 +146,12 @@ DMOJ_PROBLEMS_DATA_ROOT = '/home/ubuntu/problems'
 # URL to access static files.
 STATIC_URL = '/static/'
 
+# Override STATICFILES_DIRS to remove non-existent /home/ubuntu/dmojsite/static path
+import os
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'resources'),
+]
+
 # Uncomment to use hashed filenames with the cache framework.
 #STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
 
