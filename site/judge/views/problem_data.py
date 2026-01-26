@@ -340,13 +340,21 @@ class TestCasePreView(TitleMixin,View):
 
         if not problem:
             raise Http404("존재하지 않는 문제입니다.")
-        if request.user.is_staff or problem.is_editable_by(request.user):
+        if not problem.is_accessible_by(request.user):
+            raise Http404()
+        if request.user.has_perm('judge.view_testcase') or problem.is_editable_by(request.user):
             return self.post(request, *args, **kwargs)
         raise Http404()
 
     def post(self, request, *args, **kwargs):
         problem_code = self.kwargs.get('problem')  
         problem = Problem.objects.filter(code=problem_code).first()
+        if not problem:
+            raise Http404("존재하지 않는 문제입니다.")
+        if not problem.is_accessible_by(request.user):
+            raise Http404()
+        if not (request.user.has_perm('judge.view_testcase') or problem.is_editable_by(request.user)):
+            raise Http404()
         if problem:
             problem_id = problem.id
         else:

@@ -629,8 +629,12 @@ class ProblemList(QueryStringSortMixin, TitleMixin, SolvedProblemMixin, ListView
 
     def get_normal_queryset(self):
         filter = Q(is_public=True)
-        if('judge.see_private_problem' in self.request.user.get_group_permissions()):
+        if self.request.user.has_perm('judge.see_private_problem') or self.request.user.has_perm('judge.view_all_problem'):
             filter |= Q(is_public=False)
+        if self.request.user.has_perm('judge.manage_contest_problem'):
+            filter |= Q(is_contest_problem=True)
+        else:
+            filter &= Q(is_contest_problem=False)
         # if not self.request.user.has_perm('see_organization_problem'):
         #     org_filter = Q(is_organization_private=False)
         #     if self.profile is not None:

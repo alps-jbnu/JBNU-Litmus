@@ -316,29 +316,38 @@
     </style>
     <script src="{{ static('libs/featherlight/featherlight.min.js') }}" type="text/javascript"></script>
     <script>
-        function openModal(contestKey) {
-            const modal = document.getElementById("contest-modal");
-            modal.setAttribute('data-contest-key', contestKey);
-            modal.style.display = "flex";
-        }
-    
         document.addEventListener("DOMContentLoaded", function() {
+            document.querySelectorAll('.contest-join-trigger').forEach(function(button) {
+                button.addEventListener("click", function() {
+                    const contestKey = this.getAttribute('data-contest-key');
+                    const modal = document.getElementById("contest-modal");
+                    if (!modal) return;
+                    modal.setAttribute('data-contest-key', contestKey);
+                    modal.style.display = "flex";
+                });
+            });
+
             const groupContainer = document.querySelector('.contest-group-container');
             if (groupContainer) {
                 groupContainer.style.visibility = 'visible';
             }
             
             const buttonCloseModal = document.getElementById("close_modal");
-            buttonCloseModal.addEventListener("click", function(e) {
-                const modal = document.getElementById("contest-modal");
-                modal.style.display = "none";
-            });
+            if (buttonCloseModal) {
+                buttonCloseModal.addEventListener("click", function(e) {
+                    const modal = document.getElementById("contest-modal");
+                    if (!modal) return;
+                    modal.style.display = "none";
+                });
+            }
     
             const submitButton = document.getElementById("contest-code-button");
-            submitButton.addEventListener("click", function(e) {
-                // e.preventDefault(); // 기본 동작 방지 
-                submitContestCode();
-            });
+            if (submitButton) {
+                submitButton.addEventListener("click", function(e) {
+                    // e.preventDefault(); // 기본 동작 방지 
+                    submitContestCode();
+                });
+            }
 
             document.getElementById("all_subjects").addEventListener('change', function() {
                 if (this.checked) {
@@ -534,8 +543,8 @@
 {% macro contest_join(contest, request, finished_contests) %}
     <td>
         {% if contest.is_live_joinable_by(request.user) %}
-            <button class="unselectable button full participate-button join-warning" 
-                    onclick="openModal('{{ contest.key }}')">
+            <button class="unselectable button full participate-button join-warning contest-join-trigger"
+                    data-contest-key="{{ contest.key }}">
                 {{ _('Join') }}
             </button>
         {% elif contest.is_spectatable_by(request.user) %}

@@ -24,6 +24,7 @@ from django.shortcuts import render
 from django.urls import path, reverse, reverse_lazy
 from django.utils import timezone
 from django.utils.html import format_html
+from django.template.response import TemplateResponse
 from django.utils.translation import gettext, gettext_lazy as _, ngettext
 
 from judge.models import (Judge, Language, LanguageLimit, Problem, ProblemClarification, 
@@ -496,6 +497,7 @@ class ProblemAdmin(VersionAdmin):
                 'code', 'name', 'date', 'authors', 'testers',
                 ('is_encrypted', 'encryption_key'), 
                 'is_public',
+                'is_contest_problem',
                 'description', 
             ),
         }),
@@ -508,6 +510,7 @@ class ProblemAdmin(VersionAdmin):
         # (_('History'), {'fields': ('change_message',)}),
     )
     list_display = ['code', 'name', 'show_authors', 'points', 'public_status', 'encryption_status', 'show_public']
+    list_display_links = None
     ordering = ['code']
     search_fields = ('code', 'name', 'authors__user__username', 'curators__user__username')
     inlines = [LanguageLimitInline, ProblemDataInline, TestCaseInline, ProblemSolutionInline, ProblemClarificationInline] # [LanguageLimitInline, ProblemClarificationInline, ProblemSolutionInline, ProblemTranslationInline]
@@ -539,11 +542,32 @@ class ProblemAdmin(VersionAdmin):
 
         return actions
 
+    def get_list_display(self, request):
+        def code_link(obj):
+            if obj.is_editable_by(request.user):
+                url = reverse('admin:judge_problem_change', args=[obj.pk])
+                return format_html('<a href="{}">{}</a>', url, obj.code)
+            return obj.code
+
+        code_link.short_description = _('code')
+        code_link.admin_order_field = 'code'
+        return (
+            code_link,
+            'name',
+            'show_authors',
+            'points',
+            'public_status',
+            'encryption_status',
+            'show_public',
+        )
+
     def get_readonly_fields(self, request, obj=None):
         fields = self.readonly_fields
         fields += ('code',)
         if not request.user.has_perm('judge.change_public_visibility'):
             fields += ('is_public',)
+        if not request.user.has_perm('judge.manage_contest_problem'):
+            fields += ('is_contest_problem',)
         if not request.user.has_perm('judge.change_manually_managed'):
             fields += ('is_manually_managed',)
         if not request.user.has_perm('judge.problem_full_markup'):
@@ -551,6 +575,28 @@ class ProblemAdmin(VersionAdmin):
             if obj and obj.is_full_markup:
                 fields += ('description',)
         return fields
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super(ProblemAdmin, self).get_fieldsets(request, obj)
+        if request.user.has_perm('judge.manage_contest_problem'):
+            return fieldsets
+
+        filtered = []
+        for name, options in fieldsets:
+            fields = options.get('fields', ())
+            if isinstance(fields, (list, tuple)):
+                new_fields = []
+                for field in fields:
+                    if field == 'is_contest_problem':
+                        continue
+                    if isinstance(field, (list, tuple)):
+                        new_fields.append(tuple(f for f in field if f != 'is_contest_problem'))
+                    else:
+                        new_fields.append(field)
+                options = dict(options)
+                options['fields'] = tuple(new_fields)
+            filtered.append((name, options))
+        return tuple(filtered)
 
     # obj여부에 따라 달라지는 기능 구현
     def get_inlines(self, request, obj=None):
@@ -639,12 +685,41 @@ class ProblemAdmin(VersionAdmin):
     make_private.short_description = _('Mark problems as private')
 
     def get_queryset(self, request):
-        return Problem.get_editable_problems(request.user).prefetch_related('authors__user')
+        if request.user.has_perm('judge.view_all_problem') or request.user.has_perm('judge.edit_all_problem'):
+            queryset = Problem.objects.all()
+        else:
+            queryset = Problem.get_editable_problems(request.user)
+
+        if not request.user.has_perm('judge.manage_contest_problem'):
+            queryset = queryset.filter(is_contest_problem=False)
+
+        return queryset.prefetch_related('authors__user')
+
+    def has_view_permission(self, request, obj=None):
+        if obj is None:
+            return request.user.has_perm('judge.view_all_problem') or request.user.has_perm('judge.edit_own_problem')
+        return obj.is_editable_by(request.user)
 
     def has_change_permission(self, request, obj=None):
         if obj is None:
             return request.user.has_perm('judge.edit_own_problem')
         return obj.is_editable_by(request.user)
+
+    def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
+        if object_id is not None and not self.has_change_permission(request):
+            context = dict(
+                self.admin_site.each_context(request),
+                opts=self.model._meta,
+                title=_('Permission denied'),
+                message=_('해당 문제를 수정할 권한이 없습니다.'),
+            )
+            return TemplateResponse(
+                request,
+                'admin/judge/problem/permission_denied.html',
+                context,
+                status=200,
+            )
+        return super().changeform_view(request, object_id, form_url, extra_context)
 
     def formfield_for_manytomany(self, db_field, request=None, **kwargs):
         if db_field.name == 'allowed_languages':
@@ -656,6 +731,8 @@ class ProblemAdmin(VersionAdmin):
         form = super(ProblemAdmin, self).get_form(request,*args, **kwargs)
         form.base_fields['authors'].queryset = Profile.objects.filter(user__username=request.user.username)
         form.base_fields['allowed_languages'].initial = Language.objects.all()
+        if not request.user.has_perm('judge.manage_contest_problem'):
+            form.base_fields.pop('is_contest_problem', None)
         return form
 
     def save_model(self, request, obj, form, change):
