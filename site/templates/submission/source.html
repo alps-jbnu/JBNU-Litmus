@@ -171,7 +171,10 @@ function fallbackCopyTextToClipboard(text) {
 }
 
 function showCopySuccess() {
-    const copyBtn = document.querySelector('.copy-btn-overlay');
+    // (구버전/참고)
+    // const copyBtn = document.querySelector('.copy-btn-overlay');
+    const copyBtn = document.getElementById('copy-source-btn') || document.querySelector('.copy-btn-overlay');
+    if (!copyBtn) return;
     const originalIcon = copyBtn.innerHTML;
     copyBtn.innerHTML = '<i class="fa fa-check"></i>';
     copyBtn.style.color = '#4CAF50';
@@ -182,6 +185,24 @@ function showCopySuccess() {
         copyBtn.style.color = '#6c757d';
     }, 2000);
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    const copyBtn = document.getElementById('copy-source-btn');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', copySourceCode);
+    }
+
+    const rejudgeForm = document.getElementById('rejudge-form');
+    if (rejudgeForm) {
+        rejudgeForm.addEventListener('submit', function (e) {
+            // (구버전/참고) onclick="return confirm(...)"
+            const message = "{{ _('Are you sure you want to rejudge?')|escapejs }}";
+            if (!confirm(message)) {
+                e.preventDefault();
+            }
+        });
+    }
+});
 </script>
 {% endblock %}
 
@@ -202,11 +223,22 @@ function showCopySuccess() {
                         {{ _('원본 보기') }}
                     </a>
                     {% if perms.judge.rejudge_submission and not submission.is_locked %}
+                    <!-- (구버전/참고) CSP에서 inline onclick이 차단될 수 있음
                     <form action="{{ url('submission_rejudge') }}" method="post" style="display: inline;">
                         {% csrf_token %}
                         <input type="hidden" name="id" value="{{ submission.id }}">
                         <input type="hidden" name="path" value="{{ url('submission_status', submission.id) }}">
                         <button type="submit" class="action-btn btn-rejudge" onclick="return confirm('{{ _('Are you sure you want to rejudge?') }}')">
+                            <i class="fa fa-refresh"></i>
+                            {{ _('재채점') }}
+                        </button>
+                    </form>
+                    -->
+                    <form id="rejudge-form" action="{{ url('submission_rejudge') }}" method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="id" value="{{ submission.id }}">
+                        <input type="hidden" name="path" value="{{ url('submission_status', submission.id) }}">
+                        <button type="submit" class="action-btn btn-rejudge">
                             <i class="fa fa-refresh"></i>
                             {{ _('재채점') }}
                         </button>
@@ -256,7 +288,12 @@ function showCopySuccess() {
                     </tr>
                 </table>
                 <textarea id="hidden-source-raw" style="position:absolute; left:-9999px; top:-9999px;">{{ raw_source }}</textarea>
+                <!-- (구버전/참고) CSP에서 inline onclick이 차단될 수 있음
                 <button type="button" class="copy-btn-overlay" onclick="copySourceCode()" title="{{ _('소스코드 복사') }}">
+                    <i class="fa fa-copy"></i>
+                </button>
+                -->
+                <button type="button" id="copy-source-btn" class="copy-btn-overlay" title="{{ _('소스코드 복사') }}">
                     <i class="fa fa-copy"></i>
                 </button>
             </div>

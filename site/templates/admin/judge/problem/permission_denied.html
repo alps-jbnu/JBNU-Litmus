@@ -1,0 +1,9 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="content">
+  <h1>{% trans "Permission denied" %}</h1>
+  <p>{{ message }}</p>
+</div>
+{% endblock %}

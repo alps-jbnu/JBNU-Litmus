@@ -126,8 +126,10 @@ class UserPage(TitleMixin, UserMixin, DetailView):
         context['hide_solved'] = int(self.hide_solved)
         # context['authored'] = self.object.authored_problems.filter(is_public=True, is_organization_private=False) \
         #                           .order_by('code')
-        context['authored'] = self.object.authored_problems.filter(is_public=True) \
-                                   .order_by('code')
+        authored = self.object.authored_problems.filter(is_public=True)
+        if not self.request.user.has_perm('judge.manage_contest_problem'):
+            authored = authored.filter(is_contest_problem=False)
+        context['authored'] = authored.order_by('code')
         rating = self.object.ratings.order_by('-contest__end_time')[:1]
         context['rating'] = rating[0] if rating else None
 

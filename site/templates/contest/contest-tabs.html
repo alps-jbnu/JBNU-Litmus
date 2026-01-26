@@ -17,26 +17,44 @@
 
 {% block tabs %}
 <script>
-    function openModal(contestKey) {
-        const modal = document.getElementById("join-contest-modal");
-        modal.setAttribute('data-contest-key', contestKey);
-        modal.style.display = "flex";
-    }
-
     // DOM이 로드된 후 이벤트 리스너 추가
     document.addEventListener("DOMContentLoaded", function() {
+<<<<<<< HEAD
+        document.querySelectorAll('.contest-join-trigger').forEach(function(button) {
+            button.addEventListener("click", function() {
+                const contestKey = this.getAttribute('data-contest-key');
+                const modal = document.getElementById("join-contest-modal");
+                if (!modal) return;
+                modal.setAttribute('data-contest-key', contestKey);
+                modal.style.display = "flex";
+            });
+=======
+        // "대회 참가" 버튼(인라인 onclick 금지: CSP 대응)
+        document.querySelectorAll('[data-open-join-contest-modal="1"]').forEach((btn) => {
+            btn.addEventListener("click", () => openModal(btn.dataset.contestKey));
+>>>>>>> 7dbdb84 (fix:CSP onclick issue completed)
+        });
+
         // 모달 닫기 버튼 이벤트 리스너
         const buttonCloseModal = document.getElementById("close_join_modal");
-        buttonCloseModal.addEventListener("click", function(e) {
-            const modal = document.getElementById("join-contest-modal");
-            modal.style.display = "none";
-        });
+        if (buttonCloseModal) {
+            buttonCloseModal.addEventListener("click", function(e) {
+                const modal = document.getElementById("join-contest-modal");
+<<<<<<< HEAD
+                if (!modal) return;
+=======
+>>>>>>> 7dbdb84 (fix:CSP onclick issue completed)
+                modal.style.display = "none";
+            });
+        }
 
         // 모달 내부의 제출 버튼 이벤트 리스너
         const submitButton = document.getElementById("join-contest-submit");
-        submitButton.addEventListener("click", function(e) {
-            submitContestCode();
-        });
+        if (submitButton) {
+            submitButton.addEventListener("click", function(e) {
+                submitContestCode();
+            });
+        }
     });
 
     // 코드 검증 함수
@@ -327,9 +345,19 @@
                 #}
                 {% if not in_contest %}
                     {% if contest.is_live_joinable_by(request.user) %}
-                    <button onclick="openModal('{{ contest.key }}')" class="contest-join-pseudotab unselectable button">
+                    <button class="contest-join-pseudotab unselectable button contest-join-trigger"
+                            data-contest-key="{{ contest.key }}">
                             {{ _('대회 참가') }}
                         </button>
+                    -->
+                    <button
+                        type="button"
+                        class="contest-join-pseudotab unselectable button"
+                        data-open-join-contest-modal="1"
+                        data-contest-key="{{ contest.key }}"
+                    >
+                        {{ _('대회 참가') }}
+                    </button>
                     
                     {% elif contest.is_spectatable_by(request.user) %}
                         <!-- {# <form action="{{ url('contest_join', contest.key) }}" method="post"

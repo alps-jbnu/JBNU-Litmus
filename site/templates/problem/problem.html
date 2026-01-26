@@ -694,7 +694,7 @@
     {% endif %}
     {% endif %}
 </div>
-{% elif request.user.is_staff %}
+{% elif request.user.has_perm('judge.view_testcase') %}
 
 <!-- 교수자 -->
 <div class="info-float-div-admin">

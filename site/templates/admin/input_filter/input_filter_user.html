@@ -1,6 +1,6 @@
 <head>
-  <link
-    rel="stylesheet"
+  <link 
+    rel="stylesheet" 
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
     crossorigin="anonymous"
@@ -23,6 +23,41 @@
 <label>
   이름
   <input type="text" name="first_name" value="{{ request.GET.first_name }}" placeholder="이름">
+</label>
+<label>
+  활성 상태
+  <select name="is_active">
+    <option value="">모두</option>
+    <option value="True" {% if request.GET.is_active == "True" %}selected{% endif %}>활성</option>
+    <option value="False" {% if request.GET.is_active == "False" %}selected{% endif %}>비활성</option>
+  </select>
+</label>
+<label>
+  스태프 권한
+  <select name="is_staff">
+    <option value="">모두</option>
+    <option value="True" {% if request.GET.is_staff == "True" %}selected{% endif %}>있음</option>
+    <option value="False" {% if request.GET.is_staff == "False" %}selected{% endif %}>없음</option>
+  </select>
+</label>
+<label>
+  최상위 사용자 권한
+  <select name="is_superuser">
+    <option value="">모두</option>
+    <option value="True" {% if request.GET.is_superuser == "True" %}selected{% endif %}>있음</option>
+    <option value="False" {% if request.GET.is_superuser == "False" %}selected{% endif %}>없음</option>
+  </select>
+</label>
+<label>
+  그룹
+  <select name="groups">
+    <option value="">모두</option>
+    {% for value, label in spec.group_lookups %}
+      <option value="{{ value }}" {% if request.GET.groups == value %}selected{% endif %}>
+        {{ label }}
+      </option>
+    {% endfor %}
+  </select>
 </label>
 
   <button type="submit" style="font-size: 14px;">

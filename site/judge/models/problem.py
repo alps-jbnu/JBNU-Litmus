@@ -193,6 +193,12 @@ class Problem(models.Model):
         default=False,
         help_text=_('문제를 공개로 설정하면 모든 학생이 해당 문제를 볼 수 있습니다.')
     )
+    is_contest_problem = models.BooleanField(
+        verbose_name=_('contest-only problem'),
+        db_index=True,
+        default=False,
+        help_text=_('대회 문제로 설정하면 관리 권한자 또는 대회 참가자만 접근할 수 있습니다.')
+    )
     is_manually_managed = models.BooleanField(verbose_name=_('manually managed'), db_index=True, default=False,
                                               help_text=_('Whether judges should be allowed to manage data or not.'))
     date = models.DateTimeField(
@@ -242,6 +248,8 @@ class Problem(models.Model):
     def is_editable_by(self, user):
         if not user.is_authenticated:
             return False
+        if self.is_contest_problem and not user.has_perm('judge.manage_contest_problem'):
+            return False
         if not user.has_perm('judge.edit_own_problem'):
             return False
         if user.has_perm('judge.edit_all_problem') or user.has_perm('judge.edit_public_problem') and self.is_public:
@@ -261,6 +269,14 @@ class Problem(models.Model):
                 from judge.models import ContestProblem
                 if ContestProblem.objects.filter(problem_id=self.id, contest__users__id=current).exists():
                     return True
+
+        if self.is_contest_problem:
+            if user.is_authenticated and user.has_perm('judge.manage_contest_problem'):
+                return True
+            return False
+
+        if user.is_authenticated and user.has_perm('judge.view_all_problem'):
+            return True
 
         # Problem is public.
         if self.is_public:
@@ -317,10 +333,11 @@ class Problem(models.Model):
         queryset = cls.objects.defer('description')
 
         edit_own_problem = user.has_perm('judge.edit_own_problem')
+        view_all_problem = user.has_perm('judge.view_all_problem')
         edit_public_problem = edit_own_problem and user.has_perm('judge.edit_public_problem')
         edit_all_problem = edit_own_problem and user.has_perm('judge.edit_all_problem')
 
-        if not (user.has_perm('judge.see_private_problem') or edit_all_problem):
+        if not (user.has_perm('judge.see_private_problem') or edit_all_problem or view_all_problem):
             q = Q(is_public=True)
             # if not (user.has_perm('judge.see_organization_problem') or edit_public_problem):
             #     # Either not organization private or in the organization.
@@ -336,29 +353,39 @@ class Problem(models.Model):
             q |= Q(authors=user.profile)
             q |= Q(curators=user.profile)
             q |= Q(testers=user.profile)
+            if user.has_perm('judge.manage_contest_problem'):
+                q |= Q(is_contest_problem=True)
             queryset = queryset.filter(q)
+
+        if not user.has_perm('judge.manage_contest_problem'):
+            queryset = queryset.filter(is_contest_problem=False)
 
         return queryset
 
     @classmethod
     def get_public_problems(cls):
         # return cls.objects.filter(is_public=True, is_organization_private=False).defer('description')
-        return cls.objects.filter(is_public=True).defer('description')
+        return cls.objects.filter(is_public=True, is_contest_problem=False).defer('description')
 
     @classmethod
     def get_editable_problems(cls, user):
         if not user.has_perm('judge.edit_own_problem'):
             return cls.objects.none()
         if user.has_perm('judge.edit_all_problem'):
-            return cls.objects.all()
+            queryset = cls.objects.all()
+        else:
+            q = Q(authors=user.profile) | Q(curators=user.profile)
+            # q |= Q(is_organization_private=True, organizations__in=user.profile.admin_of.all())
 
-        q = Q(authors=user.profile) | Q(curators=user.profile)
-        # q |= Q(is_organization_private=True, organizations__in=user.profile.admin_of.all())
+            if user.has_perm('judge.edit_public_problem'):
+                q |= Q(is_public=True)
 
-        if user.has_perm('judge.edit_public_problem'):
-            q |= Q(is_public=True)
+            queryset = cls.objects.filter(q)
 
-        return cls.objects.filter(q)
+        if not user.has_perm('judge.manage_contest_problem'):
+            queryset = queryset.filter(is_contest_problem=False)
+
+        return queryset
 
     def __str__(self):
         return self.name
@@ -591,6 +618,9 @@ class Problem(models.Model):
             ('edit_own_problem', _('Edit own problems')),
             ('edit_all_problem', _('Edit all problems')),
             ('edit_public_problem', _('Edit all public problems')),
+            ('view_all_problem', _('View all problems')),
+            ('view_testcase', _('Can view testcase')),
+            ('manage_contest_problem', _('Manage contest problems')),
             ('problem_full_markup', _('Edit problems with full markup')),
             ('clone_problem', _('Clone problem')),
             ('change_public_visibility', _('Change is_public field')),

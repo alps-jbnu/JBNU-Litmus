@@ -3,6 +3,10 @@
 {% elif logo_override_image is defined and logo_override_image %}
     <img src="{{ logo_override_image|camo }}" alt="{{ SITE_NAME }}" height="44" style="border: none">
 {% else %}
+    {# (구버전/참고) CSP에서 inline onerror가 차단될 수 있음
     <img src="{{ static('icons/Litmuslogosvg.svg') }}" alt="{{ SITE_NAME }}" width="110" height="44"
          onerror="this.src=&quot;{{ static('icons/Litmuslogo.png') }}&quot;; this.onerror=null" style="border: none">
+    #}
+    <img src="{{ static('icons/Litmuslogosvg.svg') }}" alt="{{ SITE_NAME }}" width="110" height="44"
+         data-site-logo="1" data-fallback-src="{{ static('icons/Litmuslogo.png') }}" style="border: none">
 {% endif %}

@@ -885,6 +885,25 @@
         
     </div>
 </nav>
+<script>
+    // CSP-safe logo fallback (no inline onerror handlers)
+    (function () {
+        const logos = document.querySelectorAll('img[data-site-logo="1"][data-fallback-src]');
+        logos.forEach(function (img) {
+            const applyFallback = function () {
+                if (img.dataset.fallbackApplied) return;
+                img.dataset.fallbackApplied = '1';
+                img.src = img.dataset.fallbackSrc;
+            };
+            img.addEventListener('error', applyFallback);
+
+            // If the image already failed before this script ran
+            if (img.complete && img.naturalWidth === 0) {
+                applyFallback();
+            }
+        });
+    })();
+</script>
 {% if request.in_contest %}
     <div id="contest-info">
         <div class="info" style="vertical-align: middle">
