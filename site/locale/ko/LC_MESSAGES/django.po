@@ -1576,6 +1576,10 @@ msgstr "자신의 제출물만"
 msgid "problem code"
 msgstr "문제 코드"
 
+#: judge/admin/problem.py:552
+msgid "code"
+msgstr "문제 코드"
+
 #: judge/models/problem.py:119
 msgid "A short, unique code for the problem, used in the URL after /problem/"
 msgstr "/problem/ 뒤의 URL에서 사용되는 문제에 대한 짧고 고유한 코드."
