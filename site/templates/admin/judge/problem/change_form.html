@@ -14,139 +14,167 @@
             if (!$sampleInput.length || !$sampleOutput.length) {
                 return;
             }
-            if ($('#sample-io-add').length) {
+            if ($('#sample-io-inline-group').length) {
                 return;
             }
 
             var separator = '\n<<<SAMPLE_SPLIT>>>\n';
+
+            // 기존 form-row 숨기기
             var $inputRow = $sampleInput.closest('.form-row');
             var $outputRow = $sampleOutput.closest('.form-row');
-            if (!$inputRow.length || !$outputRow.length) {
-                return;
-            }
+            $inputRow.hide();
+            $outputRow.hide();
 
-            function normalizeLabel(text) {
-                var trimmed = $.trim(text);
-                if (!trimmed) {
-                    return '';
-                }
-                return trimmed.replace(/\s*\d+\s*:?$/, ':').replace(/\s*:\s*$/, ':');
-            }
-
-            function formatLabel(base, index, total) {
-                if (!base) {
-                    return '';
-                }
-                if (total === 1) {
-                    return base;
-                }
-                var hasColon = /:$/.test(base);
-                var stripped = base.replace(/:\s*$/, '');
-                return hasColon ? (stripped + ' ' + index + ':') : (base + ' ' + index);
-            }
-
+            // 데이터 파싱
             function splitSamples(value) {
-                if (!value) {
-                    return [];
-                }
+                if (!value) return [];
                 return value.split(separator).filter(function (item) {
                     return $.trim(item);
                 });
             }
 
-            function buildRow($row, kind, value, addDeleteButton) {
-                var $clone = $row.clone(false, false);
-                $clone.find('textarea').val(value || '')
-                    .removeAttr('id')
-                    .removeAttr('name')
-                    .attr('data-sample-kind', kind);
-                $clone.find('label').removeAttr('for');
-                $clone.find('.errorlist').remove();
-
-                // input에만 삭제 버튼 추가
-                if (kind === 'input' && addDeleteButton) {
-                    $clone.css('position', 'relative');
-                    // 레이블과 같은 라인에 배치
-                    var $label = $clone.find('label').first();
-                    $label.css({'display': 'inline-block', 'line-height': '24px'});
-                    var $deleteBtn = $('<button type="button" class="sample-delete-btn" style="background: #dc3545; color: white; border: none; border-radius: 4px; width: 24px; height: 24px; cursor: pointer; font-size: 16px; font-weight: bold; line-height: 1; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; margin-left: 8px; vertical-align: middle; box-shadow: 0 1px 3px rgba(220, 53, 69, 0.3);">×</button>');
-                    $label.after($deleteBtn);
-                }
-
-                return $clone;
-            }
-
-            var inputBase = normalizeLabel($inputRow.find('label').first().text()) || 'Sample input:';
-            var outputBase = normalizeLabel($outputRow.find('label').first().text()) || 'Sample output:';
-
             var inputs = splitSamples($sampleInput.val());
             var outputs = splitSamples($sampleOutput.val());
-            if (inputs.length) {
-                $sampleInput.val(inputs[0]);
-            }
-            if (outputs.length) {
-                $sampleOutput.val(outputs[0]);
+            var sampleCount = Math.max(inputs.length, outputs.length, 1);
+
+            // inline-group 구조 생성 (admin tabular inline과 동일)
+            var $inlineGroup = $('<div id="sample-io-inline-group" class="inline-group sortable"></div>');
+            var $tabular = $('<div class="tabular inline-related"></div>');
+            var $fieldset = $('<fieldset class="module"></fieldset>');
+            var $h2 = $('<h2 class="sample-io-title">Sample Input/Output</h2>');
+            var $table = $('<table></table>');
+            var $thead = $('<thead><tr><th class="column-order">SORT</th><th class="column-sample_io">입출력 예제</th><th class="column-delete">삭제</th></tr></thead>');
+            var $tbody = $('<tbody></tbody>');
+
+            $table.append($thead);
+            $table.append($tbody);
+            $fieldset.append($h2);
+            $fieldset.append($table);
+            $tabular.append($fieldset);
+            $inlineGroup.append($tabular);
+
+            // 각 샘플에 대해 행 생성 (adminsortable2와 동일한 구조)
+            for (var i = 0; i < sampleCount; i++) {
+                var isFirst = (i === 0);
+                var $row = $('<tr class="form-row row' + ((i % 2) + 1) + ' has_original"></tr>');
+
+                // Drag handle 열
+                var $dragCell = $('<td class="drag field-order"></td>');
+                $row.append($dragCell);
+
+                // Sample I/O 열
+                var $ioCell = $('<td class="field-sample_io"></td>');
+                var $inputLabel = $('<label>Sample input ' + (i + 1) + ':</label>');
+                var $inputArea = $('<textarea rows="4" cols="40" class="vLargeTextField" data-sample-kind="input">' + (inputs[i] || '') + '</textarea>');
+                var $outputLabel = $('<label>Sample output ' + (i + 1) + ':</label>');
+                var $outputArea = $('<textarea rows="4" cols="40" class="vLargeTextField" data-sample-kind="output">' + (outputs[i] || '') + '</textarea>');
+                $ioCell.append($inputLabel).append($inputArea)
+                    .append($outputLabel).append($outputArea);
+                $row.append($ioCell);
+
+                // DELETE 열
+                var $deleteCell = $('<td class="delete"></td>');
+                var $checkbox = $('<input type="checkbox" class="sample-delete-checkbox">');
+                $deleteCell.append($checkbox);
+                $row.append($deleteCell);
+
+                $tbody.append($row);
             }
 
-            var $extraContainer = $('<div id="sample-io-extra"></div>');
-            var extraCount = Math.max(inputs.length, outputs.length) - 1;
-            if (extraCount < 0) {
-                extraCount = 0;
-            }
-            for (var i = 0; i < extraCount; i++) {
-                var $pair = $('<div class="sample-io-pair"></div>');
-                $pair.append(buildRow($inputRow, 'input', inputs[i + 1] || '', true));
-                $pair.append(buildRow($outputRow, 'output', outputs[i + 1] || '', false));
-                $extraContainer.append($pair);
-            }
+            // Add 버튼 행
+            var $addRow = $('<tr class="add-row"><td colspan="3"><a class="add-row add-sample-link">Add Sample Case</a></td></tr>');
+            $tbody.append($addRow);
 
-            // + 버튼을 전체 너비로 생성 (label 영역 제거)
-            var $buttonWrapper = $('<div class="sample-io-add-row" style="margin-top: 15px;"></div>');
-            var $buttonField = $('<button type="button" class="button sample-io-btn" id="sample-io-add" style="background: #5b9bd5; color: white; border: none; border-radius: 8px; padding: 18px; cursor: pointer; font-size: 15px; font-weight: 500; transition: all 0.3s ease; width: 100%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(91, 155, 213, 0.25); position: relative; overflow: hidden;">+ Add Test Case</button>');
-            $buttonWrapper.append($buttonField);
-            // container를 먼저 추가하고 버튼을 그 뒤에 추가
-            $outputRow.after($extraContainer);
-            $extraContainer.after($buttonWrapper);
+            // inline-group을 output row 뒤에 삽입
+            $outputRow.after($inlineGroup);
 
+            // Sortable 초기화 (adminsortable2 inline-tabular.js 방식)
+            $tbody.sortable({
+                handle: '.drag',
+                items: 'tr.form-row.has_original',
+                axis: 'y',
+                cursor: 'ns-resize',
+                containment: false,
+                tolerance: 'pointer',
+                forcePlaceholderSize: true,
+                scroll: false,
+                start: function(e, ui) {
+                    ui.placeholder.height(ui.item.height());
+                },
+                update: function(e, ui) {
+                    updateLabels();
+                }
+            });
+
+            // 라벨 업데이트
             function updateLabels() {
-                var total = 1 + $extraContainer.find('.sample-io-pair').length;
-                $inputRow.find('label').first().text(formatLabel(inputBase, 1, total));
-                $outputRow.find('label').first().text(formatLabel(outputBase, 1, total));
-                $inputRow.find('.help').first().text(total === 1 ? 'Sample input for the problem.' : 'Sample input 1 for the problem.');
-                $outputRow.find('.help').first().text(total === 1 ? 'Sample output for the problem.' : 'Sample output 1 for the problem.');
-                $extraContainer.find('.sample-io-pair').each(function (idx) {
-                    var index = idx + 2;
-                    $(this).find('label').first().text(formatLabel(inputBase, index, total));
-                    $(this).find('label').last().text(formatLabel(outputBase, index, total));
-                    $(this).find('.help').first().text('Sample input ' + index + ' for the problem.');
-                    $(this).find('.help').last().text('Sample output ' + index + ' for the problem.');
+                $tbody.find('tr.form-row').each(function(idx) {
+                    var num = idx + 1;
+                    $(this).find('label').eq(0).text('Sample input ' + num + ':');
+                    $(this).find('label').eq(1).text('Sample output ' + num + ':');
                 });
             }
 
-            $buttonField.on('click', function () {
-                var $pair = $('<div class="sample-io-pair"></div>');
-                $pair.append(buildRow($inputRow, 'input', '', true));
-                $pair.append(buildRow($outputRow, 'output', '', false));
-                $extraContainer.append($pair);
+            // Add 버튼 클릭
+            $addRow.find('.add-sample-link').on('click', function(e) {
+                e.preventDefault();
+                var rowCount = $tbody.find('tr.form-row').not('.add-row').length + 1;
+
+                var $newRow = $('<tr class="form-row row' + ((rowCount % 2) + 1) + '"></tr>');
+
+                var $dragCell = $('<td class="drag field-order"></td>');
+                $newRow.append($dragCell);
+
+                var $ioCell = $('<td class="field-sample_io"></td>');
+                var $inputLabel = $('<label>Sample input ' + rowCount + ':</label>');
+                var $inputArea = $('<textarea rows="4" cols="40" class="vLargeTextField" data-sample-kind="input"></textarea>');
+                var $outputLabel = $('<label>Sample output ' + rowCount + ':</label>');
+                var $outputArea = $('<textarea rows="4" cols="40" class="vLargeTextField" data-sample-kind="output"></textarea>');
+                $ioCell.append($inputLabel).append($inputArea)
+                    .append($outputLabel).append($outputArea);
+                $newRow.append($ioCell);
+
+                var $deleteCell = $('<td class="delete"></td>');
+                var $deleteBtn = $('<a href="#" class="inline-deletelink sample-delete-btn" aria-label="삭제" title="삭제">삭제</a>');
+                $deleteCell.append($deleteBtn);
+                $newRow.append($deleteCell);
+
+                $addRow.before($newRow);
                 updateLabels();
             });
 
-            // 삭제 버튼 이벤트 (동적으로 추가된 버튼에도 작동)
-            $extraContainer.on('click', '.sample-delete-btn', function () {
-                $(this).closest('.sample-io-pair').remove();
+            // 체크박스 스타일/상태 반영
+            $tbody.on('change', '.sample-delete-checkbox', function() {
+                $(this).closest('tr').toggleClass('to-delete', $(this).is(':checked'));
+            });
+
+            $tbody.on('click', '.sample-delete-btn', function(e) {
+                e.preventDefault();
+                $(this).closest('tr').remove();
                 updateLabels();
             });
 
-            updateLabels();
+            // cases-group의 add-row 텍스트와 동일하게 맞춤
+            var $caseAddLink = $('#cases-group .module tbody .add-row a');
+            if ($caseAddLink.length) {
+                $addRow.find('a').text($caseAddLink.text());
+            }
 
-            $sampleInput.closest('form').on('submit', function () {
-                var allInputs = [$sampleInput.val()];
-                var allOutputs = [$sampleOutput.val()];
-                $extraContainer.find('textarea[data-sample-kind="input"]').each(function () {
-                    allInputs.push($(this).val());
-                });
-                $extraContainer.find('textarea[data-sample-kind="output"]').each(function () {
-                    allOutputs.push($(this).val());
+            // Form submit시 데이터 수집
+            $sampleInput.closest('form').on('submit', function() {
+                var allInputs = [];
+                var allOutputs = [];
+
+                $tbody.find('tr.form-row').each(function() {
+                    if ($(this).find('.sample-delete-checkbox').is(':checked')) {
+                        return;
+                    }
+
+                    var inputVal = $(this).find('textarea[data-sample-kind="input"]').val();
+                    var outputVal = $(this).find('textarea[data-sample-kind="output"]').val();
+                    allInputs.push(inputVal);
+                    allOutputs.push(outputVal);
                 });
 
                 while (allInputs.length && !$.trim(allInputs[allInputs.length - 1])) {
@@ -179,72 +207,136 @@
     {% endif %}
         
     <style>
-        .datetime {
+        /* change-form 페이지에만 적용되도록 스코핑 - Dashboard 영향 없음 */
+        .change-form .datetime {
             display: flex;
             align-items: center;
             width:100%;
         }
-        /* .datetime br{
-            display:none !important;
-        } */
-        .datetime input.vDateField,
-        .datetime input.vTimeField {
+        .change-form .datetime input.vDateField,
+        .change-form .datetime input.vTimeField {
+            margin-right: 10px;
+        }
+        .change-form .datetime .datetimeshortcuts {
             margin-right: 10px;
         }
 
-        .datetime .datetimeshortcuts {
-            margin-right: 10px;
-        }
-        #content .inline-group {
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        .title-button {
-            margin-left: 15px; /* 제목과 버튼 사이의 간격 조정 */
+        /* cases-group 내부에만 적용 */
+        #cases-group .title-button {
+            margin-left: 15px;
             padding: 5px 10px;
             font-size: 14px;
             cursor: pointer;
         }
-        
-        /* 예제 추가 버튼 디자인 */
-        #sample-io-add {
-            position: relative;
+
+        /* Sample I/O inline-group: cases-group 스타일과 일치 */
+        #sample-io-inline-group.inline-group {
+            margin: 0;
         }
-        #sample-io-add::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
+
+        #sample-io-inline-group .sample-io-title {
+            display: none;
+        }
+
+        #sample-io-inline-group .tabular.inline-related {
+            overflow-x: auto;
+        }
+
+        #sample-io-inline-group th.column-order,
+        #sample-io-inline-group table tbody td.drag {
+            width: 32px;
+            min-width: 32px;
+        }
+
+        #sample-io-inline-group table tbody td.drag {
+            cursor: pointer;
+            white-space: nowrap;
+            padding: 10px 0 !important;
+            background-color: #f5f5f5;
+            background-image: radial-gradient(#c7c7c7 1px, transparent 1px);
+            background-size: 4px 4px;
+            background-position: center;
+            vertical-align: middle !important;
+        }
+
+        #sample-io-inline-group tr:not(.has_original) td.drag {
+            background: none;
+            cursor: default;
+        }
+
+        #sample-io-inline-group table tbody td.delete {
+            text-align: center !important;
+            width: 80px;
+            vertical-align: middle !important;
+            padding: 10px 8px !important;
+        }
+
+        #sample-io-inline-group textarea.vLargeTextField {
             width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
-            transition: opacity 0.3s ease;
-            opacity: 0;
+            max-width: 100%;
+            font-family: monospace;
         }
-        #sample-io-add:hover {
-            background: #4a8bc2 !important;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(91, 155, 213, 0.35) !important;
+
+        #sample-io-inline-group td.field-sample_io {
+            text-align: left !important;
+            vertical-align: middle !important;
+            padding: 10px 8px !important;
         }
-        #sample-io-add:hover::before {
-            opacity: 1;
+
+        #sample-io-inline-group td.field-sample_io label {
+            display: block !important;
+            text-align: left !important;
+            margin-top: 0 !important;
+            margin-bottom: 5px !important;
         }
-        #sample-io-add:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 6px rgba(91, 155, 213, 0.3) !important;
+
+        #sample-io-inline-group td.field-sample_io textarea {
+            margin-top: 0 !important;
+            margin-bottom: 15px !important;
         }
-        
-        /* 예제 삭제 버튼 (×) 디자인 */
-        .sample-delete-btn {
-            position: relative;
+
+        #sample-io-inline-group td.field-sample_io textarea:last-child {
+            margin-bottom: 0 !important;
         }
-        .sample-delete-btn:hover {
-            background: #c82333 !important;
-            transform: scale(1.15);
-            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.5) !important;
+
+        #sample-io-inline-group td.delete .sample-delete-checkbox {
+            margin: 0 auto !important;
+            display: block !important;
         }
-        .sample-delete-btn:active {
-            transform: scale(1.05);
+
+        #content #content-main #sample-io-inline-group .module tbody .add-row a {
+            border-radius: 8px;
+            padding: 5px 5px 5px 5px;
+            color: black;
+            font-size: 13px;
+            display: inline-block;
+            margin-top: 3px;
+            cursor: pointer;
+        }
+
+        #content #content-main #sample-io-inline-group .module tbody .add-row td {
+            height: 30px;
+        }
+
+        #content #content-main #sample-io-inline-group .module tbody .add-row a::before {
+            color: #3A6FD9;
+        }
+
+        #sample-io-inline-group .sample-delete-btn {
+            cursor: pointer;
+            display: inline-block !important;
+            margin: 0 auto !important;
+            text-align: center;
+            float: none !important;
+            position: static !important;
+        }
+
+        #sample-io-inline-group th.column-delete {
+            text-align: center;
+        }
+
+        #sample-io-inline-group th.column-sample_io {
+            text-align: left;
         }
     </style>
     
