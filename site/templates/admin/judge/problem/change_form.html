@@ -11,12 +11,17 @@
         django.jQuery(function ($) {
             var $sampleInput = $('#id_sample_input');
             var $sampleOutput = $('#id_sample_output');
+            console.log('Sample input field found:', $sampleInput.length);
+            console.log('Sample output field found:', $sampleOutput.length);
             if (!$sampleInput.length || !$sampleOutput.length) {
+                console.log('Fields not found, exiting');
                 return;
             }
             if ($('#sample-io-inline-group').length) {
+                console.log('Sample IO inline group already exists, exiting');
                 return;
             }
+            console.log('Initializing Sample I/O interface');
 
             var separator = '\n<<<SAMPLE_SPLIT>>>\n';
 
@@ -90,22 +95,28 @@
             $outputRow.after($inlineGroup);
 
             // Sortable 초기화 (adminsortable2 inline-tabular.js 방식)
-            $tbody.sortable({
-                handle: '.drag',
-                items: 'tr.form-row.has_original',
-                axis: 'y',
-                cursor: 'ns-resize',
-                containment: false,
-                tolerance: 'pointer',
-                forcePlaceholderSize: true,
-                scroll: false,
-                start: function(e, ui) {
-                    ui.placeholder.height(ui.item.height());
-                },
-                update: function(e, ui) {
-                    updateLabels();
-                }
-            });
+            // jQuery UI sortable이 로드된 경우에만 실행
+            if ($.fn.sortable) {
+                $tbody.sortable({
+                    handle: '.drag',
+                    items: 'tr.form-row.has_original',
+                    axis: 'y',
+                    cursor: 'ns-resize',
+                    containment: false,
+                    tolerance: 'pointer',
+                    forcePlaceholderSize: true,
+                    scroll: false,
+                    start: function(e, ui) {
+                        ui.placeholder.height(ui.item.height());
+                    },
+                    update: function(e, ui) {
+                        updateLabels();
+                    }
+                });
+                console.log('Sortable initialized');
+            } else {
+                console.log('jQuery UI sortable not available, drag&drop disabled');
+            }
 
             // 라벨 업데이트
             function updateLabels() {
