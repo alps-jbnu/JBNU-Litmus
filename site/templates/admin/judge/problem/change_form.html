@@ -49,7 +49,7 @@
             var $fieldset = $('<fieldset class="module"></fieldset>');
             var $h2 = $('<h2 class="sample-io-title">Sample Input/Output</h2>');
             var $table = $('<table></table>');
-            var $thead = $('<thead><tr><th class="column-order">SORT</th><th class="column-sample_io">입출력 예제</th><th class="column-delete">삭제</th></tr></thead>');
+            var $thead = $('<thead><tr><th class="column-sample_io">입출력 예제</th><th class="column-delete">삭제</th></tr></thead>');
             var $tbody = $('<tbody></tbody>');
 
             $table.append($thead);
@@ -63,10 +63,6 @@
             for (var i = 0; i < sampleCount; i++) {
                 var isFirst = (i === 0);
                 var $row = $('<tr class="form-row row' + ((i % 2) + 1) + ' has_original"></tr>');
-
-                // Drag handle 열
-                var $dragCell = $('<td class="drag field-order"></td>');
-                $row.append($dragCell);
 
                 // Sample I/O 열
                 var $ioCell = $('<td class="field-sample_io"></td>');
@@ -133,9 +129,6 @@
                 var rowCount = $tbody.find('tr.form-row').not('.add-row').length + 1;
 
                 var $newRow = $('<tr class="form-row row' + ((rowCount % 2) + 1) + '"></tr>');
-
-                var $dragCell = $('<td class="drag field-order"></td>');
-                $newRow.append($dragCell);
 
                 var $ioCell = $('<td class="field-sample_io"></td>');
                 var $inputLabel = $('<label>Sample input ' + rowCount + ':</label>');
