@@ -547,23 +547,8 @@
 {% macro contest_join(contest, request, finished_contests) %}
     <td>
         {% if contest.is_live_joinable_by(request.user) %}
-<<<<<<< HEAD
             <button class="unselectable button full participate-button join-warning contest-join-trigger"
                     data-contest-key="{{ contest.key }}">
-=======
-            <!-- (구버전/참고) CSP에서 inline onclick이 차단될 수 있음
-            <button class="unselectable button full participate-button join-warning" 
-                    onclick="openModal('{{ contest.key }}')">
->>>>>>> 7dbdb84 (fix:CSP onclick issue completed)
-                {{ _('Join') }}
-            </button>
-            -->
-            <button
-                    type="button"
-                    class="unselectable button full participate-button join-warning"
-                    data-open-contest-modal="1"
-                    data-contest-key="{{ contest.key }}"
-            >
                 {{ _('Join') }}
             </button>
         {% elif contest.is_spectatable_by(request.user) %}
