@@ -311,6 +311,74 @@
 		div.original-checkboxes ul {
 			columns: 10em 4 !important;
 		}
+
+		/* Dashboard page tuning */
+		body.dashboard #content {
+			margin-right: 0 !important;
+		}
+
+		body.dashboard #content #content-main {
+			float: none;
+			width: 100%;
+			max-width: none !important;
+			margin-right: 0;
+		}
+
+		body.dashboard #content .module h2,
+		body.dashboard #content .module caption {
+			background-color: #E3E6EA;
+			color: #17171B;
+		}
+
+		/* Keep dashboard list text black */
+		body.dashboard #content #content-main .module,
+		body.dashboard #content #content-main .module th,
+		body.dashboard #content #content-main .module td,
+		body.dashboard #content #content-main .module a {
+			color: #17171B !important;
+		}
+
+		body.dashboard #content #content-main .module tbody th {
+			font-weight: 400;
+		}
+
+		/* Dashboard rows: disable zebra striping */
+		body.dashboard #content #content-main .module table tr th,
+		body.dashboard #content #content-main .module table tr td,
+		body.dashboard #content #content-main .dashboard table tr,
+		body.dashboard #content #content-main .dashboard table tr th,
+		body.dashboard #content #content-main .dashboard table tr td,
+		#content-main .dashboard table tr,
+		#content-main .dashboard table tr th,
+		#content-main .dashboard table tr td {
+			background: #fff !important;
+		}
+
+		/* Dashboard cards/tables width: reduce by 10% */
+			body.dashboard #content #content-main .module,
+			body.dashboard #content #content-related .module {
+				width: 86.5%;
+				box-sizing: border-box;
+			}
+
+			/* Recent Actions / My Actions only: -5% */
+			body.dashboard #content #content-related .module {
+				width: 78.5%;
+			}
+
+		/* Keep action links blue */
+		body.dashboard #content #content-main .module a.addlink,
+		body.dashboard #content #content-main .module a.changelink {
+			color: #0074a2 !important;
+		}
+
+		/* Move action widgets (Recent Actions / My Actions) below */
+		body.dashboard #content #content-related {
+			float: none;
+			clear: both;
+			margin-top: 24px;
+			width: 360px;
+		}
 	</style>
 </head>
 {% load i18n %}
