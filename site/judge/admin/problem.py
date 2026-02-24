@@ -58,7 +58,10 @@ class ProblemForm(ModelForm):
     
     def __init__(self, *args, **kwargs):
         super(ProblemForm, self).__init__(*args, **kwargs)
-        self.fields['authors'].widget.can_add_related = False
+        # authors는 readonly이므로 fields에 포함되지 않음
+        self.fields['curators'].widget.can_add_related = False
+        self.fields['curators'].label = 'TA'
+        self.fields['curators'].help_text = 'TA나 협업자에게 문제 편집 권한을 부여합니다. 제작자와 동일한 권한을 가지지만, 제작자로 표시되지 않습니다.'
         self.fields['testers'].widget.can_add_related = False
         self.fields['change_message'].widget.attrs.update({
             'placeholder': gettext('Describe the changes you made (optional)'),
@@ -230,7 +233,7 @@ class ProblemForm(ModelForm):
     class Meta:
         widgets = {
             'authors': AdminHeavySelect2MultipleWidget(data_view='profile_select2', attrs={'style': 'width: 100%; display: none;'}),
-            # 'curators': AdminHeavySelect2MultipleWidget(data_view='profile_select2', attrs={'style': 'width: 100%'}),
+            'curators': AdminHeavySelect2MultipleWidget(data_view='profile_select2', attrs={'style': 'width: 100%'}),
             'testers': AdminHeavySelect2MultipleWidget(data_view='profile_select2', attrs={'style': 'width: 100%'}),
             'banned_users': AdminHeavySelect2MultipleWidget(data_view='profile_select2',
                                                            attrs={'style': 'width: 100%'}),
@@ -494,7 +497,7 @@ class ProblemAdmin(VersionAdmin):
     fieldsets = (
         ('문제 설정', {
             'fields': (
-                'code', 'name', 'date', 'authors', 'testers',
+                'code', 'name', 'date', 'authors', 'curators', 'testers',
                 ('is_encrypted', 'encryption_key'), 
                 'is_public',
                 'is_contest_problem',
@@ -563,7 +566,7 @@ class ProblemAdmin(VersionAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         fields = self.readonly_fields
-        fields += ('code',)
+        fields += ('code', 'authors',)
         if not request.user.has_perm('judge.change_public_visibility'):
             fields += ('is_public',)
         if not request.user.has_perm('judge.manage_contest_problem'):
@@ -729,7 +732,7 @@ class ProblemAdmin(VersionAdmin):
 
     def get_form(self, request, *args, **kwargs):
         form = super(ProblemAdmin, self).get_form(request,*args, **kwargs)
-        form.base_fields['authors'].queryset = Profile.objects.filter(user__username=request.user.username)
+        # authors는 readonly이므로 base_fields에 없음. save_related에서 자동 설정됨.
         form.base_fields['allowed_languages'].initial = Language.objects.all()
         if not request.user.has_perm('judge.manage_contest_problem'):
             form.base_fields.pop('is_contest_problem', None)
@@ -737,7 +740,6 @@ class ProblemAdmin(VersionAdmin):
 
     def save_model(self, request, obj, form, change):
         # `organizations` will not appear in `cleaned_data` if user cannot edit it
-        form.cleaned_data['authors'] = Profile.objects.filter(user__username=request.user.username)
         # form.cleaned_data['allowed_languages'] = Language
         
         # if form.changed_data and 'organizations' in form.changed_data:
@@ -767,6 +769,13 @@ class ProblemAdmin(VersionAdmin):
             any(f in form.changed_data for f in ('is_public', 'points', 'partial'))
         ):
             self._rescore(request, obj.id)
+    
+    def save_related(self, request, form, formsets, change):
+        super(ProblemAdmin, self).save_related(request, form, formsets, change)
+        
+        # 새 문제 생성 시 현재 사용자를 authors로 설정
+        if not change:
+            form.instance.authors.set(Profile.objects.filter(user__username=request.user.username))
             
     def get_urls(self):
         return [
