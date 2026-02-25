@@ -436,6 +436,19 @@
     });
 </script>
 {% endif %}
+
+<!-- LaTeX 문법 변환 -->
+<script src="{{ static('martor-mathjax.js') }}" type="text/javascript"></script>
+<script type="text/javascript">
+    $(document).ready(function() {
+        var $description = $('#decrypted-description').length ? $('#decrypted-description') : $('.content-description');
+        if ($description.length) {
+            // martor:preview 이벤트 트리거
+            $(document).trigger('martor:preview', [$description]);
+        }
+    });
+</script>
+
 {% endblock %}
 
 {% block title_row %}
@@ -738,11 +751,11 @@
         </div>
     </div>
 </div>
-<div id="decrypted-description" style="display: none;"></div>
+<div id="decrypted-description" class="content-description require-mathjax-support" data-config="{{ static('mathjax_config.js') }}" style="display: none;"></div>
 {% else %}
-{% cache 86400 'problem_html' problem.id MATH_ENGINE LANGUAGE_CODE %}
+<div class="content-description require-mathjax-support" data-config="{{ static('mathjax_config.js') }}">
 {{ description|markdown(problem.markdown_style, MATH_ENGINE)|reference|str|safe }}
-{% endcache %}
+</div>
 
 {% with license=problem.license %}
 {% if license %}

@@ -221,6 +221,8 @@ class Problem(models.Model):
     submission_source_visibility_mode = models.CharField(verbose_name='제품 소스', max_length=1,
                                                          default=SubmissionSourceAccess.FOLLOW,
                                                          choices=SUBMISSION_SOURCE_ACCESS)
+    sample_input = models.TextField(blank=True, help_text='Sample input for the problem.', verbose_name='sample input')
+    sample_output = models.TextField(blank=True, help_text='Sample output for the problem.', verbose_name='sample output')
 
     objects = TranslatedProblemQuerySet.as_manager()
     tickets = GenericRelation('Ticket')
