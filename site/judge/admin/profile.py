@@ -8,7 +8,7 @@ from django.utils.translation import gettext, gettext_lazy as _, ngettext
 from reversion.admin import VersionAdmin
 
 from django_ace import AceWidget
-from judge.models import Profile, WebAuthnCredential,Department
+from judge.models import Profile, WebAuthnCredential, Department, School
 from judge.utils.views import NoBatchDeleteMixin
 from judge.widgets import AdminMartorWidget, AdminSelect2Widget
 
@@ -67,9 +67,13 @@ class CombinedProfileFilter(FieldListFilter):
             Department.objects.values_list('id', 'name')
         )
         self.__department_handles = set(str(dep_id) for dep_id, _ in self.__department_lookups)
-        
-        
-        self.filter_keys = ['username', 'email', 'department', 'timezone', 'IP']
+
+        self.__school_lookups = tuple(
+            School.objects.filter(is_active=True).values_list('id', 'name')
+        )
+        self.__school_handles = set(str(s_id) for s_id, _ in self.__school_lookups)
+
+        self.filter_keys = ['username', 'email', 'department', 'school', 'timezone', 'IP']
     
     @property
     def timezone_lookups(self):
@@ -77,12 +81,14 @@ class CombinedProfileFilter(FieldListFilter):
     
     @property
     def department_lookups(self):
-        print("🔥 department_lookups 호출됨")
         return self.__department_lookups
-     
+
+    @property
+    def school_lookups(self):
+        return self.__school_lookups
 
     def expected_parameters(self):
-        return ['username', 'email', 'department', 'timezone', 'IP',]
+        return ['username', 'email', 'department', 'school', 'timezone', 'IP']
 
     def choices(self, changelist):
         yield {
@@ -106,6 +112,10 @@ class CombinedProfileFilter(FieldListFilter):
 
         if department and department in self.__department_handles:
             queryset = queryset.filter(user__profile__department_id=department)
+
+        school = request.GET.get('school')
+        if school and school in self.__school_handles:
+            queryset = queryset.filter(school_id=school)
 
         if timezone and timezone in self.__timezone_handles:
             queryset = queryset.filter(user__profile__timezone=timezone)
@@ -164,19 +174,17 @@ class SubjectAdmin(admin.ModelAdmin):
     fields = ('name',)
     list_display = ('id', 'name')
     action_form = CustomActionForm
-    
 
-    
 
 class ProfileAdmin(NoBatchDeleteMixin, VersionAdmin):
     # fields = ('user', 'display_rank', 'about', 'organizations', 'timezone', 'language', 'ace_theme',
     #           'math_engine', 'last_access', 'ip', 'mute', 'is_unlisted', 'is_banned_from_problem_voting',
     #           'username_display_override', 'notes', 'is_totp_enabled', 'user_script', 'current_contest')
-    fields = ('user', 'display_rank', 'about', 'timezone', 'language', 'ace_theme', 'department',
+    fields = ('user', 'display_rank', 'about', 'timezone', 'language', 'ace_theme', 'department', 'school',
               'math_engine', 'last_access', 'ip', 'mute', 'is_unlisted', 'is_banned_from_problem_voting',
               'username_display_override', 'notes', 'is_totp_enabled', 'user_script', 'current_contest')
     readonly_fields = ('user',)
-    list_display = ('admin_user_admin', 'email', 'department', 'staff_status', 'active_status', 'timezone_full',
+    list_display = ('admin_user_admin', 'email', 'department', 'school', 'staff_status', 'active_status', 'timezone_full',
                     'date_joined_display', 'last_access_display', 'ip', 'show_public')
     ordering = ('user__username',)
     search_fields = ('user__username', 'ip', 'user__email')

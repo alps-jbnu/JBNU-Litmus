@@ -113,6 +113,10 @@ class ContestForm(ModelForm):
         self.fields['subject'].widget.can_add_related = False
         self.fields['subject'].widget.can_change_related = False
         self.fields['subject'].widget.can_delete_related = False
+        if 'school' in self.fields:
+            self.fields['school'].widget.can_add_related = False
+            self.fields['school'].widget.can_change_related = False
+            self.fields['school'].widget.can_delete_related = False
         # curators 필드 레이블 변경
         self.fields['curators'].label = 'TA'
         self.fields['curators'].help_text = 'TA나 협업자에게 과제/대회 관리 권한을 부여합니다. 제작자와 동일한 권한을 가지지만, 제작자로 표시되지 않습니다.'
@@ -213,7 +217,7 @@ class ContestAdmin(VersionAdmin):
     fieldsets = (
         # (None, { 'classes':('collapse'),
         #     'fields': ('key', 'name' , 'authors', )}),
-        ('기본', {'fields': ('key', 'name', 'authors', 'curators', 'subject' )}),
+        ('기본', {'fields': ('key', 'name', 'authors', 'curators', 'subject', 'school')}),
         (_('Settings'), {'fields': ('is_visible', 'is_practice',)}),
         (_('Scheduling'), {'fields': ('start_time', 'end_time')}),
         (_('Details'), {'fields': ('description', )}),

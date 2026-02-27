@@ -1,33 +1,30 @@
-# judge/social_auth/custom_pipeline.py
-import re
-import json
-from operator import itemgetter
-from django import forms
+# judge/custom_pipeline.py
 from django.http import HttpResponseRedirect
-from django.shortcuts import render
 from django.urls import reverse
-from django.utils.translation import gettext_lazy as _
-from django.contrib.auth.models import User
-from social_core.pipeline.partial import partial
-from judge.models import Profile, Language, Department
-from judge.models import Profile
-import uuid
 
-import logging
 
-from social_core.exceptions import AuthException
-
-def check_existing_user(backend, user, *args, **kwargs):
+def assign_school_on_keycloak_login(backend, details, user, *args, **kwargs):
     """
-    소셜 인증 파이프라인에서 사용자 존재 여부를 확인합니다.
-    만약 사용자 객체(user)가 없다면, 메시지와 함께 인증을 중단합니다.
-
-    리트머스 계정이 없고 키클락 로그인을 시도한 경우, 기존 파이프라인에서는 계정을 새로 만드는 부분이 있었음
-    키클락 로그인 후 이 부분에서 계속 에러가 나서 여러 방법을 시도하다가
-    그냥 최초 로그인 시 회원가입 후 로그인 가능하도록 함
+    Keycloak 인증 후 school 처리.
+    - 리트머스 계정 없음(user=None) → 회원가입 리다이렉트
+    - @jbnu.ac.kr → is_jbnu=True인 School 자동 할당 (school이 아직 없는 경우만)
+    - @gmail.com → school은 가입 시 이미 설정됨, 파이프라인에서 변경하지 않음
     """
     if user is None:
         request = backend.strategy.request
         request.session.flush()
         return HttpResponseRedirect(reverse('registration_register'))
+
+    email = details.get('email', '')
+    domain = email.split('@')[-1].lower() if '@' in email else ''
+
+    if domain == 'jbnu.ac.kr' and user.profile.school is None:
+        try:
+            from judge.models.profile import School
+            jbnu_school = School.objects.get(is_jbnu=True, is_active=True)
+            user.profile.school = jbnu_school
+            user.profile.save(update_fields=['school'])
+        except School.DoesNotExist:
+            pass
+
     return {}

@@ -29,7 +29,7 @@ from judge.ratings import rating_class
 from judge.utils.two_factor import webauthn_decode
 
 # __all__ = ['Class', 'Organization', 'Profile', 'OrganizationRequest', 'WebAuthnCredential']
-__all__ = ['Profile', 'WebAuthnCredential']
+__all__ = ['Profile', 'WebAuthnCredential', 'School']
 
 class EncryptedNullCharField(EncryptedCharField):
     def get_prep_value(self, value):
@@ -163,6 +163,26 @@ class Subject(models.Model):
         verbose_name = _('과목')
         verbose_name_plural = _('과목')
 
+class School(models.Model):
+    SCHOOL_TYPES = [
+        ('university', '대학교'),
+        ('highschool', '고등학교'),
+        ('middleschool', '중학교'),
+    ]
+    name = models.CharField(max_length=100, verbose_name='학교 이름', unique=True)
+    short_name = models.CharField(max_length=20, verbose_name='약칭')
+    school_type = models.CharField(max_length=20, choices=SCHOOL_TYPES)
+    is_jbnu = models.BooleanField(default=False, verbose_name='전북대 여부',
+                                  help_text='True이면 @jbnu.ac.kr 이메일 강제, False이면 @gmail.com 강제')
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = _('학교')
+        verbose_name_plural = _('학교')
+
 class Profile(models.Model):
     user = models.OneToOneField(User, verbose_name=_('user associated'), on_delete=models.CASCADE)
     about = models.TextField(verbose_name=_('self-description'), null=True, blank=True)
@@ -177,6 +197,8 @@ class Profile(models.Model):
     last_access = models.DateTimeField(verbose_name=_('last access time'), default=now)
     ip = models.GenericIPAddressField(verbose_name=_('last IP'), blank=True, null=True)
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null = True, blank=True)
+    school = models.ForeignKey('School', on_delete=models.SET_NULL,
+                               null=True, blank=True, verbose_name='학교')
     # organizations = SortedManyToManyField(Organization, verbose_name=_('organization'), blank=True,
     #                                       related_name='members', related_query_name='member')
     display_rank = models.CharField(max_length=10, default='user', verbose_name=_('display rank'),
