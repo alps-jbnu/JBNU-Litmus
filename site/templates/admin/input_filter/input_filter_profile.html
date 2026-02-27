@@ -32,6 +32,17 @@
 </select>
 </label>
 <label>
+  학교
+  <select name="school">
+    <option value="">학교</option>
+    {% for value, label in spec.school_lookups %}
+      <option value="{{ value }}" {% if request.GET.school == value|stringformat:"s" %}selected{% endif %}>
+        {{ label }}
+      </option>
+    {% endfor %}
+  </select>
+</label>
+<label>
   시간대
 <select name="timezone">
   <option value="">시간대</option>

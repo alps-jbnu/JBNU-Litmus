@@ -506,11 +506,26 @@ class UserList(QueryStringSortMixin, DiggPaginatorMixin, TitleMixin, ListView):
     default_desc = all_sorts
     default_sort = '-performance_points'
 
+    def get_school(self):
+        user = self.request.user
+        if user.is_authenticated:
+            if user.is_superuser:
+                return None
+            return getattr(self.request.profile, 'school', None)
+        return None
+
+    def get_title(self):
+        school = self.get_school()
+        if school:
+            return school.name + ' 사용자'
+        return str(gettext_lazy('사용자'))
+
     def get_queryset(self):
-        # return (Profile.objects.filter(is_unlisted=False).order_by(self.order).select_related('user')
-        #         .only('display_rank', 'user__username', 'points', 'rating', 'performance_points',
-        #               'problem_count'))
+        school = self.get_school()
         queryset = Profile.objects.filter(is_unlisted=False).select_related('user').order_by('-performance_points')
+
+        if school is not None:
+            queryset = queryset.filter(school=school)
 
         search = self.request.GET.get('search')
         if search:
@@ -521,6 +536,7 @@ class UserList(QueryStringSortMixin, DiggPaginatorMixin, TitleMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super(UserList, self).get_context_data(**kwargs)
         context['title_info'] = self.title_info
+        context['school'] = self.get_school()
         context['users'] = ranker(
             context['users'],
             key=attrgetter('performance_points', 'problem_count'),
@@ -612,7 +628,6 @@ class IdFindView(FormView):
     success_url = reverse_lazy('id_find_complete')
     email_context = settings.SITE_ADMIN_EMAIL
     title = _('아이디 찾기')
-    fixed_domain = '@jbnu.ac.kr'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -620,8 +635,7 @@ class IdFindView(FormView):
         return context
     
     def form_valid(self, form):
-        email_local = form.cleaned_data['email_local']
-        email = f"{email_local}{self.fixed_domain}"
+        email = form.cleaned_data['email']
         try:
             user = Profile.objects.get(user__email=email)
         except Profile.DoesNotExist:

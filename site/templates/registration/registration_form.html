@@ -331,15 +331,21 @@
         });
     </script>
     <script>
-        // 페이지 로드 후 실행
         document.addEventListener('DOMContentLoaded', function() {
-            // Select2 드롭다운이 열릴 때마다 실행될 이벤트 핸들러
             $(document).on('select2:open', function() {
-                // 약간의 지연 후 검색창에 maxlength 속성 추가
                 setTimeout(function() {
                     $('.select2-search__field').attr('maxlength', '50');
                 }, 10);
             });
+
+            var jbnuSchoolId = '{{ jbnu_school_id }}';
+            $('#id_school').on('change', function() {
+                var isJbnu = (String(this.value) === String(jbnuSchoolId));
+                var domain = isJbnu ? '@jbnu.ac.kr' : '@gmail.com';
+                $('span.email_domain').text(domain);
+                $('input[name=email_domain]').val(domain);
+            });
+            $('#id_school').trigger('change');
         });
     </script>
 {% endblock %}
@@ -380,19 +386,16 @@
             {% if form.first_name.errors %}
                 <div class="form-field-error">{{ form.first_name.errors }}</div>
             {% endif %}
+            <!-- 학교 선택 -->
+            <span class="fullwidth">{{ form.school }}</span>
+            {% if form.school.errors %}
+                <div class="form-field-error">{{ form.school.errors }}</div>
+            {% endif %}
             <!-- 이메일 -->
             <span class="email-input-wrapper{% if form.email_local.errors %}-error{% endif %}">
-                {#
-                <!-- {{ form.email }} -->
-                #}
                 {{ form.email_local }}
                 {{ form.email_domain }}
                 <span class="email_domain">@jbnu.ac.kr</span>
-                {#
-                <!-- <input type="email" name="email_local" id="id_email_local" placeholder="이메일 입력" class="email-local" value="{{ form.email_local.value }}"> -->
-                <!-- <span class="email-domain" aria-readonly="true">@jbnu.ac.kr</span> -->
-                <!-- <input type="text" name="email_domain" id="id_email_domain" value="@jbnu.ac.kr" class="email-domain" readonly> -->
-                #}
             </span>
             {% if form.email_local.errors %}
                 <div class="form-field-error">{{ form.email_local.errors }}</div>

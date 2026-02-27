@@ -378,35 +378,31 @@ class ProblemPointsVoteForm(ModelForm):
         
 #아이디 찾기 관련 폼
 class IdFindForm(forms.Form):
-    email_local = forms.CharField(
+    email = forms.EmailField(
         label="이메일",
-        widget=forms.TextInput(attrs={
-            'class': 'email_local',
-            'placeholder': _('이메일')}),
+        widget=forms.EmailInput(attrs={
+            'placeholder': _('이메일'),
+            'style': 'width:100%; border-radius:8px;'}),
         max_length=254
     )
-    # email = forms.EmailField(label="Email", max_length=254)
 
 #비밀번호 리셋 관련 폼    
 UserModel = get_user_model()
 class CustomPasswordResetForm(PasswordResetForm):
-    email_local = forms.CharField(
-        max_length=150,
-        widget=forms.TextInput(attrs={'placeholder': _('이메일'), 'class': 'email_local'}),
+    email_local = forms.EmailField(
+        max_length=254,
+        widget=forms.EmailInput(attrs={
+            'placeholder': _('이메일'),
+            'style': 'width:100%; border-radius:8px;',
+        }),
         label=_('Email')
     )
-    email_domain = forms.CharField(
-        max_length=50,
-        initial='@jbnu.ac.kr',
+    email = forms.EmailField(
+        initial='',
         widget=forms.HiddenInput(),
         required=False
     )
-    email = forms.EmailField(
-        initial = '',
-        widget=forms.HiddenInput(),  # 사용자에게 보이지 않는 숨겨진 필드
-        required=False
-    )
-    
+
     username = forms.RegexField(
         regex=r'^\w+$',
         max_length=30,
@@ -414,31 +410,23 @@ class CustomPasswordResetForm(PasswordResetForm):
         error_messages={'invalid': _('A username must contain letters, numbers, or underscores.')},
         widget=forms.TextInput(attrs={'placeholder': _('아이디')})
     )
-    
+
     def clean(self):
         cleaned_data = super().clean()
-        email_local = cleaned_data.get('email_local')
-        email_domain = cleaned_data.get('email_domain')
+        email = cleaned_data.get('email_local', '').strip()
 
-        # 이메일 주소 재구성
-        email = f"{email_local}@jbnu.ac.kr"
-        
-        # email_domain이 올바른 도메인인지 확인
-        if email_domain != "@jbnu.ac.kr":
-            raise forms.ValidationError(gettext('Invalid email domain. Please use the provided domain.'))
-
-        #해당 계정의 이메일 또는 사용자가 존재하는지 확인
+        # 해당 계정의 이메일 또는 사용자가 존재하는지 확인
         users = self.get_users(email)
         is_match_username = False
         for user in users:
-            if user.get_username() == cleaned_data['username']: 
+            if user.get_username() == cleaned_data.get('username'):
                 is_match_username = True
-                
+
         if not is_match_username:
             raise forms.ValidationError(_('입력하신 아이디 또는 이메일에 해당하는 사용자가 없습니다.'))
         else:
             cleaned_data['email'] = email
-        
+
         return cleaned_data
 
 # 이메일 변경 관련 폼

@@ -15,7 +15,7 @@ from judge.models.problem import LanguageLimit, License, Problem, ProblemClarifi
 from judge.models.problem_data import CHECKERS, ProblemData, ProblemTestCase, problem_data_storage, \
     problem_directory_file
 # from judge.models.profile import Class, Organization, OrganizationRequest, Profile, WebAuthnCredential
-from judge.models.profile import Profile, WebAuthnCredential, Department, Subject
+from judge.models.profile import Profile, WebAuthnCredential, Department, Subject, School
 from judge.models.runtime import Judge, Language, RuntimeVersion
 from judge.models.submission import SUBMISSION_RESULT, Submission, SubmissionSource, SubmissionTestCase
 from judge.models.ticket import Ticket, TicketMessage
