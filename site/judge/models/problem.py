@@ -120,16 +120,7 @@ default_decription = """본문 내용 작성
 
 ## 출력 설명
 출력 제한 설명
-
-## 예제 입력
-```
-테스트케이스 예제 입력
-```
-
-## 예제 출력
-```
-테스트케이스 예제 출력
-```"""
+"""
 
 class Problem(models.Model):
     SUBMISSION_SOURCE_ACCESS = (
