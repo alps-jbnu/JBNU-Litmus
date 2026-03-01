@@ -17,7 +17,7 @@ JPLAG_LANG_PYTHON = 'python3'
 from judge import contest_format
 from judge.models.problem import Problem
 # from judge.models.profile import Class, Organization, Profile
-from judge.models.profile import Profile, Subject
+from judge.models.profile import Profile, Subject, School
 
 from judge.models.submission import Submission
 from judge.ratings import rate_contest
@@ -74,6 +74,9 @@ class Contest(models.Model):
                            validators=[RegexValidator('^[a-z0-9]+$', _('Contest id must be ^[a-z0-9]+$'))])
     name = models.CharField(max_length=100, verbose_name=_('contest name'), db_index=True)
     subject = models.ForeignKey(Subject, on_delete=models.SET_NULL, null = True, blank=True)
+    school = models.ForeignKey('judge.School', on_delete=models.SET_NULL,
+                               null=True, blank=True, verbose_name='학교',
+                               help_text='특정 학교 전용 대회/과제. 비워두면 전체 공개')
     authors = models.ManyToManyField(Profile, verbose_name=_('authors'),
                                      help_text=_('These users will be able to edit the contest.'),
                                      related_name='authored_contests',blank=True)
@@ -462,28 +465,33 @@ class Contest(models.Model):
     @classmethod
     def get_visible_contests(cls, user):
         if not user.is_authenticated:
-            # return cls.objects.filter(is_visible=True, is_organization_private=False, is_private=False) \
-            #                   .defer('description').distinct()
-            return cls.objects.filter(is_visible=True,is_private=False) \
+            return cls.objects.filter(is_visible=True, is_private=False, school__isnull=True) \
                               .defer('description').distinct()
         queryset = cls.objects.defer('description')
-        if not (user.has_perm('judge.see_private_contest') or user.has_perm('judge.edit_all_contest')):
-            # org_check = (Q(organizations__in=user.profile.organizations.all()) |
-            #              Q(classes__in=user.profile.classes.all()))
-            q = Q(is_visible=True)
-            # q &= (
-            #     Q(view_contest_scoreboard=user.profile) |
-            #     Q(is_organization_private=False, is_private=False) |
-            #     Q(is_organization_private=False, is_private=True, private_contestants=user.profile) |
-            #     (Q(is_organization_private=True, is_private=False) & org_check) |
-            #     (Q(is_organization_private=True, is_private=True, private_contestants=user.profile) & org_check)
-            # )
 
+        # 학교 필터: superuser가 아닌 경우 본인 학교 대회만 조회
+        # (단, 직접 참여 중인 author/curator/tester/spectator는 학교 무관 허용)
+        if not user.is_superuser:
+            school = getattr(getattr(user, 'profile', None), 'school', None)
+            q_school = Q(school__isnull=True)
+            if school:
+                q_school |= Q(school=school)
+            q_school |= Q(authors=user.profile)
+            q_school |= Q(curators=user.profile)
+            q_school |= Q(testers=user.profile)
+            q_school |= Q(spectators=user.profile)
+            queryset = queryset.filter(q_school)
+
+        # 공개 여부 필터: 권한이 없는 경우 visible 대회만 조회
+        if not (user.is_superuser or
+                user.has_perm('judge.see_private_contest') or user.has_perm('judge.edit_all_contest')):
+            q = Q(is_visible=True)
             q |= Q(authors=user.profile)
             q |= Q(curators=user.profile)
             q |= Q(testers=user.profile)
             q |= Q(spectators=user.profile)
             queryset = queryset.filter(q)
+
         return queryset.distinct()
 
     def rate(self):
