@@ -208,8 +208,6 @@ class ProblemDetail(ProblemMixin, SolvedProblemMixin, CommentedDetailView):
             return minimal_context
         
         # 암호화되지 않은 문제는 기존대로 처리
-        context['description'] = self.object.description
-            
         authed = user.is_authenticated
         context['has_submissions'] = authed and Submission.objects.filter(user=user.profile,
                                                                           problem=self.object).exists()
@@ -261,13 +259,42 @@ class ProblemDetail(ProblemMixin, SolvedProblemMixin, CommentedDetailView):
         except ProblemTranslation.DoesNotExist:
             context['title'] = self.object.name
             context['language'] = settings.LANGUAGE_CODE
-            context['description'] = self.object.description
+            base_description = self.object.description
             context['translated'] = False
         else:
             context['title'] = translation.name
             context['language'] = self.request.LANGUAGE_CODE
-            context['description'] = translation.description
+            base_description = translation.description
             context['translated'] = True
+
+        from judge.views.preview import latex_to_markdown
+        description = latex_to_markdown(base_description)
+
+        # 예제 입력/출력 추가 (여러 개 지원)
+        def split_samples(value):
+            if not value:
+                return []
+            # 윈도우(\r\n)와 유닉스(\n) 줄바꿈 모두 처리
+            parts = re.split(r'[\r\n]+<<<SAMPLE_SPLIT>>>[\r\n]+', value)
+            return [part.strip() for part in parts if part.strip()]
+
+        sample_inputs = split_samples(self.object.sample_input)
+        sample_outputs = split_samples(self.object.sample_output)
+        sample_count = max(len(sample_inputs), len(sample_outputs))
+
+        for idx in range(sample_count):
+            input_value = sample_inputs[idx] if idx < len(sample_inputs) else ''
+            output_value = sample_outputs[idx] if idx < len(sample_outputs) else ''
+            if not input_value.strip() and not output_value.strip():
+                continue
+            if input_value.strip():
+                input_label = '## 예제 입력' if sample_count == 1 else f'## 예제 입력 {idx + 1}'
+                description += f'\n\n{input_label}\n```\n{input_value}\n```'
+            if output_value.strip():
+                output_label = '## 예제 출력' if sample_count == 1 else f'## 예제 출력 {idx + 1}'
+                description += f'\n\n{output_label}\n```\n{output_value}\n```'
+
+        context['description'] = description
 
         if not self.object.og_image or not self.object.summary:
             metadata = generate_opengraph('generated-meta-problem:%s:%d' % (context['language'], self.object.id),

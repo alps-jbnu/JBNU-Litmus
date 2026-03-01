@@ -241,6 +241,8 @@ class ProblemForm(ModelForm):
             'types': AdminSelect2MultipleWidget,
             'group': AdminSelect2Widget,
             'description': AdminMartorWidget(attrs={'data-markdownfy-url': reverse_lazy('problem_preview')}),
+            'sample_input': forms.Textarea(attrs={'rows': 4, 'style': 'width: 100%'}),
+            'sample_output': forms.Textarea(attrs={'rows': 4, 'style': 'width: 100%'}),
             'allowed_languages': CheckboxSelectMultipleWithSelectAll(),
         }
  
@@ -501,8 +503,11 @@ class ProblemAdmin(VersionAdmin):
                 ('is_encrypted', 'encryption_key'), 
                 'is_public',
                 'is_contest_problem',
-                'description', 
+                'description',
             ),
+        }),
+        ('입출력 예제', {
+            'fields': ('sample_input', 'sample_output'),
         }),
         # (_('Social Media'), {'classes': ('collapse',), 'fields': ('og_image', 'summary')}),
         (_('Taxonomy'), {'fields': ('group',)}),
@@ -654,6 +659,10 @@ class ProblemAdmin(VersionAdmin):
         return format_html('<a href="{1}">{0}</a>', gettext('View on site'), obj.get_absolute_url())
 
     show_public.short_description = '문제 바로가기'
+
+    def view_on_site(self, obj):
+        # Keep the change-form "View on site" behavior identical to the changelist link.
+        return obj.get_absolute_url()
 
     def _rescore(self, request, problem_id):
         from judge.tasks import rescore_problem
