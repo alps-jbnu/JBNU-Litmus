@@ -139,8 +139,10 @@
         <script>
             $(function() {
                 $('#theme-toggle').on('click', function() {
-                    var currentTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-                    var newTheme = (currentTheme === 'dark') ? 'light' : 'dark';
+                    var themeOrder = {'light': 'dark', 'dark': 'auto', 'auto': 'light'};
+                    var currentTheme = '{{ SITE_THEME }}';
+                    if (!themeOrder[currentTheme]) currentTheme = 'light';
+                    var newTheme = themeOrder[currentTheme];
 
                     document.cookie = 'site_theme=' + newTheme + ';path=/;max-age=31536000;SameSite=Lax';
 
@@ -1052,7 +1054,7 @@
             <li><a href="{{ url('about') }}">ABOUT</a></li>
             <li class="theme-toggle-nav">
                 <a href="javascript:void(0)" id="theme-toggle" title="{{ _('Toggle dark mode') }}">
-                    <span class="material-symbols-outlined md-24" id="theme-icon">{% if SITE_THEME == 'dark' %}light_mode{% else %}dark_mode{% endif %}</span>
+                    <span class="material-symbols-outlined md-24" id="theme-icon">{% if SITE_THEME == 'dark' %}light_mode{% elif SITE_THEME == 'auto' %}brightness_auto{% else %}dark_mode{% endif %}</span>
                 </a>
             </li>
             <div id="user-links" class="user-nav-element">
