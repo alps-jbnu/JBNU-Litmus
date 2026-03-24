@@ -12,7 +12,7 @@
         font-size: 14px;
         font-weight: 500;
         text-align: left;
-        color: #495057;
+        color: var(--font-dark-grey);
         margin-right: 10px;
     }
     
@@ -27,7 +27,7 @@
         display: flex;
         position: relative;
         display: inline-block;
-        color: #e0b8b8;
+        color: var(--font-grey);
         width: 95%;
     }
     .sort-dropdown .button, button, input[type=submit] {
@@ -35,8 +35,8 @@
     }
 
     .sort-btn, .sort-btn2 {
-        background-color: #FFFFFF08 !important;
-        color: #495057;
+        background-color: var(--hover-background-color) !important;
+        color: var(--font-dark-grey);
         padding: 6px 8px 5px 13px;
         gap: 8px;
         border-radius: 10px;
@@ -58,7 +58,7 @@
         flex-direction: column;
         position: absolute;
         top: 35px;
-        background-color: #f9f9f9;
+        background-color: var(--light-bg);
         min-width: 100%;
         box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
         z-index: 1000 !important;
@@ -68,7 +68,7 @@
 
     .sort-content a {
         display: block;
-        color: black;
+        color: var(--font-black);
         padding: 12px 16px;
         text-decoration: none;
         width: 100%; /* 가로 너비를 부모 요소에 맞춤 */
@@ -77,22 +77,22 @@
     }
 
     .sort-content a:hover {
-        background-color: #f1f1f1;
+        background-color: var(--light-bg);
     }
 
     .search-container {
         position: relative;
         display: flex;
         border-radius: 8px;
-        background: #FFFFFF;
+        background: var(--page-bg);
         margin-left: auto;
         width: 250px;
         height: 35px;
     }
     .search-container input[type="text"] {
-        border: 1px solid #DADADA;
+        border: 1px solid var(--input-border);
         border-radius: 8px;
-        color: #8391A1;
+        color: var(--font-grey);
         font-family: Pretendard;
         font-size: 14px;
         font-weight: 500;
@@ -104,7 +104,7 @@
         top: 50%;
         transform: translateY(-50%); /* Center icon vertically */
         right: 10px; /* Adjust right spacing */
-        color: #5C95D9;
+        color: var(--primary-color);
         pointer-events: none; /* Prevent icon from being clickable */
     }
 
@@ -119,19 +119,19 @@
     .apply-btn {
         height: 100%;
         border-radius: 10px;
-        background-color: #D9D9D94D;
+        background-color: var(--tab-active-bg);
         font-family: Pretendard;
         font-size: 14px;
         font-weight: 500;
         line-height: 17.5px;
         text-align: left;
-        color: #8391A1;
+        color: var(--font-grey);
 
     }
     .apply-btn.active {
         height: 100%;
         border-radius: 10px;
-        background-color: #5C95D9 !important;
+        background-color: var(--primary-color) !important;
         font-family: Pretendard;
         font-size: 14px;
         font-weight: 500;
@@ -453,15 +453,15 @@
                         var $header = $(this).closest('th');
                         var direction = $(this).data('sort');
                         headers.removeClass('sorted-asc sorted-desc');
-                        headers.find('.sort-icon').css('color', '#17171B');
+                        headers.find('.sort-icon').css('color', 'var(--font-black)');
                         headers.find('a').removeClass('sorted');
 
                         if (direction === 'asc') {
                             $header.addClass('sorted-asc');
-                            $header.find('.sort-asc').html('&#9650;').css('color', '#5C95D9');
+                            $header.find('.sort-asc').html('&#9650;').css('color', 'var(--primary-color)');
                         } else if (direction === 'desc') {
                             $header.addClass('sorted-desc');
-                            $header.find('.sort-desc').html('&#9660;').css('color', '#5C95D9');
+                            $header.find('.sort-desc').html('&#9660;').css('color', 'var(--primary-color)');
                         }
 
                     $header.find('a').addClass('sorted');

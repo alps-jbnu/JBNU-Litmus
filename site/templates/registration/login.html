@@ -3,7 +3,7 @@
 {% block media %}
 <style>
     footer {
-        background: #FFF !important;
+        background: var(--page-bg) !important;
     }
 
     .title-div {
@@ -12,7 +12,7 @@
 
     #page-container {
         display: flex;
-        background: #fff !important;
+        background: var(--page-bg) !important;
     }
 
     #content {
@@ -42,7 +42,7 @@
         max-width: 100%;
         margin: 50px auto;
         padding: 20px;
-        background-color: white;
+        background-color: var(--page-bg);
         border-radius: 10px;
         text-align: center;
     }
@@ -57,7 +57,7 @@
         width: 354px;
         display: flex;
         flex-direction: column;
-        background-color: white;
+        background-color: var(--page-bg);
         border: none;
         gap: 10px;
         margin: 0 auto;
@@ -76,14 +76,14 @@
 
     .form-area button[type="submit"] {
         color: #FFF;
-        background-color: #5C95D9;
-        border: 1px solid #5C95D9;
+        background-color: var(--primary-color);
+        border: 1px solid var(--primary-color);
     }
 
     .form-area a.button {
-        color: #5C95D9 !important;
-        background-color: #FFF;
-        border: 1px solid #D9D9D9;
+        color: var(--primary-color) !important;
+        background-color: var(--page-bg);
+        border: 1px solid var(--input-border);
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -91,13 +91,13 @@
     }
 
     .form-area button:hover {
-        background-color: #5288C8;
-        color: #FAFAFA;
+        background-color: var(--primary-hover-color);
+        color: var(--white-hover-color);
     }
 
     .form-area a.button:hover {
-        background-color: #F7F7F7;
-        color: #5487C5;
+        background-color: var(--light-bg);
+        color: var(--primary-hover-color);
     }
 
 
@@ -106,17 +106,17 @@
         justify-content: flex-end;
         gap: 10px;
         margin-bottom: 10px;
-        color: #8391A1;
+        color: var(--font-grey);
     }
 
     .form-links a {
         text-decoration: none;
-        color: #8391A1;
+        color: var(--font-grey);
     }
 
     .form-links a:hover {
         text-decoration: underline;
-        color: #8391A1;
+        color: var(--font-grey);
     }
 
     footer {
@@ -125,19 +125,21 @@
 
     .footer-content {
         text-align: center;
-        color: #808080;
+        color: var(--font-grey);
     }
 
     .form-area input[type="text"],
     .form-area input[type="password"] {
         height: 46px;
         padding: 10px 10px 10px 16px;
-        border: 1px solid #ddd;
+        border: 1px solid var(--input-border);
         border-radius: 8px;
         font-size: 14px;
         font-family: "Pretendard";
         transition: border-color 0.15s ease-in-out 0s, box-shadow 0.15s ease-in-out 0s;
         box-sizing: border-box;
+        background-color: var(--page-bg);
+        color: var(--font-basic-black);
     }
 
     input[type=text]:hover,
@@ -172,8 +174,9 @@
         width: 100%;
         height: 60px;
         border-radius: 8px;
-        background-color: #FFFFFF;
-        color: #5C95D9;
+        background-color: var(--page-bg);
+        border: 1px solid var(--border-secondary);
+        color: var(--primary-color);
         font-size: 16px;    
         font-weight: 600;
         text-decoration: none;
@@ -182,7 +185,7 @@
     }
 
     .jedutools-button:hover {
-        background-color: #FAFAFA;
+        background-color: var(--light-bg);
         box-shadow: 0px 5px 14px rgba(0, 0, 0, 0.15);
         color: var(--primary-hover-color);
     }
@@ -195,15 +198,15 @@
     .divider-line {
         flex: 1;
         height: 1px;
-        background-color: #ccc;
+        background-color: var(--border-secondary);
     }
     .divider-text {
         padding: 0 10px;
-        color: #777;
+        color: var(--font-grey);
         font-size: 14px;
     }
     .alram {
-        background-color: #EBF0F8;
+        background-color: var(--light-blue-bg);
         border: 1px solid #5F9CFF;
         border-radius: 1vw;
         text-align: center;

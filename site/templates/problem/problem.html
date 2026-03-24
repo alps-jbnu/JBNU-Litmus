@@ -3,14 +3,14 @@
 {% include "comments/media-css.html" %}
 <style>
     #common-content {
-        background: #FFF;
+        background: var(--page-bg);
     }
     #page-container {
-        background: #FFF !important;
+        background: var(--page-bg) !important;
     }
 
     footer {
-        background: #FFF !important;
+        background: var(--page-bg) !important;
     }
 
     #content-bg {
@@ -117,7 +117,7 @@
         border: none;
         font-size: 14px;
         color: var(--font-dark-grey);
-        background: #fff;
+        background: var(--page-bg);
         border-radius: 10px;
         gap: 10px;
         transition: background-color 0.3s ease, color 0.3s ease;
@@ -125,7 +125,7 @@
 
     .admin-btn.button:hover {
         color: var(--font-dark-grey);
-        background: #D9D9D936;
+        background: var(--dropdown-hover-bg);
     }
     .button,
     button,
@@ -136,7 +136,7 @@
         white-space: nowrap;
         font-weight: 400;
         line-height: 1.4;
-        background: var(--LITMUS-Primary, rgba(92, 149, 217, 1));
+        background: var(--primary-color);
         border-radius: 8px;
         padding: 6px 12px;
         display: block;
@@ -150,15 +150,15 @@
     .button:hover,
     button:hover,
     input[type=submit]:hover {
-        background-color: #5288C8;
-        color: #FAFAFA;
+        background-color: var(--primary-hover-color);
+        color: var(--white-hover-color);
     }
 
     .button:active,
     button:active,
     input[type=submit]:active {
-        border-color: #245580;
-        background: #265a88;
+        border-color: var(--primary-hover-color);
+        background: var(--primary-hover-color);
     }
 
     .button.full,
@@ -193,11 +193,11 @@
         font-weight: 500;
         line-height: 17.5px;
         text-align: center;
-        color: #8391A1;
+        color: var(--font-grey);
     }
 
     #content {
-        background: #fff;
+        background: var(--page-bg);
         width: 70%;
     }
 
@@ -321,7 +321,7 @@
     }
 
     .btn-clipboard:hover {
-        color: #17171B;
+        color: var(--font-black);
     }
 </style>
 {% endblock %}
@@ -507,7 +507,7 @@
             font-weight: 400;
             line-height: 28.8px;
             text-align: center;
-            color: var(--Blackfont, #17171B);
+            color: var(--font-black);
         ">{{ title }}</h2>
     {#
     <!-- {% if problem.is_organization_private %}
@@ -733,7 +733,7 @@
             font-weight: 400;
             line-height: 28.8px;
             text-align: center;
-            color: var(--Blackfont, #17171B);
+            color: var(--font-black);
             margin: 0;
             ">{{ title }}</h2>
 {% endblock %}

@@ -6,7 +6,7 @@
 {% block js_media %}
     <style>
         .content-body-box {
-            background-color: #f9fafb;
+            background-color: var(--background-second);
             font-family: "Pretendard";
             width: 100%;
         }
@@ -54,11 +54,11 @@
 
         .contest-div {
             background: none;
-            background-color: white;
+            background-color: var(--page-bg);
             border-radius: 10px;
             padding: 18px 24px 12px 24px;
             margin: 0 0 20px 0;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            box-shadow: var(--standard-box-shadow);
         }
 
         .content-description {
@@ -71,7 +71,7 @@
             flex-direction: row;
             padding: 0;
             margin: 0;
-            color: #8391A1;
+            color: var(--font-grey);
             list-style-type: none;
             border-radius: 10px;
             visibility: hidden;
@@ -94,7 +94,7 @@
         }
 
         .contest-group-item:hover {
-            background-color: #D9D9D936;
+            background-color: var(--tab-active-bg);
             transition: background-color 0.3s ease;
         }
 
@@ -117,14 +117,14 @@
             box-sizing: border-box; /* 크기 계산 방식 고정 */
             margin-right: 10px;
             font-size: 24px;
-            color: #D9D9D9;
+            color: var(--font-grey);
         }
 
         .contest-group-item input[type="checkbox"]:checked + label .material-symbols-outlined {
             font-size: 24px;
             border: none; 
-            background: #FFFFFF;
-            color: var(--LITMUS-primary, #5C95D9);
+            background: var(--page-bg);
+            color: var(--primary-color);
             border-radius: 50%;
         }
         
@@ -141,12 +141,12 @@
 
         .contest-group-item.active {
             background: none;
-            background-color: #D9D9D936;
-            color: #373D47;
+            background-color: var(--tab-active-bg);
+            color: var(--content-text);
         }
 
         .contest-group-item.active label {
-            color: #373D47;
+            color: var(--content-text);
         }
        
         .content-description h4 {
@@ -175,7 +175,7 @@
             margin-left: auto;
             margin-right: auto;
             margin-bottom: 0.5em;
-            background: rgba(255,255,255,1.0);
+            background: var(--page-bg);
         }
         .table.striped tr:nth-child(even) {
             background: none;
@@ -260,7 +260,7 @@
             -webkit-backdrop-filter: blur(1px);
         }
         .modal_window {
-            background: white;
+            background: var(--page-bg);
             backdrop-filter: blur(13.5px);
             -webkit-backdrop-filter: blur(13.5px);
             border-radius: 10px;

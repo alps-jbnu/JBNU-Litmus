@@ -5,10 +5,10 @@
     {{ form.media.css }}
     <style>
         #page-container {
-            background: #FFF !important;
+            background: var(--page-bg) !important;
         }
         footer {
-            background: #FFF !important;
+            background: var(--page-bg) !important;
         }
         .title-box {
             display: none;
@@ -19,7 +19,7 @@
         }
         .auth-flow-form {
             max-width: 100%;
-            background-color: white;
+            background-color: var(--page-bg);
             border-radius: 10px;
             text-align: center;
         }
@@ -41,7 +41,7 @@
             width: 354px;
             display: flex;
             flex-direction: column;
-            background-color: white;
+            background-color: var(--page-bg);
             border: none;
             gap: 10px;
             margin: 0 auto;
@@ -63,12 +63,14 @@
         { 
             padding: 10px 10px 10px 16px;
             font-size: 14px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--input-border);
             border-radius: 8px;
             width: 100%;
             height: 46px;
             box-sizing: border-box;
             font-family: "Pretendard";
+            background-color: var(--page-bg);
+            color: var(--font-basic-black);
         }
 
 
@@ -85,8 +87,8 @@
         }
         /* 로컬 이메일 입력 필드 스타일 정의 */
         input[type=text].email_local {
-            color: #000;
-            background: #fff;
+            color: var(--font-black);
+            background: var(--page-bg);
             border: 1px solid var(--border-color);
             border-right: none;  /* 오른쪽 테두리 제거 */
             border-radius: 8px 0 0 8px;  /* 왼쪽만 둥글게 */
@@ -99,7 +101,7 @@
         }
         /* 도메인 부분 스타일 정의 */
         span.email_domain {
-        background: #f1f1f1;
+        background: var(--light-bg);
         border: 1px solid var(--border-color);
         border-left: none;  /* 왼쪽 테두리 제거 */
         border-radius: 0 8px 8px 0;  /* 오른쪽만 둥글게 */
@@ -128,9 +130,9 @@
         .form-area .button {
             color: #FFF;
             background: none;
-            background-color: #5C95D9;
+            background-color: var(--primary-color);
             border-radius: 8px;
-            border: 1px solid #5C95D9;
+            border: 1px solid var(--primary-color);
             font-size: 14px;
             font-weight: bold;
             cursor: pointer;
@@ -142,7 +144,7 @@
 
         .form-area button:hover,
         .form-area a.button:hover {
-            background-color: #5288C8;
+            background-color: var(--primary-hover-color);
             color: #FAFAFA;
         }
 
@@ -203,7 +205,7 @@
         }
         .form-area .password-rule {
             border-radius: 8px;
-            border: 1px solid #5C95D9;
+            border: 1px solid var(--primary-color);
             text-align: left;
             cursor: pointer;
         }
@@ -212,7 +214,7 @@
             font-weight: bold;
             text-align: center;
             padding-left: 10px;
-            color: #5C95D9;
+            color: var(--primary-color);
             margin: 0;
             height: 40px;
             display: flex;
@@ -220,7 +222,7 @@
             justify-content: center;
         }
         .form-area .password-rule p:hover {
-            color: #5C95D9;
+            color: var(--primary-color);
         }
         .form-area .password-rule ul {
             margin-block-start: 5px;
@@ -247,9 +249,9 @@
 
         input[type=text], input[type=password], input[type=email], input[type=number] {
             padding: 4px 8px;
-            color: #3b3b3b;
-            background: #fff none;
-            border: 1px solid #ccc;
+            color: var(--font-basic-black);
+            background: var(--page-bg) none;
+            border: 1px solid var(--input-border);
             border-radius: 4px;
             box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset;
             transition: border-color 0.15s ease-in-out 0s, box-shadow 0.15s ease-in-out 0s;
