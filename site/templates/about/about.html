@@ -3,11 +3,11 @@
 {% block media %}
 <style>
   #page-container {
-    background: #FFF !important;
+    background: var(--page-bg) !important;
   }
 
   footer {
-    background: #FFF !important;
+    background: var(--page-bg) !important;
   }
 
   #content {
@@ -21,7 +21,7 @@
 
   .footer-content {
     text-align: center;
-    color: #808080;
+    color: var(--font-grey);
   }
 </style>
 <style>
@@ -41,13 +41,13 @@
     align-items: center;
     width: 990px;
     border-radius: 30px;
-    background-color: #D9D9D93D;
+    background-color: var(--tab-active-bg);
     padding: 15px;
     margin: 15px 0;
   }
 
   .year {
-    color: #5C95D9;
+    color: var(--primary-color);
     font-weight: 700;
     font-size: 18px;
     padding: 0 45px;
@@ -62,7 +62,7 @@
   .menu h3 {
     width: 620px;
     text-align: center;
-    color: #5C95D9;
+    color: var(--primary-color);
     font-weight: 700;
     font-size: 18px;
     margin: 0 auto;
@@ -90,7 +90,7 @@
   }
 
   .info {
-    color: #8391A1;
+    color: var(--font-grey);
     font-size: 16px;
   }
 
@@ -134,12 +134,12 @@
     font-weight: 400;
     line-height: 20px;
     text-align: center;
-    color: #8391A1;
+    color: var(--font-grey);
   }
 
   .info2 a,
   .subinfo a {
-    color: #5C95D9;
+    color: var(--primary-color);
     text-decoration: none;
   }
 
@@ -163,7 +163,7 @@
   }
 
   .card-header {
-    color: #5C95D9;
+    color: var(--primary-color);
     font-size: 16px;
     font-weight: 600;
     margin-bottom: 10px;
@@ -176,13 +176,13 @@
     padding: 8px;
     border: 1px solid var(--border-color);
     border-radius: 10px;
-    background: #FFFFFF;
+    background: var(--page-bg);
     min-width: 180px;
     transition: background 0.3s ease;
   }
 
   .card-content:hover {
-    background: #FAFAFA;
+    background: var(--light-bg);
   }
 
   .card-content {
@@ -206,12 +206,12 @@
     padding: 1px;
   }
 
-  .material-symbols-outlined {
+  .content .material-symbols-outlined {
     background: #5C95D9;
     border: 5px solid #5C95D9;
     border-radius: 10px;
     text-align: left;
-    color: #FFFFFF;
+    color: #FFF;
   }
 
   .text {
@@ -229,14 +229,14 @@
     padding: 10px 10px;
     border: 1px solid var(--border-color);
     border-radius: 10px;
-    background: #FFFFFF;
-    color: var(--basicgreyFont, #495057);
+    background: var(--page-bg);
+    color: var(--font-dark-grey);
     cursor: pointer;
     transition: background 0.3s ease;
   }
 
   .guide-button:hover {
-    background: #FAFAFA;
+    background: var(--light-bg);
   }
 
   .team-info {
@@ -244,7 +244,7 @@
   }
 
   details.update-note {
-    background-color: #f9f9f9;
+    background-color: var(--light-bg);
     border: none;
     border-radius: 8px;
     margin-top: 20px;
@@ -265,7 +265,7 @@
   }
 
   details.update-note summary:hover {
-    background-color: #e9ecef;
+    background-color: var(--light-bg);
   }
 
   details.update-note summary::-webkit-details-marker {
@@ -294,7 +294,7 @@
     display: inline-block;
     margin-right: 8px;
     transition: transform 0.3s ease;
-    color: #5C95D9;
+    color: var(--primary-color);
     font-weight: bold;
     font-size: 14px;
   }
@@ -320,7 +320,7 @@
 
   details.update-note .update-content h4 {
     margin: 20px 0 10px;
-    color: #5C95D9;
+    color: var(--primary-color);
     font-size: 18px;
     font-weight: 600;
   }
@@ -342,7 +342,7 @@
 
   .team-info h3 {
     text-align: left;
-    color: #5C95D9;
+    color: var(--primary-color);
     font-weight: 700;
     font-size: 18px;
     margin-bottom: 15px;
@@ -364,7 +364,7 @@
   .no-patch-note {
     text-align: center;
     padding: 20px;
-    color: #6c757d;
+    color: var(--font-grey);
     font-style: italic;
   }
 
@@ -384,13 +384,13 @@
   .open-source-card {
     border: 1px solid var(--border-color);
     border-radius: 14px;
-    background: #FFFFFF;
+    background: var(--page-bg);
     padding: 16px 18px;
     text-align: left;
   }
 
   .open-source-title {
-    color: #5C95D9;
+    color: var(--primary-color);
     font-weight: 700;
     font-size: 16px;
     margin-bottom: 10px;
@@ -399,11 +399,11 @@
   .open-source-meta {
     font-size: 14px;
     line-height: 20px;
-    color: #495057;
+    color: var(--font-dark-grey);
   }
 
   .open-source-meta a {
-    color: #5C95D9;
+    color: var(--primary-color);
     text-decoration: none;
   }
 

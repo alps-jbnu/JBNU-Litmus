@@ -303,7 +303,7 @@
 
     <style>
         .content-body-box {
-            background-color: #f9fafb;
+            background-color: var(--background-second);
         }
         .total {
             text-align: center;
@@ -319,12 +319,12 @@
             margin: 0 auto;
         }
         .fa-check-circle{
-            color: #5C95D9;
+            color: var(--primary-color);
         }
         .submission-row .sub-main{
             min-width: 694px;
             height: 55px;
-            background-color: white;
+            background-color: var(--page-bg);
             flex-wrap: wrap;
             border:none;
             padding: 0;
@@ -351,39 +351,39 @@
     <style>
         .AC {
             border-left: 8px solid #94D95C;
-            background-color: #f5f5f5;
+            background-color: var(--background-second);
             color: #94D95C;
         }
         .WA, .TLE, .MLE, .OLE, .IR, .RTE {
             border-left: 8px solid #dc2626;
-            background-color: #f5f5f5;
+            background-color: var(--background-second);
             color: #dc2626;
         } 
         .CE, .IE, .SC, .AB, .None {
             border-left: 8px solid #525252;
-            background-color: #f5f5f5;
+            background-color: var(--background-second);
             color: #525252;
         }
         /*
         .AC {
             border-left: 8px solid #94D95C;
-            background-color: #f5f5f5;
+            background-color: var(--background-second);
         }
         .OLE, .IR, .RTE, .OTH {
             border-left: 8px solid #facc15;
-            background-color: #f5f5f5;
+            background-color: var(--background-second);
         }    
         .IE {
             border-left: 8px solid #dc2626;
-            background-color: #f5f5f5;
+            background-color: var(--background-second);
         }    
         .WA, .TLE, .AB, .MLE, .QU, .G {
             border-left: 8px solid #525252;
-            background-color: #f5f5f5;
+            background-color: var(--background-second);
         }   
         .CE {
             border-left: 8px solid #525252;
-            background-color: #f5f5f5;
+            background-color: var(--background-second);
         }
         */
         .sidebox {
@@ -391,11 +391,11 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
             padding: 8px !important;
             margin-bottom: 20px;
-            background-color: #FFF;
+            background-color: var(--page-bg);
         }
         .sidebox h3 {
-            background-color: #f5f5f5;
-            color: black;
+            background-color: var(--background-second);
+            color: var(--font-black);
             margin: 0 5px;
             border-radius: 10px;
             font-size: 14px; 
@@ -412,7 +412,7 @@
             align-items: center;
         }
         .form-submit-group a {
-            background-color: #5C95D9;
+            background-color: var(--primary-color);
             color: #fff;
             font-size: 14px;
             border-radius: 10px;
@@ -420,7 +420,7 @@
         }
         /* (추가) CSP-safe 버전에서 <button> 사용 */
         .form-submit-group button {
-            background-color: #5C95D9;
+            background-color: var(--primary-color);
             color: #fff;
             font-size: 14px;
             border-radius: 10px;
@@ -433,7 +433,7 @@
         }
         .select2-container {
             border: none;
-            width: 180px;
+            width: 100% !important;
         }
         .select2-container--dmoj .select2-selection--multiple {
             border: 1px solid var(--border-color);
@@ -484,7 +484,7 @@
             border-bottom: 1px solid rgba(0, 0, 0, 0.03);
             border-radius: 10px 10px 0 0;
             font-size: 1.1em;
-            background-color: #FFF;
+            background-color: var(--page-bg);
         }
         .head-result {
             width: 98px;
@@ -552,7 +552,7 @@
             width: 797px;
             height: 25px;
             padding: 7px 10px;
-            background-color: #FFF;
+            background-color: var(--page-bg);
             border-bottom: 1px solid var(--border-color);
             text-align: center;
             display: flex;

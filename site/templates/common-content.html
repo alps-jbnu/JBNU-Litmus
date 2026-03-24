@@ -92,7 +92,7 @@
                     // 2초 후 원래 아이콘으로 복원
                     setTimeout(function () {
                         button.html(originalIcon);
-                        button.css('color', '#6c757d');
+                        button.css('color', 'var(--font-grey)');
                     }, 2000);
                 }
                 
@@ -109,13 +109,13 @@
             line-height: 1.5em;
             font-size: 1.2em;
             font-family: "Pretendard","Segoe UI", "Lucida Grande", Arial, sans-serif;
-            color: #373D47;
+            color: var(--content-text);
         }
 
         .content-description p {
             margin: 1em 0 !important;
             padding: 0 !important;
-            color: #373D47;
+            color: var(--content-text);
         }
         .content-description img {
         max-width: 100%;
@@ -123,7 +123,7 @@
         }
         .content-description h1, .content-description h2, .content-description h3, .content-description h4, .content-description h5, .content-description h6 {
         font-weight: normal;
-        color: #373D47;
+        color: var(--content-text);
         margin-bottom: 0.75em;
         padding: 0;
         background: 0;
@@ -151,7 +151,7 @@
         line-height: 1.225;
         padding-bottom: 0.3em;
         padding-top: 0.5em;
-        color: #373D47;
+        color: var(--content-text);
         }
         .content-description h5 {
         font-size: 1.15em;
@@ -161,7 +161,7 @@
         font-size: 0.9em;
         }
         .content-description blockquote {
-        color: #808080;
+        color: var(--font-grey);
         margin: 0;
         padding-left: 1.5em;
         border-left: 0.5em #eee solid;
@@ -171,12 +171,12 @@
         height: 0;
         border: 0;
         font-style: italic;
-        border-bottom: 1px solid #ccc;
+        border-bottom: 1px solid var(--code-border);
         margin: 25px 0 20px 0;
         padding: 0;
         }
         .content-description pre, .content-description code, .content-description kbd, .content-description samp, .content-description span.code {
-        color: #000;
+        color: var(--font-black);
         page-break-inside: avoid;
         font-family: Consolas, "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier, monospace;
         font-size: 0.98em;
@@ -185,20 +185,20 @@
         font-family: Consolas, "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier, monospace !important;
         margin: 0 2px;
         padding: 0 5px;
-        border: 1px solid #ccc;
-        background-color: #f8f8f8;
+        border: 1px solid var(--code-border);
+        background-color: var(--code-bg);
         border-radius: 4px;
         font-size: 0.95em;
-        color: #3b3b3b;
+        color: var(--font-dark-grey);
         }
         .content-description pre {
         white-space: pre-wrap;
         word-wrap: break-word;
         margin: 1.5em 0 1.5em 0;
         padding: 1em;
-        border: 1px solid #ccc;
-        background-color: #f8f8f8;
-        color: #000;
+        border: 1px solid var(--code-border);
+        background-color: var(--code-bg);
+        color: var(--font-black);
         border-radius: 4px;
         }
         .content-description pre code, .content-description pre div.code {
@@ -208,7 +208,7 @@
         padding: 0;
         background: transparent;
         font-size: 1em;
-        color: #000;
+        color: var(--font-black);
         }
         .content-description b, .content-description strong {
         font-weight: bold;
@@ -218,12 +218,12 @@
         }
         .content-description ins {
         background: #ff9;
-        color: #000;
+        color: var(--font-black);
         text-decoration: none;
         }
         .content-description mark {
         background: #ff0;
-        color: #000;
+        color: var(--font-black);
         font-style: italic;
         font-weight: bold;
         }
@@ -274,7 +274,7 @@
             right: 2px;
             border: none;
             background: none;
-            color: #6c757d;
+            color: var(--font-grey);
             cursor: pointer;
             font-size: 14px;
             transition: color 0.3s ease;
@@ -283,7 +283,7 @@
 
         .copy-btn-overlay:hover {
             background: none;
-            color: #17171B;
+            color: var(--font-black);
         }
 
         /* pre 태그에 relative 포지션 추가 */

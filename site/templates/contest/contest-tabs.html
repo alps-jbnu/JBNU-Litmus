@@ -107,31 +107,31 @@
         background-color: rgba(0,0,0,0.4);
     }
     .modal-content {
-        background-color: #fefefe;
+        background-color: var(--page-bg);
         margin: auto;
         padding: 20px;
-        border: 1px solid #888;
+        border: 1px solid var(--font-grey);
         width: 80%;
     }
     .close {
-        color: #aaa;
+        color: var(--font-grey);
         float: right;
         font-size: 28px;
         font-weight: bold;
     }
     .close:hover,
     .close:focus {
-        color: black;
+        color: var(--font-black);
         text-decoration: none;
         cursor: pointer;
     }
     form.contest-join-pseudotab {
         width: auto;
         background: none;
-        background-color: #5C95D9;
+        background-color: var(--primary-color);
         margin-left: auto;
         border-radius: 8px 8px 8px 8px;
-        border: 1px solid #5C95D9;
+        border: 1px solid var(--primary-color);
         display: flex;
         align-items: center;
     }
@@ -140,10 +140,10 @@
     }
     .button{
         background: none;
-        background-color: #5C95D9;
+        background-color: var(--primary-color);
         margin-left: auto;
         border-radius: 8px 8px 8px 8px;
-        border: 1px solid #5C95D9;
+        border: 1px solid var(--primary-color);
         display: flex;
         align-items: center;
     }
@@ -167,7 +167,7 @@
         background: #265a88;
     }
     .button:active, button:active, input[type=submit]:active {
-        border-color: #245580;
+        border-color: var(--primary-hover-color);
         background: #265a88;
     }
     .button, button, input[type=submit] {
@@ -206,7 +206,7 @@
         -webkit-backdrop-filter: blur(1px);
     }
     .modal_window {
-        background: white;
+        background: var(--page-bg);
         backdrop-filter: blur(13.5px);
         -webkit-backdrop-filter: blur(13.5px);
         border-radius: 10px;
