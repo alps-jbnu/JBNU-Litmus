@@ -574,5 +574,19 @@
 
             <input type="submit" class="submit-bar" value="{{ _('Update profile') }}">
         </form>
+        <script>
+            $(function() {
+                $('form').on('submit', function() {
+                    var theme = $('#id_site_theme').val();
+                    if (theme) {
+                        var cookieVal = theme;
+                        if (theme === 'auto') {
+                            cookieVal = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+                        }
+                        document.cookie = 'site_theme=' + cookieVal + ';path=/;max-age=31536000;SameSite=Lax';
+                    }
+                });
+            });
+        </script>
     </div>
 {% endblock %}
