@@ -28,7 +28,7 @@ from judge.models.choices import ACE_THEMES, MATH_ENGINES_CHOICES, TIMEZONE
 SITE_THEME_CHOICES = (
     ('light', _('Light')),
     ('dark', _('Dark')),
-    ('auto', _('Follow system')),
+    ('auto', _('시스템 기본값')),
 )
 from judge.models.runtime import Language
 from judge.ratings import rating_class

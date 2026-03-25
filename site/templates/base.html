@@ -138,27 +138,6 @@
         </script>
         <script>
             $(function() {
-                $('#theme-toggle').on('click', function() {
-                    var themeOrder = {'light': 'dark', 'dark': 'auto', 'auto': 'light'};
-                    var currentTheme = '{{ SITE_THEME }}';
-                    if (!themeOrder[currentTheme]) currentTheme = 'light';
-                    var newTheme = themeOrder[currentTheme];
-
-                    document.cookie = 'site_theme=' + newTheme + ';path=/;max-age=31536000;SameSite=Lax';
-
-                    if (window.user && window.user.id) {
-                        $.post('/api/set-theme/', {
-                            theme: newTheme,
-                            csrfmiddlewaretoken: $.cookie('dmoj_csrftoken')
-                        }).always(function() {
-                            window.location.reload();
-                        });
-                        return;
-                    }
-
-                    window.location.reload();
-                });
-
                 if (window.matchMedia) {
                     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
                         var profileTheme = '{{ SITE_THEME }}';
@@ -950,27 +929,6 @@
             background-color: var(--pagination-active-bg);
         }
 
-        /* 테마 토글 버튼 */
-        .theme-toggle-nav {
-            display: inline-block;
-            vertical-align: middle;
-        }
-        #theme-toggle {
-            cursor: pointer;
-            padding: 13px 7px;
-            display: inline-flex;
-            align-items: center;
-            vertical-align: middle;
-            height: 18px;
-            transition: color 0.3s;
-        }
-        #theme-toggle:hover {
-            color: var(--primary-color) !important;
-        }
-        #theme-toggle .material-symbols-outlined {
-            vertical-align: middle;
-        }
-
         /* 로고 다크모드 전환 */
         [data-theme="dark"] .logo-light { display: none !important; }
         [data-theme="dark"] .logo-dark { display: inline !important; }
@@ -1052,11 +1010,6 @@
             <li><a href="{{ url('user_list') }}">USERS</a></li>
             <li><a href="{{ url('status_all') }}">STATUS</a></li>
             <li><a href="{{ url('about') }}">ABOUT</a></li>
-            <li class="theme-toggle-nav">
-                <a href="javascript:void(0)" id="theme-toggle" title="{{ _('Toggle dark mode') }}">
-                    <span class="material-symbols-outlined md-24" id="theme-icon">{% if SITE_THEME == 'dark' %}light_mode{% elif SITE_THEME == 'auto' %}brightness_auto{% else %}dark_mode{% endif %}</span>
-                </a>
-            </li>
             <div id="user-links" class="user-nav-element">
                 {% if request.user.is_authenticated %}
                     <ul>
