@@ -1,5 +1,24 @@
 <!DOCTYPE html>
 <html lang="{{ LANGUAGE_CODE }}">
+<script>
+(function() {
+    var theme = '{{ SITE_THEME }}';
+    if (theme === 'auto') {
+        theme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    }
+    if (!theme || (theme !== 'dark' && theme !== 'light')) {
+        var stored = (document.cookie.match(/(?:^|;)\s*site_theme=([^;]*)/) || [])[1];
+        theme = (stored === 'dark') ? 'dark' : 'light';
+    }
+    if (theme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+    }
+    var metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+        metaThemeColor.content = (theme === 'dark') ? '#222222' : '#FFBB33';
+    }
+})();
+</script>
 <head>
     <title>{% block title %}{{ title }} - {{ SITE_LONG_NAME }}{% endblock %}</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -117,6 +136,19 @@
                 }
             }
         </script>
+        <script>
+            $(function() {
+                if (window.matchMedia) {
+                    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+                        var profileTheme = '{{ SITE_THEME }}';
+                        if (profileTheme === 'auto') {
+                            document.cookie = 'site_theme=' + (e.matches ? 'dark' : 'light') + ';path=/;max-age=31536000;SameSite=Lax';
+                            window.location.reload();
+                        }
+                    });
+                }
+            });
+        </script>
 
     {% endcompress %}
     {% block js_media %}{% endblock %}
@@ -155,7 +187,7 @@
                 if (selected !== null) {
                     var elementWidth = selected.outerWidth();
                     var elementHeight = selected.outerHeight();
-                    var padding = 10;  // 10px 여백
+                    var padding = 10; 
         
                     // 화면 안쪽 10px 만큼 제한
                     var left_px = Math.max(padding, Math.min((x_pos - x_elem), window.innerWidth - elementWidth - padding)) + 'px';
@@ -244,7 +276,7 @@
                 }
             }
 
-        /* 색상 변수설정 */
+        /* 색상 변수설정 - Light theme (default) */
         :root {
             --primary-color: #5C95D9;
             --secondary-color: #9FCDF2;
@@ -259,6 +291,79 @@
             --background-second: #f9fafb;
             --standard-box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
             --hover-background-color: #D9D9D936;
+            --page-bg: #FFF;
+            --nav-bg: rgba(255, 255, 255, 0.95);
+            --dropdown-bg: #FFF;
+            --dropdown-hover-bg: #D9D9D936;
+            --active-nav-bg: #FFF;
+            --contest-info-bg: #FFF;
+            --contest-info-text: #17171B;
+            --footer-text: #8391A1;
+            --pagination-active-bg: #f2f3f4;
+            --pagination-text: #8391A1;
+            --form-error-bg: rgba(255, 0, 0, 0.3);
+            --form-error-border: red;
+            --form-error-inactive-bg: rgba(255, 123, 0, 0.3);
+            --form-error-inactive-border: rgb(255, 123, 0);
+            --mobile-nav-bg: #FFF;
+            --anon-text: #5c5954;
+            --select2-selected-bg: #D9D9D976;
+            --icon-grey: #8391A1;
+            --icon-hover-bg: rgba(186, 208, 225, 0.21);
+            --code-bg: #f8f8f8;
+            --code-border: #ccc;
+            --code-text: #000;
+            --light-bg: #f4f4f4;
+            --light-blue-bg: #edf3fb;
+            --light-blue-text: #5285c4;
+            --tab-active-bg: #D9D9D936;
+            --content-text: #373D47;
+            --input-border: #DADADA;
+        }
+
+        /* Dark theme overrides */
+        [data-theme="dark"] {
+            --primary-color: #6BA3E8;
+            --secondary-color: #4A7CB5;
+            --primary-hover-color: #7BB0F0;
+            --white-hover-color: #2A2A2A;
+            --font-black: #E8E8EC;
+            --font-basic-black: #C8CDD3;
+            --font-dark-grey: #B0B8C0;
+            --font-grey: #8391A1;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --border-secondary: #3a3a3a;
+            --background-second: #1a1a1e;
+            --standard-box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            --hover-background-color: rgba(255, 255, 255, 0.08);
+            --page-bg: #222;
+            --nav-bg: #1e1e1e;
+            --dropdown-bg: #2a2a2e;
+            --dropdown-hover-bg: rgba(255, 255, 255, 0.08);
+            --active-nav-bg: #1e1e1e;
+            --contest-info-bg: #2a2a2e;
+            --contest-info-text: #E8E8EC;
+            --footer-text: #8391A1;
+            --pagination-active-bg: #333;
+            --pagination-text: #8391A1;
+            --form-error-bg: rgba(255, 0, 0, 0.15);
+            --form-error-border: #cc3333;
+            --form-error-inactive-bg: rgba(255, 123, 0, 0.15);
+            --form-error-inactive-border: #cc7700;
+            --mobile-nav-bg: #1e1e1e;
+            --anon-text: #b0b0b0;
+            --select2-selected-bg: rgba(255, 255, 255, 0.1);
+            --icon-grey: #8391A1;
+            --icon-hover-bg: rgba(100, 140, 180, 0.2);
+            --code-bg: #2d2d2d;
+            --code-border: #555;
+            --code-text: #e0e0e0;
+            --light-bg: #2a2a2e;
+            --light-blue-bg: #1e2a3a;
+            --light-blue-text: #7baae8;
+            --tab-active-bg: rgba(255, 255, 255, 0.08);
+            --content-text: #C8CDD3;
+            --input-border: #555;
         }
 
         /* css 초기화 */
@@ -295,7 +400,7 @@
             
         }
         .title-box {
-            background-color: #FFF;
+            background-color: var(--page-bg);
         }
         .title-area {
             width: 1040px;
@@ -303,7 +408,7 @@
             margin-right: auto;
             padding-top: 35px;
             padding-bottom: 30px;
-            background-color: #FFF;
+            background-color: var(--page-bg);
         }
         .content-body-box {
             min-height: 400px;
@@ -316,7 +421,7 @@
             max-width: 100%;
             font-size: 14px;
             line-height: 1.231;
-            background: #FFF;
+            background: var(--page-bg);
             font-family: "Pretendard","Segoe UI", "Lucida Grande", Arial, sans-serif;
             color: var(--font-basic-black);
             height: 100%;
@@ -422,7 +527,7 @@
             color: var(--font-dark-grey);
         }
         .select2-container--default .select2-results__option[aria-selected=true] {
-            background-color: #D9D9D976;
+            background-color: var(--select2-selected-bg);
         }
         .select2-container--default .select2-results__option--highlighted[aria-selected] {
             background-color: var(--primary-color);
@@ -432,7 +537,7 @@
         }
         /* 여기서부터 네비게이션 바 css */
         #nav-container {
-            background: rgba(255, 255, 255);
+            background: var(--nav-bg);
             width: 100%;
             height: 100%;
             margin: 0 auto;
@@ -492,7 +597,7 @@
         }
         nav ul li a.active, nav ul li button.active {
             color: var(--primary-color);
-            background: #FFF;
+            background: var(--active-nav-bg);
         }
         nav ul li a .nav-expand, nav ul li button .nav-expand {
             display: none;
@@ -502,7 +607,7 @@
             position: absolute;
             display: none;
             color: var(--font-black);
-            background: #FFF;
+            background: var(--dropdown-bg);
             margin: 0 !important;
             box-shadow: var(--standard-box-shadow);
             border: none;
@@ -510,13 +615,15 @@
             margin-left: 5px !important;
             padding: 5px;
             font-size: 15px;
+            z-index: 600;
         }
         nav ul li ul li:first-child a.active {
             border-top: 1px solid var(--border-color);
         }
         nav ul li ul li {
             display: block;
-            height: 32px;
+            min-height: 32px;
+            height: auto;
         }
         nav ul li ul li a, nav ul li ul li button{
             padding: 8px 20px 8px 8px !important;
@@ -530,7 +637,7 @@
         }
         nav ul li ul li a:hover, nav ul li ul li button:hover{
             color: var(--primary-color);
-            background-color: #D9D9D936;
+            background-color: var(--dropdown-hover-bg);
         }
         nav ul li button {
             background: none;
@@ -539,6 +646,28 @@
             width: 100%;
             border-radius: 0;
             height: auto;
+        }
+        nav ul li ul li form {
+            margin: 0;
+            padding: 0;
+            display: block;
+        }
+        nav ul li ul li form button {
+            text-align: center;
+            height: auto;
+            min-height: 32px;
+            padding: 8px 20px 8px 8px !important;
+            font-size: 0.8em;
+            line-height: 18px;
+            border-radius: 10px;
+            width: 100%;
+            background: none;
+            color: var(--font-black);
+            cursor: pointer;
+        }
+        nav ul li ul li form button:hover {
+            color: var(--primary-color);
+            background-color: var(--dropdown-hover-bg);
         }
         nav ul li:hover > ul, nav ul li:active > ul, nav ul li:focus > ul {
             display: block !important;
@@ -574,7 +703,7 @@
             min-height: 100%;
             align-items: center;
             white-space: nowrap;
-            color: #5c5954;
+            color: var(--anon-text);
         }
         #user-links .anon a {
             color: var(--font-black);
@@ -619,14 +748,14 @@
         /* footer 디자인 */
         footer {
             background: var(--background-second);
-            color: #8391A1;
+            color: var(--footer-text);
             border: none;
-            position: relative; 
+            position: relative;
             width: 100%;
             height: 40px;
             text-align: center;
             z-index: 1000;
-            margin-top: auto; 
+            margin-top: auto;
         }
         #footer-content {
             width: 306px;
@@ -637,16 +766,16 @@
             font-weight: 500;
         }
         footer a:link {
-            color: #8391A1;
+            color: var(--footer-text);
         }
         footer a:visited {
-            color: #8391A1;
+            color: var(--footer-text);
         }
         footer a:hover {
-            color: #8391A1;
+            color: var(--footer-text);
         }
         #footer-content a:active {
-            color: #8391A1;
+            color: var(--footer-text);
         }
 
         @media (max-width: 830px) {
@@ -654,7 +783,7 @@
                 display: none;
             }
             #nav-list {
-                background: #FFF;
+                background: var(--mobile-nav-bg);
                 display: flex;
                 justify-content: space-between;
                 top: 0;
@@ -668,7 +797,7 @@
         #contest-info {
             width: 190px;
             border:none;
-            background-color: #FFF;
+            background-color: var(--contest-info-bg);
             box-shadow: 0 0 10px 0 var(--secondary-color);
             border-radius: 20px;
             height: auto;
@@ -681,7 +810,7 @@
             max-width: 160px;
             height: auto;
             font-size: 16px;
-            color: black;
+            color: var(--contest-info-text);
             display: block;
             flex-direction: column;
             line-height: 1.3em;
@@ -701,7 +830,7 @@
             left: 0;
             top: -30px;
             background-color: var(--font-dark-grey);
-            color: #FFF;
+            color: var(--page-bg);
             padding: 5px;
             border-radius: 10px;
             font-size: 15px;
@@ -712,7 +841,7 @@
             right: 10px;
         }
         #contest-info .material-symbols-outlined {
-            color: #8391A1; 
+            color: var(--icon-grey);
             border-radius: 50%;
             padding: 2.5px;
             transition: background-color 0.3s ease, color 0.3s ease;
@@ -720,7 +849,7 @@
             border: none;
         }
         #contest-info .material-symbols-outlined:hover {
-            background: rgba(186, 208, 225, 0.21); 
+            background: var(--icon-hover-bg);
         }
         .contest-time-remaining-box {
             display: flex;
@@ -732,7 +861,7 @@
         .contest-time-remaining-box .contest-time-remaining-label {
             width: 37%;
             white-space: nowrap;
-            color: #8391A1;
+            color: var(--icon-grey);
             overflow: hidden;
             text-overflow: ellipsis;
         }
@@ -761,43 +890,96 @@
         /* form-error 스타일 */
 
         #form-errors, .form-errors {
-            background: rgba(255, 0, 0, 0.3);
-            border: 3px solid red;
+            background: var(--form-error-bg);
+            border: 3px solid var(--form-error-border);
             border-radius: 4px;
             padding: 0 1em 0.1em 1em;
             margin: 0.3em 0 0.5em 0;
         }
 
         #form-errors.inactive {
-            background: rgba(255, 123, 0, 0.3);
-            border: 3px solid rgb(255, 123, 0);
+            background: var(--form-error-inactive-bg);
+            border: 3px solid var(--form-error-inactive-border);
             border-radius: 4px;
             padding: 0 1em 0.1em 1em;
             margin: 0.3em 0 0.5em 0;
         }
         ul.pagination > .active-page > a {
-            background-color: #f2f3f4;
-            color: #5C95D9;
+            background-color: var(--pagination-active-bg);
+            color: var(--primary-color);
         }
-        
+
         ul.pagination > li > a, ul.pagination > li > span {
             margin: 0 3px;
             background: none;
             border: none;
-            color: #8391A1;
+            color: var(--pagination-text);
             border-radius: 20px !important;
             transition: background-color 0.3s, box-shadow 0.3s;
         }
         ul.pagination > .active-page > a, ul.pagination > .active-page > span {
             margin: 0 3px;
             background: none;
-            color: #5C95D9;
+            color: var(--primary-color);
             border-radius: 20px !important;
             transition: background-color 0.3s, box-shadow 0.3s;
-            background-color: #f2f3f4;
+            background-color: var(--pagination-active-bg);
         }
         ul.pagination > li > a:hover {
-            background-color: #f2f3f4;
+            background-color: var(--pagination-active-bg);
+        }
+
+        /* 로고 다크모드 전환 */
+        [data-theme="dark"] .logo-light { display: none !important; }
+        [data-theme="dark"] .logo-dark { display: inline !important; }
+
+        /* select2 다크모드 오버라이드 */
+        [data-theme="dark"] .select2-dropdown {
+            background-color: var(--dropdown-bg);
+            border-color: var(--border-secondary);
+        }
+        [data-theme="dark"] .select2-container--default .select2-selection--single {
+            background-color: var(--page-bg);
+            border-color: var(--border-secondary);
+        }
+        [data-theme="dark"] .select2-container--default .select2-selection--multiple {
+            background-color: var(--page-bg);
+            border-color: var(--border-secondary);
+        }
+        [data-theme="dark"] .select2-container--default .select2-results__option {
+            color: var(--font-basic-black);
+        }
+        [data-theme="dark"] .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: var(--primary-color);
+            color: #fff;
+        }
+        [data-theme="dark"] .select2-container--default .select2-search--dropdown .select2-search__field {
+            background-color: var(--page-bg);
+            color: var(--font-basic-black);
+            border-color: var(--border-secondary);
+        }
+        [data-theme="dark"] .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: var(--font-basic-black);
+        }
+
+        /* 글로벌 입력필드 다크모드 */
+        [data-theme="dark"] input[type=text],
+        [data-theme="dark"] input[type=password],
+        [data-theme="dark"] input[type=email],
+        [data-theme="dark"] input[type=number],
+        [data-theme="dark"] input[type=url],
+        [data-theme="dark"] textarea,
+        [data-theme="dark"] select {
+            background-color: var(--page-bg) !important;
+            color: var(--font-basic-black) !important;
+            border-color: var(--input-border) !important;
+        }
+        [data-theme="dark"] select option {
+            background-color: var(--dropdown-bg);
+            color: var(--font-basic-black);
+        }
+        [data-theme="dark"] .select2-container--default .select2-selection--single .select2-selection__placeholder {
+            color: var(--font-grey);
         }
     </style>
 </head>

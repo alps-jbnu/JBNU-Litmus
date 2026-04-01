@@ -6,7 +6,7 @@
         flex-direction: column;
     }
     .tabs-area {
-        background-color: #f9fafb;
+        background-color: var(--background-second);
         display: block;
         border: none;
     }
@@ -33,18 +33,18 @@
         font-weight: 500;
         margin-left: 15px;
         margin-right: 15px;
-        color: #8391A1;
+        color: var(--font-grey);
     }
     ul li.tab.active {
         background: none;
-        background-color: #D9D9D936;
+        background-color: var(--tab-active-bg);
     }
     ul li.tab.active a, ul li.tab.active span {
-        color: #5C95D9;
+        color: var(--primary-color);
     }
 
     ul li.tab:hover {
-        background-color: #D9D9D936;
+        background-color: var(--tab-active-bg);
     }
     .title {
         display: flex;
@@ -82,8 +82,8 @@
         flex-direction: column;
         width: 110px;
         height: 35px;
-        background-color: #edf3fb;
-        color: #5285c4;
+        background-color: var(--light-blue-bg);
+        color: var(--light-blue-text);
         border-radius: 10px;
         line-height: 2.3em;
         font-size: 14px;
@@ -92,8 +92,8 @@
         transition: background-color 0.3s ease;
     }
     .admin-tab li a:hover {
-        background-color: #e3eaf6; 
-        color: #6291d0; 
+        background-color: var(--light-blue-bg); 
+        color: var(--light-blue-text); 
     }
 </style>
 

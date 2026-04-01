@@ -465,6 +465,17 @@ def edit_profile(request):
 
 @require_POST
 @login_required
+def set_theme(request):
+    theme = request.POST.get('theme', 'light')
+    if theme not in ('light', 'dark', 'auto'):
+        theme = 'light'
+    request.profile.site_theme = theme
+    request.profile.save(update_fields=['site_theme'])
+    return JsonResponse({'status': 'ok', 'theme': theme})
+
+
+@require_POST
+@login_required
 def generate_api_token(request):
     profile = request.profile
     with revisions.create_revision(atomic=True):

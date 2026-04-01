@@ -20,7 +20,7 @@
             height: 70px
         }
         .grayed {
-            color: #666;
+            color: var(--font-grey);
         }
         .block-buttons {
             margin: 0.5em 0 0.8em;
@@ -82,19 +82,19 @@
         }
         .button, button, input[type=submit] {
             background: none;
-            background-color: #5C95D9;
+            background-color: var(--primary-color);
             border-radius: 8px;
-            border: 1px solid #5C95D9;
+            border: 1px solid var(--primary-color);
         }
         .edit-div {
             border-radius: 10px;
             box-shadow: var(--standard-box-shadow);
             padding: 20px;
             margin-bottom: 15px;
-            background-color: #FFF;
+            background-color: var(--page-bg);
         }
         .edit-div .block-header {
-            color: #17171B;
+            color: var(--font-black);
             font-size: 16px;
             font-weight: bold;
             margin-left: 3px;
@@ -133,7 +133,7 @@
             border: 1px solid var(--border-color);
         }
         .inline-header  {
-            color: #5C95D9;
+            color: var(--primary-color);
             padding: 5px 10px;
             border-radius: 10px;
             transition: color 0.3s ease, background-color 0.3s ease;
@@ -147,7 +147,7 @@
             font-size: 1.1em;
             padding: 4px 8px;
             padding-left: 0;
-            color: #8391A1;
+            color: var(--font-grey);
         }
         .select2-container--default .select2-selection--single {
             border-radius: 10px;
@@ -392,6 +392,10 @@
                         <label class="inline-header grayed">편집기 테마</label>
                         <span class="fullwidth">{{ form.ace_theme }}</span>
                     </div>
+                    <div class="site-theme" style="margin-bottom: 15px;">
+                        <label class="inline-header grayed">사이트 테마</label>
+                        <span class="fullwidth">{{ form.site_theme }}</span>
+                    </div>
                     <div class="pane-div">
                         <label class="inline-header grayed">비밀번호</label>
                         <a href="{{ url('password_change') }}" class="inline-header edit-pw" style="line-height: 1.8em;">비밀번호 변경</a>
@@ -570,5 +574,19 @@
 
             <input type="submit" class="submit-bar" value="{{ _('Update profile') }}">
         </form>
+        <script>
+            $(function() {
+                $('form').on('submit', function() {
+                    var theme = $('#id_site_theme').val();
+                    if (theme) {
+                        var cookieVal = theme;
+                        if (theme === 'auto') {
+                            cookieVal = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+                        }
+                        document.cookie = 'site_theme=' + cookieVal + ';path=/;max-age=31536000;SameSite=Lax';
+                    }
+                });
+            });
+        </script>
     </div>
 {% endblock %}
