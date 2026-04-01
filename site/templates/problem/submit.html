@@ -104,7 +104,7 @@
                     });
                     editor.getSession().setUseWrapMode(true);
                     editor.setFontSize(14);
-                    editor.setPrintMarginColumn(100);
+                    editor.setShowPrintMargin(false);
                     editor.focus();
                 });
 
@@ -290,6 +290,11 @@
         }
         .django-ace-toolbar {
             background: var(--page-bg);
+        }
+        [data-theme="dark"] .django-ace-toolbar {
+            border-bottom-color: var(--border-color);
+            background-image: none;
+            color: var(--font-basic-black);
         }
         .select2-container--default .select2-selection--single {
             border: 1px solid var(--input-border);
