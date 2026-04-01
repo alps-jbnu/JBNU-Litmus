@@ -85,7 +85,7 @@
             flex-direction: column;
             justify-content: center;
             position: relative;
-            background-color: #fff !important;
+            background-color: var(--page-bg) !important;
             transition: box-shadow 0.2s ease;
         }
         .top-pagination-bar .select2-selection:hover {
@@ -96,14 +96,14 @@
             padding-left: 0;
         }
         .top-pagination-bar input[type="text"] {
-            background-color: #fff !important;
-            color: #8391A1;
+            background-color: var(--page-bg) !important;
+            color: var(--font-grey);
             font-family: Pretendard, sans-serif;
             font-size: 14px;
             font-weight: 500 !important;
             text-align: left !important;
             border-radius: 8px;
-            border: 1px solid #DADADA;
+            border: 1px solid var(--input-border);
             box-sizing: border-box;
             box-shadow:  1px 1px rgba(0, 0, 0, 0.075) inset;
             transition: border-color 0.15s ease-in-out 0s, box-shadow 0.15s ease-in-out 0s;
@@ -111,11 +111,11 @@
         }
 
         .top-pagination-bar .select2-selection__rendered {
-            color: #8391A1;
-            background: #fff;
+            color: var(--font-grey);
+            background: var(--page-bg);
             font-size: 14px;
             font-weight: 500;
-            border-color: #DADADA;
+            border-color: var(--input-border);
 
             
         }
@@ -125,7 +125,7 @@
             top: 50%;
             transform: translateY(-50%); /* Center icon vertically */
             right: 10px; /* Adjust right spacing */
-            color: #5C95D9;
+            color: var(--primary-color);
             pointer-events: none; /* Prevent icon from being clickable */
         }
         .select2-search--dropdown .select2-search__field {
@@ -149,10 +149,10 @@
             outline: 1px solid var(--border-color);
         }
         .select2-results__option--highlighted {
-            background-color: #d9d9d956 !important;
+            background-color: var(--tab-active-bg) !important;
         }
         #selection {
-            background-color: #fff !important;
+            background-color: var(--page-bg) !important;
 
         }
         #search-form {

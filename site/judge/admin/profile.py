@@ -31,6 +31,7 @@ class ProfileForm(ModelForm):
             'timezone': AdminSelect2Widget,
             'language': AdminSelect2Widget,
             'ace_theme': AdminSelect2Widget,
+            'site_theme': AdminSelect2Widget,
             'current_contest': AdminSelect2Widget,
             'about': AdminMartorWidget(attrs={'data-markdownfy-url': reverse_lazy('profile_preview')}),
         }

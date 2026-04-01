@@ -24,6 +24,12 @@ from pyotp.utils import strings_equal
 from sortedm2m.fields import SortedManyToManyField
 
 from judge.models.choices import ACE_THEMES, MATH_ENGINES_CHOICES, TIMEZONE
+
+SITE_THEME_CHOICES = (
+    ('light', _('Light')),
+    ('dark', _('Dark')),
+    ('auto', _('시스템 기본값')),
+)
 from judge.models.runtime import Language
 from judge.ratings import rating_class
 from judge.utils.two_factor import webauthn_decode
@@ -194,6 +200,8 @@ class Profile(models.Model):
     performance_points = models.FloatField(default=0, db_index=True)
     problem_count = models.IntegerField(default=0, db_index=True)
     ace_theme = models.CharField(max_length=30, verbose_name=_('Ace theme'), choices=ACE_THEMES, default='github')
+    site_theme = models.CharField(max_length=5, verbose_name=_('site theme'), choices=SITE_THEME_CHOICES,
+                                  default='light')
     last_access = models.DateTimeField(verbose_name=_('last access time'), default=now)
     ip = models.GenericIPAddressField(verbose_name=_('last IP'), blank=True, null=True)
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null = True, blank=True)

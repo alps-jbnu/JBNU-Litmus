@@ -104,7 +104,7 @@
                     });
                     editor.getSession().setUseWrapMode(true);
                     editor.setFontSize(14);
-                    editor.setPrintMarginColumn(100);
+                    editor.setShowPrintMargin(false);
                     editor.focus();
                 });
 
@@ -129,7 +129,7 @@
     {% compress css %}
         <style media="screen">
             #problem_submit {
-                background-color: white;
+                background-color: var(--page-bg);
                 border: none;
                 border-radius: 10px;
                 padding: 15px 25px;
@@ -152,7 +152,7 @@
             #result-version-info {
                 border-bottom: 1px solid var(--border-color);
                 margin: 0px 1em;
-                color: #757575;
+                color: var(--font-grey);
                 font-weight: 600;
                 padding: 0.2em 0;
                 text-align: right;
@@ -168,8 +168,8 @@
             }
 
             #language-select2 .select2-results__option {   
-                color: #757575 !important;
-                background: white !important;
+                color: var(--font-grey) !important;
+                background: var(--page-bg) !important;
             }
 
             #language-select2 .select2-results__option--highlighted {
@@ -178,7 +178,7 @@
 
             #language-select2 .select2-results__option[aria-selected=true] {
                 font-weight: bold;
-                color: black !important;
+                color: var(--font-black) !important;
             }
 
             #language-select2 .select2-results__option {
@@ -201,7 +201,7 @@
                 padding-bottom: 1em;
             }
             .select2-container--open .select2-dropdown--above {
-                border: 1px solid #d9d9d9;
+                border: 1px solid var(--input-border);
                 border-bottom: none;
                 border-radius-top-left: 8px;
                 border-radius-top-right: 8px;
@@ -253,7 +253,7 @@
 
         .submit-category .option label {
             padding:   5px;
-            background-color: #fff;
+            background-color: var(--page-bg);
             margin: 0;
             cursor: pointer;
         }
@@ -269,12 +269,12 @@
             display: flex;
             align-items: flex-end;
 
-            color: #8391A1;
+            color: var(--font-grey);
         }
         .submit-bar input{
             background: none;
-            background-color: #5C95D9;
-            border: 1px solid #5C95D9;
+            background-color: var(--primary-color);
+            border: 1px solid var(--primary-color);
             color: #FFFFFF;
             border-radius: 8px;
         }
@@ -289,10 +289,15 @@
             margin-top: 24px;
         }
         .django-ace-toolbar {
-            background: #fff;
+            background: var(--page-bg);
+        }
+        [data-theme="dark"] .django-ace-toolbar {
+            border-bottom-color: var(--border-color);
+            background-image: none;
+            color: var(--font-basic-black);
         }
         .select2-container--default .select2-selection--single {
-            border: 1px solid #d9d9d9;
+            border: 1px solid var(--input-border);
             border-radius: 8px;
             height: 35px;
         }
@@ -303,7 +308,7 @@
             height: 35px;
         }
         .select2-container--open .select2-dropdown--below {
-            border: 1px solid #d9d9d9;
+            border: 1px solid var(--input-border);
             border-top: none;
             border-radius-bottom-left: 8px;
             border-radius-bottom-right: 8px;

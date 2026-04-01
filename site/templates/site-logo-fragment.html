@@ -8,5 +8,9 @@
          onerror="this.src=&quot;{{ static('icons/Litmuslogo.png') }}&quot;; this.onerror=null" style="border: none">
     #}
     <img src="{{ static('icons/Litmuslogosvg.svg') }}" alt="{{ SITE_NAME }}" width="110" height="44"
-         data-site-logo="1" data-fallback-src="{{ static('icons/Litmuslogo.png') }}" style="border: none">
+         data-site-logo="1" data-fallback-src="{{ static('icons/Litmuslogo.png') }}" style="border: none"
+         class="logo-light">
+    <img src="{{ static('icons/Litmuslogosvg_white_text.svg') }}" alt="{{ SITE_NAME }}" width="110" height="44"
+         data-site-logo="1" style="border: none; display: none;"
+         class="logo-dark">
 {% endif %}
