@@ -74,6 +74,7 @@ judges.conf.new
 
 # Development environment
 .codeium/
+.copilot/
 .windsurf-server/
 hcpark_log_temp/
 .codex/
