@@ -7,6 +7,191 @@
             $('.submissions-link').appendTo('div#bottombar').show();
         });
     </script>
+    <script type="text/javascript">
+        django.jQuery(function ($) {
+            var $sampleInput = $('#id_sample_input');
+            var $sampleOutput = $('#id_sample_output');
+            console.log('Sample input field found:', $sampleInput.length);
+            console.log('Sample output field found:', $sampleOutput.length);
+            if (!$sampleInput.length || !$sampleOutput.length) {
+                console.log('Fields not found, exiting');
+                return;
+            }
+            if ($('#sample-io-inline-group').length) {
+                console.log('Sample IO inline group already exists, exiting');
+                return;
+            }
+            console.log('Initializing Sample I/O interface');
+
+            var separator = '\n<<<SAMPLE_SPLIT>>>\n';
+
+            // 기존 form-row 숨기기
+            var $inputRow = $sampleInput.closest('.form-row');
+            var $outputRow = $sampleOutput.closest('.form-row');
+            $inputRow.hide();
+            $outputRow.hide();
+
+            // 데이터 파싱
+            function splitSamples(value) {
+                if (!value) return [];
+                return value.split(separator).filter(function (item) {
+                    return $.trim(item);
+                });
+            }
+
+            var inputs = splitSamples($sampleInput.val());
+            var outputs = splitSamples($sampleOutput.val());
+            var sampleCount = Math.max(inputs.length, outputs.length, 1);
+
+            // inline-group 구조 생성 (admin tabular inline과 동일)
+            var $inlineGroup = $('<div id="sample-io-inline-group" class="inline-group sortable"></div>');
+            var $tabular = $('<div class="tabular inline-related"></div>');
+            var $fieldset = $('<fieldset class="module"></fieldset>');
+            var $h2 = $('<h2 class="sample-io-title">Sample Input/Output</h2>');
+            var $table = $('<table></table>');
+            var $thead = $('<thead><tr><th class="column-sample_io">입출력 예제</th><th class="column-delete">삭제</th></tr></thead>');
+            var $tbody = $('<tbody></tbody>');
+
+            $table.append($thead);
+            $table.append($tbody);
+            $fieldset.append($h2);
+            $fieldset.append($table);
+            $tabular.append($fieldset);
+            $inlineGroup.append($tabular);
+
+            // 각 샘플에 대해 행 생성 (adminsortable2와 동일한 구조)
+            for (var i = 0; i < sampleCount; i++) {
+                var $row = $('<tr class="form-row row' + ((i % 2) + 1) + ' has_original"></tr>');
+
+                // Sample I/O 열
+                var $ioCell = $('<td class="field-sample_io"></td>');
+                var $inputLabel = $('<label>Sample input ' + (i + 1) + ':</label>');
+                var $inputArea = $('<textarea rows="4" cols="40" class="vLargeTextField" data-sample-kind="input">' + (inputs[i] || '') + '</textarea>');
+                var $outputLabel = $('<label>Sample output ' + (i + 1) + ':</label>');
+                var $outputArea = $('<textarea rows="4" cols="40" class="vLargeTextField" data-sample-kind="output">' + (outputs[i] || '') + '</textarea>');
+                $ioCell.append($inputLabel).append($inputArea)
+                    .append($outputLabel).append($outputArea);
+                $row.append($ioCell);
+
+                // DELETE 열
+                var $deleteCell = $('<td class="delete"></td>');
+                var $checkbox = $('<input type="checkbox" class="sample-delete-checkbox">');
+                $deleteCell.append($checkbox);
+                $row.append($deleteCell);
+
+                $tbody.append($row);
+            }
+
+            // Add 버튼 행
+            var $addRow = $('<tr class="add-row"><td colspan="3"><a class="add-row add-sample-link">Add Sample Case</a></td></tr>');
+            $tbody.append($addRow);
+
+            // inline-group을 output row 뒤에 삽입
+            $outputRow.after($inlineGroup);
+
+            // Sortable 초기화 (adminsortable2 inline-tabular.js 방식)
+            // jQuery UI sortable이 로드된 경우에만 실행
+            if ($.fn.sortable) {
+                $tbody.sortable({
+                    handle: '.drag',
+                    items: 'tr.form-row.has_original',
+                    axis: 'y',
+                    cursor: 'ns-resize',
+                    containment: false,
+                    tolerance: 'pointer',
+                    forcePlaceholderSize: true,
+                    scroll: false,
+                    start: function(e, ui) {
+                        ui.placeholder.height(ui.item.height());
+                    },
+                    update: function(e, ui) {
+                        updateLabels();
+                    }
+                });
+                console.log('Sortable initialized');
+            } else {
+                console.log('jQuery UI sortable not available, drag&drop disabled');
+            }
+
+            // 라벨 업데이트
+            function updateLabels() {
+                $tbody.find('tr.form-row').each(function(idx) {
+                    var num = idx + 1;
+                    $(this).find('label').eq(0).text('Sample input ' + num + ':');
+                    $(this).find('label').eq(1).text('Sample output ' + num + ':');
+                });
+            }
+
+            // Add 버튼 클릭
+            $addRow.find('.add-sample-link').on('click', function(e) {
+                e.preventDefault();
+                var rowCount = $tbody.find('tr.form-row').not('.add-row').length + 1;
+
+                var $newRow = $('<tr class="form-row row' + ((rowCount % 2) + 1) + '"></tr>');
+
+                var $ioCell = $('<td class="field-sample_io"></td>');
+                var $inputLabel = $('<label>Sample input ' + rowCount + ':</label>');
+                var $inputArea = $('<textarea rows="4" cols="40" class="vLargeTextField" data-sample-kind="input"></textarea>');
+                var $outputLabel = $('<label>Sample output ' + rowCount + ':</label>');
+                var $outputArea = $('<textarea rows="4" cols="40" class="vLargeTextField" data-sample-kind="output"></textarea>');
+                $ioCell.append($inputLabel).append($inputArea)
+                    .append($outputLabel).append($outputArea);
+                $newRow.append($ioCell);
+
+                var $deleteCell = $('<td class="delete"></td>');
+                var $deleteBtn = $('<a href="#" class="inline-deletelink sample-delete-btn" aria-label="삭제" title="삭제">삭제</a>');
+                $deleteCell.append($deleteBtn);
+                $newRow.append($deleteCell);
+
+                $addRow.before($newRow);
+                updateLabels();
+            });
+
+            // 체크박스 스타일/상태 반영
+            $tbody.on('change', '.sample-delete-checkbox', function() {
+                $(this).closest('tr').toggleClass('to-delete', $(this).is(':checked'));
+            });
+
+            $tbody.on('click', '.sample-delete-btn', function(e) {
+                e.preventDefault();
+                $(this).closest('tr').remove();
+                updateLabels();
+            });
+
+            // cases-group의 add-row 텍스트와 동일하게 맞춤
+            var $caseAddLink = $('#cases-group .module tbody .add-row a');
+            if ($caseAddLink.length) {
+                $addRow.find('a').text($caseAddLink.text());
+            }
+
+            // Form submit시 데이터 수집
+            $sampleInput.closest('form').on('submit', function() {
+                var allInputs = [];
+                var allOutputs = [];
+
+                $tbody.find('tr.form-row').each(function() {
+                    if ($(this).find('.sample-delete-checkbox').is(':checked')) {
+                        return;
+                    }
+
+                    var inputVal = $(this).find('textarea[data-sample-kind="input"]').val();
+                    var outputVal = $(this).find('textarea[data-sample-kind="output"]').val();
+                    allInputs.push(inputVal);
+                    allOutputs.push(outputVal);
+                });
+
+                while (allInputs.length && !$.trim(allInputs[allInputs.length - 1])) {
+                    allInputs.pop();
+                }
+                while (allOutputs.length && !$.trim(allOutputs[allOutputs.length - 1])) {
+                    allOutputs.pop();
+                }
+
+                $sampleInput.val(allInputs.join(separator));
+                $sampleOutput.val(allOutputs.join(separator));
+            });
+        });
+    </script>
     {% if original and original.pk %}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -18,41 +203,146 @@
             heading.appendChild(button);
 
             button.onclick = function() {
-                window.open("{% url 'admin:testcase_preview' original.pk %}", "Popup", "width=600,height=400");  
+                window.open("{% url 'admin:testcase_preview' original.pk %}", "Popup", "width=600,height=400");
             }
         });
     </script>
     {% endif %}
-        
+
     <style>
-        .datetime {
+        /* change-form 페이지에만 적용되도록 스코핑 - Dashboard 영향 없음 */
+        .change-form .datetime {
             display: flex;
             align-items: center;
             width:100%;
         }
-        /* .datetime br{
-            display:none !important;
-        } */
-        .datetime input.vDateField,
-        .datetime input.vTimeField {
+        .change-form .datetime input.vDateField,
+        .change-form .datetime input.vTimeField {
             margin-right: 10px;
         }
-        
-        .datetime .datetimeshortcuts {
+        .change-form .datetime .datetimeshortcuts {
             margin-right: 10px;
         }
-        #content .inline-group {
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        .title-button {
-            margin-left: 15px; /* 제목과 버튼 사이의 간격 조정 */
+
+        /* cases-group 내부에만 적용 */
+        #cases-group .title-button {
+            margin-left: 15px;
             padding: 5px 10px;
             font-size: 14px;
             cursor: pointer;
         }
+
+        /* Sample I/O inline-group: cases-group 스타일과 일치 */
+        #sample-io-inline-group.inline-group {
+            margin: 0;
+        }
+
+        #sample-io-inline-group .sample-io-title {
+            display: none;
+        }
+
+        #sample-io-inline-group .tabular.inline-related {
+            overflow-x: auto;
+        }
+
+        #sample-io-inline-group th.column-order,
+        #sample-io-inline-group table tbody td.drag {
+            width: 32px;
+            min-width: 32px;
+        }
+
+        #sample-io-inline-group table tbody td.drag {
+            cursor: pointer;
+            white-space: nowrap;
+            padding: 10px 0 !important;
+            background-color: #f5f5f5;
+            background-image: radial-gradient(#c7c7c7 1px, transparent 1px);
+            background-size: 4px 4px;
+            background-position: center;
+            vertical-align: middle !important;
+        }
+
+        #sample-io-inline-group tr:not(.has_original) td.drag {
+            background: none;
+            cursor: default;
+        }
+
+        #sample-io-inline-group table tbody td.delete {
+            text-align: center !important;
+            width: 80px;
+            vertical-align: middle !important;
+            padding: 10px 8px !important;
+        }
+
+        #sample-io-inline-group textarea.vLargeTextField {
+            width: 100%;
+            max-width: 100%;
+            font-family: monospace;
+        }
+
+        #sample-io-inline-group td.field-sample_io {
+            text-align: left !important;
+            vertical-align: middle !important;
+            padding: 10px 8px !important;
+        }
+
+        #sample-io-inline-group td.field-sample_io label {
+            display: block !important;
+            text-align: left !important;
+            margin-top: 0 !important;
+            margin-bottom: 5px !important;
+        }
+
+        #sample-io-inline-group td.field-sample_io textarea {
+            margin-top: 0 !important;
+            margin-bottom: 15px !important;
+        }
+
+        #sample-io-inline-group td.field-sample_io textarea:last-child {
+            margin-bottom: 0 !important;
+        }
+
+        #sample-io-inline-group td.delete .sample-delete-checkbox {
+            margin: 0 auto !important;
+            display: block !important;
+        }
+
+        #content #content-main #sample-io-inline-group .module tbody .add-row a {
+            border-radius: 8px;
+            padding: 5px 5px 5px 5px;
+            color: black;
+            font-size: 13px;
+            display: inline-block;
+            margin-top: 3px;
+            cursor: pointer;
+        }
+
+        #content #content-main #sample-io-inline-group .module tbody .add-row td {
+            height: 30px;
+        }
+
+        #content #content-main #sample-io-inline-group .module tbody .add-row a::before {
+            color: #3A6FD9;
+        }
+
+        #sample-io-inline-group .sample-delete-btn {
+            cursor: pointer;
+            display: inline-block !important;
+            margin: 0 auto !important;
+            text-align: center;
+            float: none !important;
+            position: static !important;
+        }
+
+        #sample-io-inline-group th.column-delete {
+            text-align: center;
+        }
+
+        #sample-io-inline-group th.column-sample_io {
+            text-align: left;
+        }
     </style>
-    
+
 {% endblock extrahead %}
 
 {% block after_field_sets %}{{ block.super }}
@@ -64,5 +354,3 @@
         </a>
     {% endif %}
 {% endblock %}
-
-

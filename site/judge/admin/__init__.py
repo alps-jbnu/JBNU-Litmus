@@ -9,6 +9,7 @@ from judge.admin.interface import BlogPostAdmin, FlatPageAdmin, LicenseAdmin, Lo
 # from judge.admin.organization import ClassAdmin, OrganizationAdmin, OrganizationRequestAdmin
 from judge.admin.problem import ProblemAdmin, ProblemPointsVoteAdmin
 from judge.admin.profile import ProfileAdmin, DepartmentAdmin, SubjectAdmin
+from judge.admin.school import SchoolAdmin
 from judge.admin.users import UserAdmin
 from judge.admin.runtime import JudgeAdmin, LanguageAdmin
 from judge.admin.submission import SubmissionAdmin
@@ -22,7 +23,7 @@ from judge.admin.patch_note import PatchNoteAdmin
 from judge.models import BlogPost, Comment, CommentLock, Contest, ContestParticipation, \
     ContestTag, Judge, Language, License, MiscConfig, NavigationBar, \
     Problem, ProblemGroup, ProblemPointsVote, ProblemType, Profile, Submission, Department, Subject, \
-    PatchNote
+    School, PatchNote
 
 # admin.site.register(BlogPost, BlogPostAdmin)``
 # admin.site.register(Comment, CommentAdmin) # 260112 댓글 기능 비활성화
@@ -48,6 +49,7 @@ admin.site.register(ProblemType, ProblemTypeAdmin)
 admin.site.register(Profile, ProfileAdmin)
 admin.site.register(Department,DepartmentAdmin)
 admin.site.register(Subject,SubjectAdmin)
+admin.site.register(School, SchoolAdmin)
 admin.site.register(Submission, SubmissionAdmin)
 
 #유저가 생성될때, 프로필도 같이 생성

@@ -50,7 +50,7 @@
             border: 2px solid var(--border-color);
             width: 130px;  
             height: auto;
-            background-color: white;
+            background-color: var(--page-bg);
             margin-top: 20px;
             margin-bottom: 20px;
         }
@@ -61,14 +61,14 @@
         }
         .user-sidebar-area {
             width: 100%;
-            background-color: #FFF
+            background-color: var(--page-bg)
         }
         .user-sidebar-div {
             width: 1040px;
             margin: 0 auto;
             justify-content: center;
             align-items: center;
-            background-color: #FFF;
+            background-color: var(--page-bg);
         }
         .user-info-text {
             display: flex;
@@ -79,15 +79,15 @@
         }
         .user-info-text .num-style {
             font-size: 22px;
-            color: #5C95D9;
+            color: var(--primary-color);
         }
         .user-info-text .semibold {
             font-size: 15px;
-            color: #8391A1;
+            color: var(--font-grey);
         }
         .user-info-text .button-sub {
-            background-color: #EBEFF3;
-            color: #5C95D9;
+            background-color: var(--light-bg);
+            color: var(--primary-color);
             border-radius: 10px;
             font-size: 13px;
             width: 100px;
@@ -105,19 +105,19 @@
             font-weight: 400;
             margin-bottom: 5px;
             margin-right: 10px;
-            color: #8391A1;
+            color: var(--font-grey);
         }
-        .user-info-text-1 p { 
+        .user-info-text-1 p {
             font-size: 28px;
             font-weight: 500;
-            color: #000000;
+            color: var(--font-black);
             margin-top: 3px;
             margin-bottom: 10px !important;
         }
         .user-info-text-1 h4 {
             font-size: 16px;
             font-weight: 600;
-            color: #8391A1;
+            color: var(--font-grey);
         }
         .user-info-text-2 {
             display: flex;
@@ -141,8 +141,8 @@
             display:block;
             height: 35px;
             width: 110px;
-            background-color: #f4f4f4;
-            color: #8391a1;
+            background-color: var(--light-bg);
+            color: var(--font-grey);
             border-radius: 10px;
             margin-left: 10px;
             line-height: 2.3em;
@@ -153,8 +153,8 @@
             transition: background-color 0.3s ease;
         }
         .user-info-btn-1 a:hover {
-            background-color: #ececec; 
-            color: #6a7a8a; 
+            background-color: var(--light-bg);
+            color: var(--font-grey);
         }
             
         .user-info-btn-1 a i {
@@ -172,8 +172,8 @@
             display:block;
             height: 35px;
             width: 110px;
-            background-color: #edf3fb;
-            color: #5285c4;
+            background-color: var(--light-blue-bg);
+            color: var(--light-blue-text);
             border-radius: 10px;
             margin-left: 10px;
             line-height: 2.3em;
@@ -183,11 +183,11 @@
             transition: background-color 0.3s ease;
         }
         .user-info-btn-2 a:hover {
-            background-color: #e3eaf6; 
-            color: #6291d0; 
+            background-color: var(--light-blue-bg);
+            color: var(--light-blue-text);
         }
         .user-content-area {
-            background-color: #f9fafb;
+            background-color: var(--background-second);
         }
         .user-content-div {
             width: 1040px;
@@ -211,16 +211,16 @@
             line-height: 2.3em;
             font-size: 15px;
             font-weight: 500;
-            color: #8391A1;
+            color: var(--font-grey);
         }
         .user-custom-tabs ul li.active {
-            background-color: #f2f3f4;
+            background-color: var(--light-bg);
         }
         .user-custom-tabs ul li a.active {
-            color: #5C95D9;
+            color: var(--primary-color);
         }
         .user-custom-tabs ul li:hover {
-            background-color: #f2f3f4;
+            background-color: var(--light-bg);
         }
     </style>
     <div class="user-info-page">
@@ -326,7 +326,7 @@
                         <div class="user-info-btn-1">
                             
                             <a href="{{ url('user_edit_profile') }}">
-                                <i class="fas fa-pen fa-rotate-by" style="color: #8391a1;"></i>
+                                <i class="fas fa-pen fa-rotate-by" style="color: var(--font-grey);"></i>
                                 프로필 수정
                             </a>
                         </div>

@@ -34,7 +34,7 @@
             width: 100%;
         }
         .content-body-box {
-            background-color: #f9fafb;
+            background-color: var(--background-second);
         }
 
         #content-top {
@@ -64,7 +64,7 @@
             font-size: 18px;
             line-height: 22px;
             text-align: left;
-            color: #17171B;
+            color: var(--font-black);
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 10px;
         }
@@ -82,7 +82,7 @@
         #problem-table {
             box-sizing: border-box;
             width: 100%;
-            background: #FFFFFF;
+            background: var(--page-bg);
             border-radius: 10px 10px 0px 0px;
             margin-bottom: 0;
         }
@@ -128,13 +128,13 @@
             height: 50px;
             border: none;
             padding: 0;
-            background-color: #fff;
+            background-color: var(--page-bg);
             font-weight: normal;
             position: relative;
             background: rgba(0, 0, 0, 0.03);
         }
         #problem-table th a {
-            color: #17171B;
+            color: var(--font-black);
             align-items: center;
             text-decoration: none;
         }
@@ -142,7 +142,7 @@
         #problem-table th .sort-icon {
             font-size: 12px;
             font-weight: normal;
-            color: #17171B; /* 기본 상태의 아이콘 색상 */
+            color: var(--font-black); /* 기본 상태의 아이콘 색상 */
             margin-left: 3px;
             cursor: pointer; /* 커서가 클릭 가능 */
             visibility: visible;
@@ -165,7 +165,7 @@
             line-height: 2;
             padding: 0 !important;
             background: none;
-            background-color: #5C95D9;
+            background-color: var(--primary-color);
             display: flex;
             justify-content: center
         }
@@ -205,8 +205,8 @@
         }
 
         .lock-icon {
-            fill: #D9D9D9;
-            stroke: #D9D9D9;
+            fill: var(--font-grey);
+            stroke: var(--font-grey);
         }
         .table tr:first-child th:first-child {
             border-top-left-radius: 10px !important;
@@ -242,17 +242,17 @@
             overflow: hidden;
             text-overflow: ellipsis;
             font-size: 16px;
-            color: #8391A1;
+            color: var(--font-grey);
         }
-        
+
         #problem-group li span:hover {
-            background-color: #D9D9D936;
+            background-color: var(--tab-active-bg);
             transition: background-color 0.3s ease;
         }
         
         #problem-group li.active > span {
-            background-color: #D9D9D936;
-            color: #373D47;
+            background-color: var(--tab-active-bg);
+            color: var(--content-text);
         }
         
         #problem-group li ul {
@@ -275,14 +275,14 @@
             content: '\e2c8'; /* folder icon */
             margin-right: 10px;
             font-size: 20px;
-            color: #D9D9D9;
+            color: var(--font-grey);
             display: inline-block;
         }
         
         /* 폴더가 활성화되었을 때 아이콘 변경 */
         #problem-group li.active > span.folder-toggle::before {
             content: '\e2c7'; /* open folder icon */
-            color: #5C95D9;
+            color: var(--primary-color);
         }
         
         /* All 버튼을 위한 아이콘 */
@@ -291,13 +291,13 @@
             content: '\e896'; /* list icon */
             margin-right: 10px;
             font-size: 20px;
-            color: #D9D9D9;
+            color: var(--font-grey);
             display: inline-block;
         }
         
         /* 활성화된 All 버튼 */
         #problem-group li.active > span.all-problems::before {
-            color: #5C95D9;
+            color: var(--primary-color);
         }
 
     </style>
@@ -630,15 +630,15 @@
                                 var $header = $(this).closest('th');
                                 var direction = $(this).data('sort');
                                 headers.removeClass('sorted-asc sorted-desc');
-                                headers.find('.sort-icon').css('color', '#17171B');
+                                headers.find('.sort-icon').css('color', 'var(--font-black)');
                                 headers.find('a').removeClass('sorted');
 
                                 if (direction === 'asc') {
                                     $header.addClass('sorted-asc');
-                                    $header.find('.sort-asc').html('&#9650;').css('color', '#5C95D9');
+                                    $header.find('.sort-asc').html('&#9650;').css('color', 'var(--primary-color)');
                                 } else if (direction === 'desc') {
                                     $header.addClass('sorted-desc');
-                                    $header.find('.sort-desc').html('&#9660;').css('color', '#5C95D9');
+                                    $header.find('.sort-desc').html('&#9660;').css('color', 'var(--primary-color)');
                                 }
 
                                 $header.find('a').addClass('sorted');

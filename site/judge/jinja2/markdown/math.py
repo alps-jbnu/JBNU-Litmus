@@ -9,7 +9,7 @@ mistune._pre_tags.append('latex')
 
 class MathInlineGrammar(mistune.InlineGrammar):
     block_math = re.compile(r'^\$\$(.*?)\$\$|^\\\[(.*?)\\\]', re.DOTALL)
-    math = re.compile(r'^~(.*?)~|^\\\((.*?)\\\)', re.DOTALL)
+    math = re.compile(r'^~(.*?)~|^\$(?!\$)(.*?)(?<!\\)\$(?!\$)|^\\\((.*?)\\\)', re.DOTALL)
     text = re.compile(r'^[\s\S]+?(?=[\\<!\[_*`~$]|\\[\[(]|https?://| {2,}\n|$)')
 
 
@@ -27,7 +27,7 @@ class MathInlineLexer(mistune.InlineLexer):
         return self.renderer.block_math(m.group(1) or m.group(2))
 
     def output_math(self, m):
-        return self.renderer.math(m.group(1) or m.group(2))
+        return self.renderer.math(m.group(1) or m.group(2) or m.group(3))
 
     def output_inline_html(self, m):
         tag = m.group(1)

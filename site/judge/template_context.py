@@ -23,8 +23,27 @@ def get_resource(request):
         scheme = 'https'
     else:
         scheme = 'http'
+    # Theme resolution priority:
+    # 1. ?dark query param (legacy/debug)
+    # 2. Profile.site_theme for logged-in users
+    # 3. site_theme cookie for anonymous users
+    # 4. Default: 'light'
+    if 'dark' in request.GET:
+        theme = 'dark'
+    elif hasattr(request, 'profile') and request.profile:
+        theme = getattr(request.profile, 'site_theme', 'light')
+    else:
+        theme = request.COOKIES.get('site_theme', 'light')
+
+    if theme == 'dark':
+        style_css = 'dark/style.css'
+    else:
+        # 'auto' defaults to light server-side; JS handles actual switching
+        style_css = 'style.css'
+
     return {
-        'STYLE_CSS': 'dark/style.css' if 'dark' in request.GET else 'style.css',
+        'STYLE_CSS': style_css,
+        'SITE_THEME': theme,
         'INLINE_JQUERY': settings.INLINE_JQUERY,
         'INLINE_FONTAWESOME': settings.INLINE_FONTAWESOME,
         'JQUERY_JS': settings.JQUERY_JS,

@@ -6,7 +6,7 @@
 {% block js_media %}
     <style>
         .content-body-box {
-            background-color: #f9fafb;
+            background-color: var(--background-second);
             font-family: "Pretendard";
             width: 100%;
         }
@@ -21,7 +21,7 @@
             flex-direction: row;
             padding: 0;
             margin: 0;
-            color: #8391A1;
+            color: var(--font-grey);
             list-style-type: none;
             border-radius: 10px;
             visibility: hidden;
@@ -41,7 +41,7 @@
             transition: background-color 0.3s ease;
         }
         .contest-group-item:hover {
-            background-color: #D9D9D936;
+            background-color: var(--tab-active-bg);
             transition: background-color 0.3s ease;
         }
         .contest-group-item input[type="checkbox"] {
@@ -63,7 +63,7 @@
             box-sizing: border-box;
             margin-right: 10px;
             font-size: 24px;
-            color: #D9D9D9;
+            color: var(--font-grey);
         }
         .contest-group-item input[type="checkbox"]:checked + label .material-symbols-outlined {
             font-size: 24px;
@@ -83,11 +83,11 @@
         }
         .contest-group-item.active {
             background: none;
-            background-color: #D9D9D936;
-            color: #373D47;
+            background-color: var(--tab-active-bg);
+            color: var(--content-text);
         }
         .contest-group-item.active label {
-            color: #373D47;
+            color: var(--content-text);
         }
         .contest-head-block {
             display: flex;
@@ -126,11 +126,11 @@
         }
         .contest-div {
             background: none;
-            background-color: white;
+            background-color: var(--page-bg);
             border-radius: 10px;
             padding: 18px 24px 12px 24px;
             margin: 0 0 20px 0;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            box-shadow: var(--standard-box-shadow);
         }
         .content-description h4 {
             border-bottom: none;
@@ -158,13 +158,13 @@
             margin-left: auto;
             margin-right: auto;
             margin-bottom: 0.5em;
-            background: rgba(255,255,255,1.0);
+            background: var(--page-bg);
         }
         .contest-list td:last-child {
             width: 200px;
         }
         .table.striped tr:nth-child(even) {
-            background: #ffffff;
+            background: var(--page-bg);
         }
         .active {
             background: linear-gradient(90deg, rgba(159, 205, 242, 0.2) 0.62%, rgba(167, 231, 244, 0) 100.62%);
@@ -256,13 +256,13 @@
             border-radius: 8px;
             padding-left: 12px;
             font-size: 12px;
-            color: black;
+            color: var(--font-black);
             display: flex;
             flex-direction: column;
             justify-content: center;
         }
         .top-pagination-bar .select2-selection__rendered {
-            color: #8391A1;
+            color: var(--font-grey);
             font-size: 12px;
         }
 
@@ -287,7 +287,7 @@
             justify-content: center;
         }
         .bottom-pagination-bar .pagination {
-            color: #8391A1;
+            color: var(--font-grey);
         }
         ul.pagination > li.disabled-page {
             display: none;
@@ -296,20 +296,20 @@
             margin: 0 3px;
             background: none;
             border: none;
-            color: #8391A1;
+            color: var(--font-grey);
             border-radius: 20px !important;
             transition: background-color 0.3s, box-shadow 0.3s;
         }
         ul.pagination > .active-page > a, ul.pagination > .active-page > span {
             margin: 0 3px;
             background: none;
-            color: #5C95D9;
+            color: var(--primary-color);
             border-radius: 20px !important;
             transition: background-color 0.3s, box-shadow 0.3s;
-            background-color: #f2f3f4;
+            background-color: var(--light-bg);
         }
         ul.pagination > li > a:hover {
-            background-color: #f2f3f4;
+            background-color: var(--light-bg);
         }
     </style>
     <script src="{{ static('libs/featherlight/featherlight.min.js') }}" type="text/javascript"></script>
