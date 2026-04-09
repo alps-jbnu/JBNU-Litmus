@@ -28,6 +28,8 @@ from judge.widgets import Select2MultipleWidget, Select2Widget
 
 
 bad_mail_regex = list(map(re.compile, settings.BAD_MAIL_PROVIDER_REGEX))
+EMAIL_PASSWORD_ERROR_MESSAGE = '비밀번호는 이메일과 동일하거나 유사하게 설정할 수 없습니다.'
+PASSWORD_MISMATCH_ERROR_MESSAGE = '비밀번호가 일치하지 않습니다.'
 
 @csrf_exempt
 def validate_password_method(request):
@@ -141,10 +143,18 @@ class CustomRegistrationForm(RegistrationForm):
     # 변경 후
     # def clean_email_local(self):
     #     email_local = self.cleaned_data.get('email_local')
-        
+
+    def clean_password2(self):
+        password1 = self.cleaned_data.get('password1')
+        password2 = self.cleaned_data.get('password2')
+        if password1 and password2 and password1 != password2:
+            raise forms.ValidationError(PASSWORD_MISMATCH_ERROR_MESSAGE, code='password_mismatch')
+        return password2
+
     def clean(self):
         cleaned_data = super().clean()
         email_local = cleaned_data.get('email_local')
+        password1 = cleaned_data.get('password1')
         email_domain = cleaned_data.get('email_domain')
 
         # 이메일 주소 재구성
@@ -161,10 +171,33 @@ class CustomRegistrationForm(RegistrationForm):
         domain = email.split('@')[-1].lower()
         if (domain in settings.BAD_MAIL_PROVIDERS or
                 any(regex.match(domain) for regex in bad_mail_regex)):
-            raise forms.ValidationError(gettext('Your email provider is not allowed due to history of abuse. '
-                                                'Please use a reputable email provider.'), code='email')
+            self.add_error('email_local', gettext('Your email provider is not allowed due to history of abuse. '
+                                                  'Please use a reputable email provider.'))
+
+        if password1 and email_local and password1 == email_local:
+            self.add_error('password1', EMAIL_PASSWORD_ERROR_MESSAGE)
         
         return cleaned_data
+
+    def _post_clean(self):
+        # Run ModelForm post-clean without UserCreationForm's password2 validation.
+        forms.ModelForm._post_clean(self)
+
+        password = self.cleaned_data.get('password1')
+        if not password:
+            return
+
+        try:
+            validate_password(password, self.instance)
+        except ValidationError as error:
+            existing_password1_errors = set(self.errors.get('password1', []))
+            for message in error.messages:
+                normalized_message = message
+                if '이메일' in message or 'email' in message.lower():
+                    normalized_message = EMAIL_PASSWORD_ERROR_MESSAGE
+                if normalized_message not in existing_password1_errors:
+                    self.add_error('password1', normalized_message)
+                    existing_password1_errors.add(normalized_message)
 
     def clean_username(self):
         username = self.cleaned_data.get('username')
