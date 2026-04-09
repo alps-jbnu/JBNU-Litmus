@@ -91,3 +91,5 @@ site/resources/static/jplag_reports/*
 
 #settings.py (dev/service)
 site/dmoj/settings.py
+
+.copilot/
