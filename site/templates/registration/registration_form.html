@@ -368,7 +368,13 @@
                 <ul id="password-error-list" style="color: red ; display: none;"></ul>
             </span>
             {% if form.password1.errors %}
-                <div class="form-field-error">{{ form.password1.errors }}</div>
+                {% for error in form.password1.errors %}
+                    {% if error == '비밀번호는 이메일과 동일하거나 유사하게 설정할 수 없습니다.' %}
+                        <div class="form-field-error">
+                            <ul class="errorlist"><li>{{ error }}</li></ul>
+                        </div>
+                    {% endif %}
+                {% endfor %}
             {% endif %}
             <span class="fullwidth{% if form.password2.errors %}-error{% endif %}">{{ form.password2 }}</span>
             {% if form.password2.errors and form.password1.value and form.password2.value and form.password1.value != form.password2.value %}
