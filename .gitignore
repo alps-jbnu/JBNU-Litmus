@@ -93,3 +93,5 @@ site/resources/static/jplag_reports/*
 site/dmoj/settings.py
 
 .copilot/
+
+JBNU-Litmus/
