@@ -243,6 +243,16 @@
         }
         .form-field-error ul.errorlist {
             padding: 0;
+            margin: 0;
+            text-align: left;
+        }
+        #password-error-list {
+            margin: 10px 0 -10px 18px;
+            padding: 0;
+            text-align: left;
+        }
+        #password-error-list li {
+            margin: 0 0 4px 0;
         }
         input[type=text], input[type=password], input[type=email], input[type=number] {
             padding: 4px 8px;
@@ -299,10 +309,18 @@
             var passwordErrorList = document.querySelector('#password-error-list');
             var validatePasswordUrl = '{{ validate_password_url }}';  // 템플릿 변수로 URL 설정
 
+            function hidePasswordErrors() {
+                passwordErrorList.innerHTML = '';
+                passwordErrorList.style.display = "none";
+            }
+
             passwordField.addEventListener('input', function() {
                 var password = passwordField.value;
+                if (!password) {
+                    hidePasswordErrors();
+                    return;
+                }
                 var xhr = new XMLHttpRequest();
-                passwordErrorList.style.display = "block";
                 xhr.open('POST', validatePasswordUrl, true);
                 xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
                 xhr.setRequestHeader('X-CSRFToken', '{{ csrf_token }}');
@@ -314,11 +332,14 @@
                             var errors = response.errors;
                             passwordErrorList.innerHTML = '';
                             if (errors.length > 0) {
+                                passwordErrorList.style.display = "block";
                                 errors.forEach(function(error) {
                                     var li = document.createElement('li');
                                     li.textContent = error;
                                     passwordErrorList.appendChild(li);
                                 });
+                            } else {
+                                hidePasswordErrors();
                             }
                         } else {
                             console.error("AJAX 요청 오류:", xhr.responseText);  // 오류 로그 추가
