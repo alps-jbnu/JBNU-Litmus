@@ -1,4 +1,5 @@
 # hidden file
+.git-credentials
 .gitconfig
 .DS_Store
 .bashrc
