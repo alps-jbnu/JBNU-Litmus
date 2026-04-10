@@ -65,6 +65,12 @@ register_patterns = [
     path('email/change/', user.EmailChangeView.as_view(), name='email_change'),
     path('email/change/complete/', user.EmailChangeCompleteView.as_view(), name='email_change_complete'),
 
+    # 이메일 인증 필요 안내 페이지
+    path('activation/required/',
+         TitledTemplateView.as_view(template_name='registration/activation_required.html',
+                                    title=_('이메일 인증 필요')),
+         name='activation_required'),
+
     # 활성화 메일 재전송 기능 라우팅
     path('activationmail/resend/', user.ResendActivationEmailView.as_view(), name='resend_activation_email'),
     path('activationmail/resend/complete/', user.ResendActivationEmailCompleteView.as_view(), name='resend_activation_email_complete'),

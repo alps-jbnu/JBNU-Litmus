@@ -704,15 +704,17 @@ class EmailChangeView(FormView):
             form.add_error('username', _('아이디 또는 비밀번호가 잘못되었습니다.'))
             return self.form_invalid(form)
 
-        # 이메일을 새로 설정하고 계정을 바로 활성화
+        # 이메일을 새로 설정하고 인증 전까지 비활성화
         user.email = new_email
-        user.is_active = True
-        user.save() # 유저 데이터 저장
+        user.is_active = False
+        user.save()
 
-        # 이미 프로필이 있는지 확인
+        # 새 인증 키를 발급하고 인증 이메일 발송
         registration_profile, created = RegistrationProfile.objects.get_or_create(user=user)
-        registration_profile.activated = True
-        registration_profile.save()
+        registration_profile.create_new_activation_key(save=True)
+
+        site = get_current_site(self.request)
+        registration_profile.send_activation_email(site=site, request=self.request)
 
         return super().form_valid(form)
 
@@ -746,12 +748,11 @@ class ResendActivationEmailView(FormView):
             # 이미 프로필이 있는지 확인
             profile, created = RegistrationProfile.objects.get_or_create(user=user)
 
-            # 활성화 키를 새로 생성
+            # 활성화 키를 새로 생성하고 인증 이메일 재전송
             profile.create_new_activation_key(save=True)
 
-            # 활성화 메일 재전송 대신 바로 활성화
-            profile.activated = True
-            profile.save()
+            site = get_current_site(self.request)
+            profile.send_activation_email(site=site, request=self.request)
 
         except User.DoesNotExist:
             form.add_error('username', _('아이디 또는 비밀번호가 잘못되었습니다.'))

@@ -31,16 +31,37 @@
         color: var(--font-grey);
         line-height: 1.6;
     }
+    .message-links {
+        margin-top: 24px;
+        display: flex;
+        justify-content: center;
+        gap: 16px;
+        font-size: 14px;
+    }
+    .message-links a {
+        color: var(--primary-color);
+        text-decoration: none;
+        padding: 8px 16px;
+        border: 1px solid var(--border-secondary);
+        border-radius: 8px;
+    }
+    .message-links a:hover {
+        background-color: var(--light-bg);
+    }
 </style>
 
 {% endblock %}
 {% block body %}
     <div class="message-container">
-        <p class="message-title">{{ _('회원가입이 완료되었습니다!') }}</p>
+        <p class="message-title">{{ _('이메일 인증이 필요합니다') }}</p>
         <p class="message-text">
-            {{ _('입력하신 이메일로 인증 메일이 발송되었습니다.') }}<br>
+            {{ _('이메일 인증이 완료되지 않은 계정입니다.') }}<br>
             {{ _('이메일을 확인하여 계정을 활성화해주세요.') }}<br><br>
-            {{ _('메일이 도착하지 않는 경우, 스팸함을 확인해주세요.') }}
+            {{ _('메일이 도착하지 않은 경우, 아래 버튼을 이용해주세요.') }}
         </p>
+        <div class="message-links">
+            <a href="{{ url('resend_activation_email') }}">{{ _('활성화 메일 재전송') }}</a>
+            <a href="{{ url('email_change') }}">{{ _('이메일 변경') }}</a>
+        </div>
     </div>
 {% endblock %}
