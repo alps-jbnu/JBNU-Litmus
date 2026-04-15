@@ -5,6 +5,7 @@ from django.contrib import admin
 from django.core.exceptions import PermissionDenied
 from django.db import connection, transaction
 from django.db.models import Q, TextField
+from django import forms
 from django.forms import ModelForm, ModelMultipleChoiceField
 from django.http import Http404, HttpResponseRedirect, HttpResponse
 from django.shortcuts import get_object_or_404
@@ -101,6 +102,14 @@ class ContestProblemInline(SortableInlineAdminMixin, admin.TabularInline):
 
 
 class ContestForm(ModelForm):
+    penalty = forms.IntegerField(
+        label='오답 패널티 (분)',
+        help_text='오답 1회당 부여되는 패널티 시간 (분). 대회용 순위 형식에서만 적용됩니다.',
+        required=False,
+        initial=10,
+        min_value=0,
+    )
+
     def __init__(self, *args, **kwargs):
         super(ContestForm, self).__init__(*args, **kwargs)
         if 'rate_exclude' in self.fields:
@@ -122,12 +131,25 @@ class ContestForm(ModelForm):
         self.fields['curators'].help_text = 'TA나 협업자에게 과제/대회 관리 권한을 부여합니다. 제작자와 동일한 권한을 가지지만, 제작자로 표시되지 않습니다.'
         # self.fields['banned_users'].widget.can_add_related = False
         # self.fields['view_contest_scoreboard'].widget.can_add_related = False
-        
+
+        # Load penalty value from format_config
+        if self.instance and self.instance.pk and self.instance.format_config:
+            self.fields['penalty'].initial = self.instance.format_config.get('penalty', 10)
+
     def clean(self):
         cleaned_data = super(ContestForm, self).clean()
         # key값은 모델에 save될때, 자동으로 추가되므로 아무 값이나 넣어줘도 무관
         if 'key' not in cleaned_data:
             cleaned_data['key'] = self.instance.key
+
+        # Save penalty into format_config when format is ICPC
+        format_name = cleaned_data.get('format_name', self.instance.format_name if self.instance else 'default')
+        if format_name == 'icpc':
+            penalty_value = cleaned_data.get('penalty')
+            if penalty_value is None:
+                penalty_value = 10
+            self.instance.format_config = {'penalty': penalty_value}
+            cleaned_data['format_config'] = self.instance.format_config
         return cleaned_data
         # cleaned_data['banned_users'].filter(current_contest__contest=self.instance).update(current_contest=None)
 
@@ -194,8 +216,6 @@ class CombinedContestFilter(FieldListFilter):
 
         return queryset
     
-from django import forms
-
 class CustomActionForm(forms.Form):
     action = forms.ChoiceField(
         label="작업",   
@@ -218,7 +238,7 @@ class ContestAdmin(VersionAdmin):
         # (None, { 'classes':('collapse'),
         #     'fields': ('key', 'name' , 'authors', )}),
         ('기본', {'fields': ('key', 'name', 'authors', 'curators', 'subject', 'school')}),
-        (_('Settings'), {'fields': ('is_visible', 'is_practice',)}),
+        (_('Settings'), {'fields': ('is_visible', 'is_practice', 'format_name', 'penalty')}),
         (_('Scheduling'), {'fields': ('start_time', 'end_time')}),
         (_('Details'), {'fields': ('description', )}),
         # (_('Rating'), {'fields': ('is_rated', 'rate_all', )}),
@@ -328,7 +348,7 @@ class ContestAdmin(VersionAdmin):
         super().save_model(request, obj, form, change)
         # We need this flag because `save_related` deals with the inlines, but does not know if we have already rescored
         self._rescored = False
-        if form.changed_data and any(f in form.changed_data for f in ('format_config', 'format_name')):
+        if form.changed_data and any(f in form.changed_data for f in ('format_config', 'format_name', 'penalty')):
             self._rescore(obj.key)
             self._rescored = True
 
