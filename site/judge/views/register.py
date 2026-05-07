@@ -30,28 +30,161 @@ from judge.widgets import Select2MultipleWidget, Select2Widget
 
 bad_mail_regex = list(map(re.compile, settings.BAD_MAIL_PROVIDER_REGEX))
 
+
+def _build_registration_email(school, email_local, email_domain):
+    if not email_local:
+        return '', []
+
+    expected_domain = '@jbnu.ac.kr' if school and school.is_jbnu else '@gmail.com'
+    errors = []
+
+    if email_domain and email_domain != expected_domain:
+        if expected_domain == '@jbnu.ac.kr':
+            errors.append(gettext('전북대학교는 @jbnu.ac.kr 이메일만 사용 가능합니다.'))
+        else:
+            errors.append(gettext('외부 학교는 Gmail(@gmail.com)만 사용 가능합니다.'))
+
+    return f'{email_local}{expected_domain}', errors
+
+
+def _validate_registration_username(username, school):
+    errors = []
+
+    if not username:
+        return errors
+
+    field = CustomRegistrationForm.base_fields['username']
+    try:
+        field.clean(username)
+    except ValidationError as exc:
+        errors.extend(exc.messages)
+        return errors
+
+    if school and school.is_jbnu:
+        if len(username) not in (5, 9):
+            errors.append('학번을 올바르게 입력해주세요.')
+            return errors
+
+        if len(username) == 9:
+            year_part = username[2:4]
+            try:
+                year = int(year_part)
+            except ValueError:
+                errors.append('올바른 학번 형식이 아닙니다.')
+                return errors
+
+            if year < 15 or year > 26:
+                errors.append('15학번부터 26학번까지만 가입이 가능합니다.')
+
+    return errors
+
+
+def _validate_registration_email(email_local, school, email_domain):
+    errors = []
+
+    if not email_local:
+        return '', errors
+
+    field = CustomRegistrationForm.base_fields['email_local']
+    try:
+        email_local = field.clean(email_local)
+    except ValidationError as exc:
+        return '', exc.messages
+
+    email, domain_errors = _build_registration_email(school, email_local, email_domain)
+    errors.extend(domain_errors)
+    if errors:
+        return email, errors
+
+    if User.objects.filter(email=email).exists():
+        errors.append(gettext('해당 이메일은 이미 존재하는 이메일입니다.'))
+        return email, errors
+
+    domain = email.split('@')[-1].lower()
+    if domain in settings.BAD_MAIL_PROVIDERS or any(regex.match(domain) for regex in bad_mail_regex):
+        errors.append(gettext('Your email provider is not allowed due to history of abuse. Please use a reputable email provider.'))
+
+    return email, errors
+
+
+def _validate_registration_password(password, username='', first_name='', email=''):
+    if not password:
+        return []
+
+    validators = get_default_password_validators()
+    temp_user = User(username=username or '', first_name=first_name or '', email=email or '')
+
+    try:
+        validate_password(password, user=temp_user, password_validators=validators)
+    except ValidationError as exc:
+        return exc.messages
+
+    return []
+
 @csrf_exempt
 def validate_password_method(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
             password = data.get('password', '')
-            print(f"Received password for validation: {password}")  # 디버깅 메시지
-
-            validators = get_default_password_validators()
-            errors = []
-            
-            try:
-                validate_password(password, password_validators=validators)
-                return JsonResponse({'is_valid': True})
-            except ValidationError as e:
-                errors = [str(error) for error in e.messages]
-                print(f"Validation errors: {errors}")  # 디버깅 메시지
-                return JsonResponse({'errors': errors})
-        except Exception as e:
-            print(f"Unexpected error: {e}")  # 디버깅 메시지
+            username = data.get('username', '')
+            first_name = data.get('first_name', '')
+            email = data.get('email', '')
+            errors = _validate_registration_password(
+                password,
+                username=username,
+                first_name=first_name,
+                email=email,
+            )
+            if not errors:
+                return JsonResponse({'is_valid': True, 'errors': []})
+            return JsonResponse({'errors': errors})
+        except Exception:
             return JsonResponse({'errors': ['Internal Server Error']}, status=500)
     return JsonResponse({'errors': ['Invalid request method.']})
+
+
+@csrf_exempt
+def validate_registration_method(request):
+    if request.method != 'POST':
+        return JsonResponse({'errors': ['Invalid request method.']}, status=405)
+
+    try:
+        data = json.loads(request.body)
+    except (TypeError, ValueError):
+        return JsonResponse({'errors': ['Invalid request body.']}, status=400)
+
+    school_id = data.get('school')
+    school = None
+    if school_id:
+        school = School.objects.filter(pk=school_id, is_active=True).first()
+
+    username = (data.get('username') or '').strip()
+    first_name = (data.get('first_name') or '').strip()
+    email_local = (data.get('email_local') or '').strip()
+    email_domain = (data.get('email_domain') or '').strip()
+    password1 = data.get('password1') or ''
+    password2 = data.get('password2') or ''
+
+    email, email_errors = _validate_registration_email(email_local, school, email_domain)
+    password1_errors = _validate_registration_password(
+        password1,
+        username=username,
+        first_name=first_name,
+        email=email,
+    )
+
+    errors = {
+        'username': _validate_registration_username(username, school),
+        'email_local': email_errors,
+        'password1': password1_errors,
+        'password2': [],
+    }
+
+    if password2 and password1 != password2:
+        errors['password2'].append('비밀번호가 일치하지 않습니다.')
+
+    return JsonResponse({'errors': errors})
 
 
 class CustomRegistrationForm(RegistrationForm):
@@ -226,6 +359,7 @@ class RegistrationView(OldRegistrationView):
         kwargs['password_validators'] = get_default_password_validators()
         kwargs['tos_url'] = settings.TERMS_OF_SERVICE_URL
         kwargs['validate_password_url'] = reverse('validate_password')
+        kwargs['validate_registration_url'] = reverse('validate_registration')
         jbnu = School.objects.filter(is_jbnu=True).first()
         kwargs['jbnu_school_id'] = jbnu.id if jbnu else ''
         return super(RegistrationView, self).get_context_data(**kwargs)
