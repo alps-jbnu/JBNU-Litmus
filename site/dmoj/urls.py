@@ -19,7 +19,7 @@ from judge.views import TitledTemplateView, about, api, blog, comment, practices
 from judge.views.problem_data import ProblemDataView, ProblemSubmissionDiff, TestCasePreView, \
     problem_data_file, problem_init_view
 from judge.views.problem import check_problem_password
-from judge.views.register import ActivationView, RegistrationView, validate_password_method
+from judge.views.register import ActivationView, RegistrationView, validate_password_method, validate_registration_method
 from judge.views.select2 import ClassSelect2View, CommentSelect2View, ContestSelect2View, \
     ContestUserSearchSelect2View, ProblemSelect2View, \
     UserSearchSelect2View, UserSelect2View#, OrganizationSelect2View
@@ -37,6 +37,7 @@ register_patterns = [
     path('activate/<str:activation_key>/', ActivationView.as_view(), name='registration_activate'),
     path('register/', RegistrationView.as_view(), name='registration_register'),
     path('validate_password/', validate_password_method, name='validate_password'),
+    path('validate_registration/', validate_registration_method, name='validate_registration'),
     path('register/complete/',
          TitledTemplateView.as_view(template_name='registration/registration_complete.html',
                                     title=_('회원가입 완료')),
