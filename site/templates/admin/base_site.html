@@ -191,6 +191,15 @@
 </style>
 {% endblock %}
 
+{% block wpadmin_extrastyle %}
+<style>
+  #adminbarwrap #adminbar .wp-user-tools {
+    position: relative;
+    right: 210px;
+  }
+</style>
+{% endblock %}
+
 {% block title %}{{ title }} | {% wpadmin_render_custom_title %}{% endblock %}
 
 {% block branding %}
