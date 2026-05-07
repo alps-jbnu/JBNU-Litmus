@@ -367,9 +367,11 @@ class Problem(models.Model):
         if user.has_perm('judge.edit_all_problem'):
             queryset = cls.objects.all()
         else:
-            q = Q(authors=user.profile) | Q(curators=user.profile)
-            # q |= Q(is_organization_private=True, organizations__in=user.profile.admin_of.all())
+            editable_ids = cls.objects.filter(
+                Q(authors=user.profile) | Q(curators=user.profile),
+            ).values('id')
 
+            q = Q(id__in=editable_ids)
             if user.has_perm('judge.edit_public_problem'):
                 q |= Q(is_public=True)
 

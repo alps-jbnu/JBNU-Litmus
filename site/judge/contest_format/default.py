@@ -15,7 +15,7 @@ from judge.utils.timedelta import nice_repr
 
 @register_contest_format('default')
 class DefaultContestFormat(BaseContestFormat):
-    name = gettext_lazy('Default')
+    name = gettext_lazy('과제용')
 
     @classmethod
     def validate(cls, config):
