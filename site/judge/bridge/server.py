@@ -4,6 +4,7 @@ from socketserver import TCPServer, ThreadingMixIn
 
 class ThreadingTCPListener(ThreadingMixIn, TCPServer):
     allow_reuse_address = True
+    request_queue_size = 256
 
 
 class Server:
