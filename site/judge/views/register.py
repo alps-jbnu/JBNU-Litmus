@@ -231,25 +231,15 @@ class RegistrationView(OldRegistrationView):
         return super(RegistrationView, self).get_context_data(**kwargs)
 
     def register(self, form):
-        # super().register(form) 사용하지 않고 직접 유저 생성
-        cleaned_data = form.cleaned_data
-        username = cleaned_data['username']
-        password = cleaned_data['password1']
-        email = cleaned_data['email']
-        first_name = cleaned_data['first_name']
-
-        user = User.objects.create_user(
-            username=username,
-            password=password,
-            email=email,
-            first_name=first_name
-        )
-        user.is_active = True  # 메일 인증 없이 바로 활성화
-        user.save()
-
+        user = super(RegistrationView, self).register(form)
         profile, _ = Profile.objects.get_or_create(user=user, defaults={
             'language': Language.get_default_language(),
         })
+
+        cleaned_data = form.cleaned_data
+        user.first_name = cleaned_data['first_name']
+        user.save()
+
         profile.timezone = settings.DEFAULT_USER_TIME_ZONE
         profile.language = cleaned_data['language']
         profile.department = cleaned_data['department']
