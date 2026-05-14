@@ -11,6 +11,7 @@ from django.db import models
 from django.forms import ChoiceField, ModelChoiceField
 from django.shortcuts import render
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.translation import gettext, gettext_lazy as _, ngettext
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -29,6 +30,20 @@ from judge.widgets import Select2MultipleWidget, Select2Widget
 
 
 bad_mail_regex = list(map(re.compile, settings.BAD_MAIL_PROVIDER_REGEX))
+
+
+def _current_registration_student_year():
+    now = timezone.now()
+    if timezone.is_aware(now):
+        now = timezone.localtime(now)
+    return now.year
+
+
+def _registration_student_year_error(year):
+    max_year = _current_registration_student_year()
+    if year > max_year:
+        return '{:02d}학번까지만 가입이 가능합니다.'.format(max_year % 100)
+    return None
 
 
 def _build_registration_email(school, email_local, email_domain):
@@ -66,15 +81,16 @@ def _validate_registration_username(username, school):
             return errors
 
         if len(username) == 9:
-            year_part = username[2:4]
+            year_part = username[:4]
             try:
                 year = int(year_part)
             except ValueError:
                 errors.append('올바른 학번 형식이 아닙니다.')
                 return errors
 
-            if year < 15 or year > 26:
-                errors.append('15학번부터 26학번까지만 가입이 가능합니다.')
+            year_error = _registration_student_year_error(year)
+            if year_error:
+                errors.append(year_error)
 
     return errors
 
@@ -325,11 +341,12 @@ class CustomRegistrationForm(RegistrationForm):
             if len(username) != 5 and len(username) != 9:
                 raise forms.ValidationError('학번을 올바르게 입력해주세요.')
             if len(username) == 9:
-                year_part = username[2:4]
+                year_part = username[:4]
                 try:
                     year = int(year_part)
-                    if year < 15 or year > 26:
-                        raise forms.ValidationError('15학번부터 26학번까지만 가입이 가능합니다.')
+                    year_error = _registration_student_year_error(year)
+                    if year_error:
+                        raise forms.ValidationError(year_error)
                 except ValueError:
                     raise forms.ValidationError('올바른 학번 형식이 아닙니다.')
 
