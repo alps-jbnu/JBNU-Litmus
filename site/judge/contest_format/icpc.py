@@ -16,8 +16,8 @@ from judge.utils.timedelta import nice_repr
 
 @register_contest_format('icpc')
 class ICPCContestFormat(DefaultContestFormat):
-    name = gettext_lazy('ICPC')
-    config_defaults = {'penalty': 20}
+    name = gettext_lazy('대회용')
+    config_defaults = {'penalty': 10}
     config_validators = {'penalty': lambda x: x >= 0}
     """
         penalty: Number of penalty minutes each incorrect submission adds. Defaults to 20.
@@ -58,28 +58,33 @@ class ICPCContestFormat(DefaultContestFormat):
                         FROM judge_contestsubmission ccs LEFT OUTER JOIN
                              judge_submission csub ON (csub.id = ccs.submission_id)
                         WHERE ccs.problem_id = cp.id AND ccs.participation_id = %s AND ccs.points = MAX(cs.points)
-                ) AS `time`, cp.id AS `prob`
+                ) AS `time`, cp.id AS `prob`, cp.points AS `max_possible`
                 FROM judge_contestproblem cp INNER JOIN
                      judge_contestsubmission cs ON (cs.problem_id = cp.id AND cs.participation_id = %s) LEFT OUTER JOIN
                      judge_submission sub ON (sub.id = cs.submission_id)
                 GROUP BY cp.id
             """, (participation.id, participation.id))
 
-            for points, time, prob in cursor.fetchall():
+            for points, time, prob, max_possible in cursor.fetchall():
                 time = from_database_time(time)
                 dt = (time - participation.start).total_seconds()
 
+                # Only full score counts as solved; partial scores are treated as 0
+                if points < max_possible:
+                    points = 0
+
+                # Count total attempts (excluding IE/CE)
+                subs = participation.submissions.exclude(submission__result__isnull=True) \
+                                                .exclude(submission__result__in=['IE', 'CE']) \
+                                                .filter(problem_id=prob)
+                total_attempts = subs.count()
+
                 # Compute penalty
                 if self.config['penalty']:
-                    # An IE can have a submission result of `None`
-                    subs = participation.submissions.exclude(submission__result__isnull=True) \
-                                                    .exclude(submission__result__in=['IE', 'CE']) \
-                                                    .filter(problem_id=prob)
                     if points:
                         prev = subs.filter(submission__date__lte=time).count() - 1
                         penalty += prev * self.config['penalty'] * 60
                     else:
-                        # We should always display the penalty, even if the user has a score of 0
                         prev = subs.count()
                 else:
                     prev = 0
@@ -88,40 +93,40 @@ class ICPCContestFormat(DefaultContestFormat):
                     cumtime += dt
                     last = max(last, dt)
 
-                format_data[str(prob)] = {'time': dt, 'points': points, 'penalty': prev}
+                format_data[str(prob)] = {'time': dt, 'points': points, 'penalty': prev, 'attempts': total_attempts}
                 score += points
 
         participation.cumtime = cumtime + penalty
         participation.score = round(score, self.contest.points_precision)
-        participation.tiebreaker = last  # field is sorted from least to greatest
+        participation.tiebreaker = cumtime  # sum of solve times (exclude penalty); asc -> earlier wins on tie
         participation.format_data = format_data
         participation.save()
 
     def display_user_problem(self, participation, contest_problem):
         format_data = (participation.format_data or {}).get(str(contest_problem.id))
         if format_data:
-            penalty = format_html('<small style="color:red"> ({penalty})</small>',
-                                  penalty=floatformat(format_data['penalty'])) if format_data['penalty'] else ''
-            return format_html(
-                '<td class="{state}"><a href="{url}">{points}{penalty}<div class="solving-time">{time}</div></a></td>',
-                state=(('pretest-' if self.contest.run_pretests_only and contest_problem.is_pretested else '') +
-                       self.best_solution_state(format_data['points'], contest_problem.points)),
-                url=reverse('contest_user_submissions',
-                            args=[self.contest.key, participation.user.user.username, contest_problem.problem.code]),
-                points=floatformat(format_data['points']),
-                penalty=penalty,
-                time=nice_repr(timedelta(seconds=format_data['time']), 'noday'),
-            )
+            url = reverse('contest_user_submissions',
+                          args=[self.contest.key, participation.user.user.username, contest_problem.problem.code])
+
+            if format_data['points']:
+                # Solved: display time = first-solve time + accumulated penalty
+                total_seconds = format_data['time'] + format_data['penalty'] * self.config['penalty'] * 60
+                return format_html(
+                    '<td class="{state}"><a href="{url}">{points}'
+                    '<div class="solving-time">{time}</div></a></td>',
+                    state=(('pretest-' if self.contest.run_pretests_only and contest_problem.is_pretested else '') +
+                           self.best_solution_state(format_data['points'], contest_problem.points)),
+                    url=url,
+                    points=floatformat(format_data['points']),
+                    time=nice_repr(timedelta(seconds=total_seconds), 'noday'),
+                )
+            else:
+                return format_html('<td class="failed-score"><a href="{url}">-</a></td>', url=url)
         else:
             return mark_safe('<td></td>')
 
     def get_label_for_problem(self, index):
-        index += 1
-        ret = ''
-        while index > 0:
-            ret += chr((index - 1) % 26 + 65)
-            index = (index - 1) // 26
-        return ret[::-1]
+        return str(index + 1)
 
     def get_short_form_display(self):
         yield _('The maximum score submission for each problem will be used.')
