@@ -38,11 +38,17 @@
             // \subsubsection*{소제목} → <h5>소제목</h5>
             html = html.replace(/\\subsubsection\*\{([^}]+)\}/g, '<h5>$1</h5>');
 
+            // %\newline, \newline → 줄바꿈
+            html = html.replace(/%\s*\\newline\b/g, '<br>');
+            html = html.replace(/\\newline\b/g, '<br>');
+
             // \textbf{텍스트} → <strong>텍스트</strong>
-            html = html.replace(/\\textbf\{([^}]+)\}/g, '<strong>$1</strong>');
+            html = html.replace(/\\textbf\s*\{([^}]+)\}/g, '<strong>$1</strong>');
+            html = html.replace(/\\textbf\s+([^<\n]+)/g, '<strong>$1</strong>');
 
             // \textit{텍스트} → <em>텍스트</em>
-            html = html.replace(/\\textit\{([^}]+)\}/g, '<em>$1</em>');
+            html = html.replace(/\\textit\s*\{([^}]+)\}/g, '<em>$1</em>');
+            html = html.replace(/\\textit\s+([^<\n]+)/g, '<em>$1</em>');
 
             // \begin{itemize}...\end{itemize} → <ul>...</ul>
             html = html.replace(/\\begin\{itemize\}([\s\S]*?)\\end\{itemize\}/g, function(match, content) {
