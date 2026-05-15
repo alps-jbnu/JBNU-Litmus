@@ -303,6 +303,12 @@ class Problem(models.Model):
         if self.testers.filter(id=user.profile.id).exists():
             return True
 
+        # If user is an author/curator(TA) of any contest containing this problem.
+        if self.contests.filter(
+            Q(contest__authors=user.profile) | Q(contest__curators=user.profile),
+        ).exists():
+            return True
+
         return False
 
     def is_subs_manageable_by(self, user):
