@@ -638,7 +638,7 @@ SOCIAL_AUTH_PIPELINE = (
     'social_core.pipeline.user.get_username',
     'social_core.pipeline.social_auth.associate_by_email',
     # 최초 로그인 시 회원가입 하라는 메시지를 띄우는 파이프라인
-    'judge.custom_pipeline.check_existing_user', 
+    'judge.custom_pipeline.assign_school_on_keycloak_login',
     # 기존 파이프라인 - 기존 리트머스 계정이 없고 키클락 로그인 시도한 경우 인증 에러가 뜸
     # 'judge.social_auth.choose_username',
     #'social_core.pipeline.user.create_user',

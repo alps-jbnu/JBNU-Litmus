@@ -45,6 +45,7 @@ DATABASES = {
         'USER': 'dmoj',
         'PASSWORD': env('DB_PASSWORD'),
         'HOST': '127.0.0.1',
+        'CONN_MAX_AGE': 60,
         'OPTIONS': {
             'charset': 'utf8mb4',
             'sql_mode': 'STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION',
@@ -56,6 +57,7 @@ DATABASES = {
         'USER': 'dmoj',
         'PASSWORD': env('DB_PASSWORD'),
         'HOST': '127.0.0.1',
+        'CONN_MAX_AGE': 60,
         'OPTIONS': {
             'charset': 'utf8mb4',
             'sql_mode': 'STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION',

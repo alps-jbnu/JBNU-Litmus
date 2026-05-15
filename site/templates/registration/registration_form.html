@@ -164,6 +164,33 @@
 
         .form-field-error {
             color: red;
+            display: block;
+            text-align: left;
+            position: relative;
+            border-radius: 6px;
+        }
+
+        .validation-flash-overlay {
+            position: absolute;
+            inset: -4px -6px;
+            border-radius: 8px;
+            pointer-events: none;
+            animation: validation-flash-overlay 1.4s ease-out forwards;
+        }
+
+        @keyframes validation-flash-overlay {
+            0% {
+                background-color: rgba(255, 73, 73, 0.14);
+                box-shadow: 0 0 0 3px rgba(255, 73, 73, 0.2);
+            }
+            18% {
+                background-color: rgba(255, 73, 73, 0.14);
+                box-shadow: 0 0 0 3px rgba(255, 73, 73, 0.2);
+            }
+            100% {
+                background-color: rgba(255, 73, 73, 0);
+                box-shadow: 0 0 0 0 rgba(255, 73, 73, 0);
+            }
         }
 
         small {
@@ -186,9 +213,14 @@
         }
 
         ul.errorlist {
-            margin: 0px;
-            text-align: right;
-            list-style: none;
+            margin: 0;
+            padding-left: 22px;
+            text-align: left;
+            list-style: disc;
+        }
+
+        ul.errorlist li {
+            margin: 0;
         }
 
         .full-textfield {
@@ -239,12 +271,8 @@
             font-size: 14px;
             margin-top: 5px;
         }
-        .form-field-error {
-            display: flex;
-            text-align: left;
-        }
         .form-field-error ul.errorlist {
-            padding: 0;
+            padding-left: 22px;
         }
 
         input[type=text], input[type=password], input[type=email], input[type=number] {
@@ -297,39 +325,184 @@
         {{ recaptcha_init(LANGUAGE_CODE) }}
     {% endif %}
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            var passwordField = document.querySelector('#id_password1');
-            var passwordErrorList = document.querySelector('#password-error-list');
-            var validatePasswordUrl = '{{ validate_password_url }}';  // 템플릿 변수로 URL 설정
+        document.addEventListener('DOMContentLoaded', function() {
+            var form = document.querySelector('#edit-form');
+            var usernameField = document.querySelector('#id_username');
+            var password1Field = document.querySelector('#id_password1');
+            var password2Field = document.querySelector('#id_password2');
+            var firstNameField = document.querySelector('#id_first_name');
+            var emailLocalField = document.querySelector('#id_email_local');
+            var emailDomainField = document.querySelector('input[name=email_domain]');
+            var schoolField = document.querySelector('#id_school');
+            var submitButton = form.querySelector('button[type="submit"]');
+            var validateRegistrationUrl = '{{ validate_registration_url }}';
+            var requestTimer = null;
+            var errorContainerSelectors = [
+                '#username-error-container',
+                '#email-error-container',
+                '#password1-error-container',
+                '#password2-error-container'
+            ];
 
-            passwordField.addEventListener('input', function() {
-                var password = passwordField.value;
+            function renderErrors(containerId, errors) {
+                var container = document.querySelector(containerId);
+                if (!container) {
+                    return;
+                }
+
+                container.innerHTML = '';
+                if (!errors || !errors.length) {
+                    container.style.display = 'none';
+                    return;
+                }
+
+                var list = document.createElement('ul');
+                list.className = 'errorlist';
+                errors.forEach(function(error) {
+                    var item = document.createElement('li');
+                    item.textContent = error;
+                    list.appendChild(item);
+                });
+                container.appendChild(list);
+                container.style.display = 'flex';
+            }
+
+            function syncPasswordSummary(passwordErrors) {
+                var passwordErrorList = document.querySelector('#password-error-list');
+                var passwordErrorContainer = document.querySelector('#password1-error-container');
+                if (!passwordErrorList) {
+                    return;
+                }
+
+                passwordErrorList.innerHTML = '';
+                if (!password1Field.value || !passwordErrors.length) {
+                    passwordErrorList.style.display = 'none';
+                    if (passwordErrorContainer) {
+                        passwordErrorContainer.style.display = 'none';
+                    }
+                    return;
+                }
+
+                passwordErrors.forEach(function(error) {
+                    var li = document.createElement('li');
+                    li.textContent = error;
+                    passwordErrorList.appendChild(li);
+                });
+                passwordErrorList.style.display = 'block';
+                if (passwordErrorContainer) {
+                    passwordErrorContainer.style.display = 'block';
+                }
+            }
+
+            function hasErrors(errors) {
+                return ['username', 'email_local', 'password1', 'password2'].some(function(field) {
+                    return errors[field] && errors[field].length;
+                });
+            }
+
+            function flashErrorContainer(element) {
+                if (!element) {
+                    return;
+                }
+
+                var overlay = document.createElement('span');
+                overlay.className = 'validation-flash-overlay';
+                element.appendChild(overlay);
+                window.setTimeout(function() {
+                    if (overlay.parentNode) {
+                        overlay.parentNode.removeChild(overlay);
+                    }
+                }, 1400);
+            }
+
+            function flashVisibleErrors() {
+                errorContainerSelectors.forEach(function(selector) {
+                    var container = document.querySelector(selector);
+                    if (!container || container.style.display === 'none' || !container.textContent.trim()) {
+                        return;
+                    }
+
+                    flashErrorContainer(container);
+                });
+            }
+
+            function validateRegistrationFields(callback) {
                 var xhr = new XMLHttpRequest();
-                passwordErrorList.style.display = "block";
-                xhr.open('POST', validatePasswordUrl, true);
+                xhr.open('POST', validateRegistrationUrl, true);
                 xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
                 xhr.setRequestHeader('X-CSRFToken', '{{ csrf_token }}');
                 xhr.onreadystatechange = function() {
-                    if (xhr.readyState === 4) {
-                        console.log("AJAX 응답 상태 코드:", xhr.status);  // 로그 추가
-                        if (xhr.status === 200) {
-                            var response = JSON.parse(xhr.responseText);
-                            var errors = response.errors;
-                            passwordErrorList.innerHTML = '';
-                            if (errors.length > 0) {
-                                errors.forEach(function(error) {
-                                    var li = document.createElement('li');
-                                    li.textContent = error;
-                                    passwordErrorList.appendChild(li);
-                                });
-                            }
-                        } else {
-                            console.error("AJAX 요청 오류:", xhr.responseText);  // 오류 로그 추가
+                    if (xhr.readyState !== 4) {
+                        return;
+                    }
+
+                    if (xhr.status !== 200) {
+                        if (callback) {
+                            callback(false);
                         }
+                        return;
+                    }
+
+                    var response;
+                    try {
+                        response = JSON.parse(xhr.responseText);
+                    } catch (e) {
+                        if (callback) {
+                            callback(false);
+                        }
+                        return;
+                    }
+
+                    var errors = response.errors || {};
+                    renderErrors('#username-error-container', errors.username || []);
+                    renderErrors('#email-error-container', errors.email_local || []);
+                    renderErrors('#password2-error-container', errors.password2 || []);
+                    syncPasswordSummary(errors.password1 || []);
+                    if (callback) {
+                        callback(!hasErrors(errors));
                     }
                 };
-                xhr.send(JSON.stringify({password: password}));
+                xhr.send(JSON.stringify({
+                    username: usernameField.value,
+                    first_name: firstNameField.value,
+                    password1: password1Field.value,
+                    password2: password2Field.value,
+                    email_local: emailLocalField.value,
+                    email_domain: emailDomainField.value,
+                    school: schoolField.value
+                }));
+            }
+
+            function scheduleValidation() {
+                window.clearTimeout(requestTimer);
+                requestTimer = window.setTimeout(validateRegistrationFields, 150);
+            }
+
+            function handleRegistrationSubmit(event) {
+                if (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+
+                window.clearTimeout(requestTimer);
+                validateRegistrationFields(function(isValid) {
+                    if (isValid) {
+                        form.submit();
+                    } else {
+                        flashVisibleErrors();
+                    }
+                });
+            }
+
+            [usernameField, password1Field, password2Field, firstNameField, emailLocalField].forEach(function(field) {
+                field.addEventListener('input', scheduleValidation);
             });
+
+            schoolField.addEventListener('change', scheduleValidation);
+            form.addEventListener('submit', handleRegistrationSubmit);
+            if (submitButton) {
+                submitButton.addEventListener('click', handleRegistrationSubmit);
+            }
         });
     </script>
     <script>
@@ -346,6 +519,7 @@
                 var domain = isJbnu ? '@jbnu.ac.kr' : '@gmail.com';
                 $('span.email_domain').text(domain);
                 $('input[name=email_domain]').val(domain);
+                document.querySelector('#id_email_local').dispatchEvent(new Event('input', { bubbles: true }));
             });
             $('#id_school').trigger('change');
         });
@@ -358,10 +532,8 @@
         <form id="edit-form" action="" method="post" class="form-area">
             {% csrf_token %}
             <!-- 아이디 -->
-            <span class="fullwidth{% if form.username.errors %}-error{% endif %}">{{ form.username }}</span>
-            {% if form.username.errors %}
-                <div class="form-field-error">{{ form.username.errors }}</div>
-            {% endif %}
+            <span class="fullwidth">{{ form.username }}</span>
+            <div class="form-field-error" id="username-error-container" style="display:none;"></div>
             <!-- 비밀번호 -->
             {#
             <!-- <div style="display: none" class="pass-req alert alert-info">
@@ -372,47 +544,30 @@
                 </ul>
             </div> -->
             #}
-            <span class="fullwidth{% if form.password1.errors %}-error{% endif %}">
+            <span class="fullwidth">
                 {{ form.password1 }}
-                <ul id="password-error-list" style="color: red ; display: none;"></ul>
             </span>
-            {% if form.password1.errors %}
-                <div class="form-field-error">{{ form.password1.errors }}</div>
-            {% endif %}
-            <span class="fullwidth{% if form.password2.errors %}-error{% endif %}">{{ form.password2 }}</span>
-            {% if form.password2.errors %}
-                <div class="form-field-error">비밀번호가 일치하지 않습니다.</div>
-            {% endif %}
+            <div class="form-field-error" id="password1-error-container" style="display:none;">
+                <ul id="password-error-list" class="errorlist" style="color: red; display: none;"></ul>
+            </div>
+            <span class="fullwidth">{{ form.password2 }}</span>
+            <div class="form-field-error" id="password2-error-container" style="display:none;"></div>
             <!-- 이름 -->
-            <span class="fullwidth{% if form.first_name.errors %}-error{% endif %}">{{ form.first_name }}</span>
-            {% if form.first_name.errors %}
-                <div class="form-field-error">{{ form.first_name.errors }}</div>
-            {% endif %}
+            <span class="fullwidth">{{ form.first_name }}</span>
             <!-- 학교 선택 -->
             <span class="fullwidth">{{ form.school }}</span>
-            {% if form.school.errors %}
-                <div class="form-field-error">{{ form.school.errors }}</div>
-            {% endif %}
             <!-- 이메일 -->
-            <span class="email-input-wrapper{% if form.email_local.errors %}-error{% endif %}">
+            <span class="email-input-wrapper">
                 {{ form.email_local }}
                 {{ form.email_domain }}
                 <span class="email_domain">@jbnu.ac.kr</span>
             </span>
-            {% if form.email_local.errors %}
-                <div class="form-field-error">{{ form.email_local.errors }}</div>
-            {% endif %}
-            {% if form.non_field_errors() %}
-                <div class="form-field-error">{{ form.non_field_errors() }}</div>
-            {% endif %}
+            <div class="form-field-error" id="email-error-container" style="display:none;"></div>
             <!-- 국가선택 -->
             <!-- 언어선택 -->
             <span class="fullwidth">{{ form.language }}</span>
             <!-- 학과선택 -->
             <span class="fullwidth">{{ form.department }}</span>
-            {% if form.department.errors %}
-                <div class="form-field-error">{{ form.department.errors }}</div>
-            {% endif %}
             <!-- 조직선택 -->
             {#
             <!-- {% if form.organizations %}
