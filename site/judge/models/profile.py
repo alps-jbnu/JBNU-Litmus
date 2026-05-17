@@ -3,6 +3,7 @@ import hmac
 import json
 import secrets
 import struct
+from datetime import timedelta
 from operator import mul
 
 import pyotp
@@ -190,6 +191,9 @@ class School(models.Model):
         verbose_name_plural = _('학교')
 
 class Profile(models.Model):
+    LOGIN_FAILURE_LIMIT = 5
+    LOGIN_LOCK_DURATION = timedelta(minutes=10)
+
     user = models.OneToOneField(User, verbose_name=_('user associated'), on_delete=models.CASCADE)
     about = models.TextField(verbose_name=_('self-description'), null=True, blank=True)
     timezone = models.CharField(max_length=50, verbose_name=_('time zone'), choices=TIMEZONE,
@@ -256,6 +260,8 @@ class Profile(models.Model):
     data_last_downloaded = models.DateTimeField(verbose_name=_('last data download time'), null=True, blank=True)
     username_display_override = models.CharField(max_length=100, blank=True, verbose_name=_('display name override'),
                                                  help_text=_('Name displayed in place of username.'))
+    failed_login_attempts = models.PositiveSmallIntegerField(default=0, verbose_name=_('failed login attempts'))
+    login_locked_until = models.DateTimeField(null=True, blank=True, verbose_name=_('login locked until'))
 
     # @cached_property
     # def organization(self):
@@ -350,6 +356,43 @@ class Profile(models.Model):
         return False
 
     check_totp_code.alters_data = True
+
+    ## 계정이 잠겨있는지 확인
+    def is_login_locked(self, now=None):
+        now = now or timezone.now()
+        return self.login_locked_until is not None and self.login_locked_until > now
+
+    ## 5번 실패 했을 시, 초기화 하는 메서드
+    def clear_login_failures(self):
+        if self.failed_login_attempts or self.login_locked_until is not None:
+            self.failed_login_attempts = 0
+            self.login_locked_until = None
+            self.save(update_fields=['failed_login_attempts', 'login_locked_until'])
+
+    clear_login_failures.alters_data = True
+
+    ## 로그인을 5번 이상 틀릴 시 10분 잠금 
+    def register_login_failure(self, now=None):
+        now = now or timezone.now()
+
+        if self.is_login_locked(now=now):
+            return True
+
+        self.failed_login_attempts += 1
+        update_fields = ['failed_login_attempts']
+
+        if self.failed_login_attempts >= self.LOGIN_FAILURE_LIMIT:
+            self.failed_login_attempts = 0
+            self.login_locked_until = now + self.LOGIN_LOCK_DURATION
+            update_fields.append('login_locked_until')
+        elif self.login_locked_until is not None:
+            self.login_locked_until = None
+            update_fields.append('login_locked_until')
+
+        self.save(update_fields=update_fields)
+        return self.is_login_locked(now=now)
+
+    register_login_failure.alters_data = True
 
     def get_absolute_url(self):
         return reverse('user_page', args=(self.user.username,))

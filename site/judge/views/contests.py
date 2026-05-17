@@ -69,7 +69,9 @@ import logging
 @csrf_exempt
 def verify_contest_code(request, contest_key):
     data = json.loads(request.body)
-    entered_code = data.get('code')
+    entered_code = data.get('code') or ''
+    if len(entered_code) > 30:
+        return JsonResponse({'valid': False, 'error': '비정상적인 접근입니다.'})
     user = request.user  # 로그인된 사용자
     profile = request.profile  # 사용자의 프로필
 
@@ -916,7 +918,7 @@ class ContestAccessDenied(Exception):
 
 
 class ContestAccessCodeForm(forms.Form):
-    access_code = forms.CharField(max_length=255)
+    access_code = forms.CharField(max_length=30)
 
     def __init__(self, *args, **kwargs):
         super(ContestAccessCodeForm, self).__init__(*args, **kwargs)
