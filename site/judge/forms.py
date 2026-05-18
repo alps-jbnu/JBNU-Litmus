@@ -30,6 +30,7 @@ from importlib import import_module
 from django.conf import settings
 from django.contrib.auth.forms import AuthenticationForm
 from bleach import clean
+from django.utils import timezone
 
 User = get_user_model()
 
@@ -96,14 +97,15 @@ class ProfileForm(ModelForm):
         about = self.cleaned_data['about']
         if len(about) > 1000:
             raise ValidationError(_('자기소개는 1000자 이내로 작성해주세요.'))
-        
+
+        allowed_tags = [tag for tag in settings.BLEACH_USER_SAFE_TAGS if tag != 'style']
         sanitized_about = clean(
             about,
-            tags=settings.BLEACH_USER_SAFE_TAGS,
+            tags=allowed_tags,
             attributes=settings.BLEACH_USER_SAFE_ATTRS,
             strip=True
         )
-        
+
         return sanitized_about
 
     # def clean(self):
@@ -194,10 +196,13 @@ class CustomAuthenticationForm(AuthenticationForm):
             "아이디 또는 비밀번호가 잘못되었습니다."
         ),
         'inactive': _("인증이 완료되지 않은 계정입니다."),
+        'account_locked': _("로그인 시도가 너무 많습니다. 10분 후 다시 시도해 주세요."),
     }
 
     def __init__(self, *args, **kwargs):
         super(CustomAuthenticationForm, self).__init__(*args, **kwargs)
+        self.login_failure_status_message = ''
+        self.login_lock_notice_message = _('아이디 또는 비밀번호를 5회 이상 잘못 입력하면\n10분 동안 로그인이 잠깁니다.')
         self.fields['username'].widget.attrs.update({
             'placeholder': _('아이디를 입력해 주세요'),
             'autocomplete': 'off'
@@ -220,19 +225,139 @@ class CustomAuthenticationForm(AuthenticationForm):
         password = self.cleaned_data.get('password')
 
         if username is not None and password:
+            profile = self._get_profile(username)
+            if profile is not None and profile.is_login_locked():
+                self.add_error('username', self.error_messages['account_locked'])
+                return self.cleaned_data
+            if profile is None and self._is_session_login_locked(username):
+                self.add_error('username', self.error_messages['account_locked'])
+                return self.cleaned_data
+
+            authenticated_user = None
+            authenticated_backend_path = None
             for backend_path in settings.AUTHENTICATION_BACKENDS:
                 backend = self._get_backend(backend_path)
                 if backend:
                     user = self._try_login_with_backend(backend, username, password)
                     if user:
-                        self.confirm_login_allowed(user)
-                        user.backend = backend_path
-                        self.user_cache = user
+                        authenticated_user = user
+                        authenticated_backend_path = backend_path
                         break
+
+            if authenticated_user is not None:
+                self.confirm_login_allowed(authenticated_user)
+                authenticated_user.backend = authenticated_backend_path
+                self.user_cache = authenticated_user
+                profile = profile or getattr(authenticated_user, 'profile', None)
+                if profile is not None:
+                    profile.clear_login_failures()
+                self._clear_session_login_failures(username)
             else:
-                self.add_error('username', self.error_messages['invalid_login'])
+                if profile is not None:
+                    if profile.register_login_failure():
+                        self.add_error('username', self.error_messages['account_locked'])
+                        return self.cleaned_data
+                    self.login_failure_status_message = self._get_login_failure_status_message(profile)
+                    self.add_error('username', self._get_invalid_login_message(profile))
+                else:
+                    current_attempt, is_locked = self._register_session_login_failure(username)
+                    if is_locked:
+                        self.add_error('username', self.error_messages['account_locked'])
+                        return self.cleaned_data
+                    self.login_failure_status_message = self._format_login_failure_status_message(current_attempt)
+                    self.add_error('username', self._format_invalid_login_message(current_attempt))
 
         return self.cleaned_data
+
+    def _get_invalid_login_message(self, profile):
+        if profile is None:
+            return self.error_messages['invalid_login']
+
+        return self._format_invalid_login_message(profile.failed_login_attempts)
+
+    def _get_login_failure_status_message(self, profile):
+        if profile is None:
+            return ''
+
+        return self._format_login_failure_status_message(profile.failed_login_attempts)
+
+    def _format_invalid_login_message(self, current_attempt):
+        return self.error_messages['invalid_login']
+
+    def _format_login_failure_status_message(self, current_attempt):
+        return _('현재 로그인 실패: %(current_attempt)d/%(max_attempts)d회') % {
+            'current_attempt': current_attempt,
+            'max_attempts': Profile.LOGIN_FAILURE_LIMIT,
+        }
+
+    def _session_login_failures(self):
+        if not hasattr(self, 'request') or self.request is None:
+            return {}
+        return self.request.session.setdefault('login_failure_tracker', {})
+
+    def _session_login_failure_key(self, username):
+        return (username or '').strip().lower()
+
+    def _is_session_login_locked(self, username):
+        if not hasattr(self, 'request') or self.request is None:
+            return False
+
+        tracker = self._session_login_failures()
+        data = tracker.get(self._session_login_failure_key(username))
+        if not data:
+            return False
+
+        locked_until = data.get('locked_until')
+        if not locked_until:
+            return False
+
+        return timezone.now().timestamp() < locked_until
+
+    def _register_session_login_failure(self, username):
+        if not hasattr(self, 'request') or self.request is None:
+            return 0, False
+
+        tracker = self._session_login_failures()
+        key = self._session_login_failure_key(username)
+        now_ts = timezone.now().timestamp()
+        data = tracker.get(key, {'count': 0, 'locked_until': None})
+
+        if data.get('locked_until') and now_ts < data['locked_until']:
+            return 0, True
+
+        data['count'] = data.get('count', 0) + 1
+        data['locked_until'] = None
+
+        if data['count'] >= Profile.LOGIN_FAILURE_LIMIT:
+            data = {
+                'count': 0,
+                'locked_until': (timezone.now() + Profile.LOGIN_LOCK_DURATION).timestamp(),
+            }
+            tracker[key] = data
+            self.request.session.modified = True
+            return 0, True
+
+        tracker[key] = data
+        self.request.session.modified = True
+        return data['count'], False
+
+    def _clear_session_login_failures(self, username):
+        if not hasattr(self, 'request') or self.request is None:
+            return
+
+        tracker = self.request.session.get('login_failure_tracker', {})
+        key = self._session_login_failure_key(username)
+        if key in tracker:
+            del tracker[key]
+            self.request.session.modified = True
+
+    def _get_profile(self, username):
+        user = User.objects.filter(username=username).first()
+        if user is None:
+            return None
+
+        profile, _ = Profile.objects.get_or_create(user=user)
+        return profile
 
     def _get_backend(self, backend_path):
         try:
