@@ -19,9 +19,9 @@ def latex_to_markdown(text):
     # (Mistune block_math 규칙이 $$...$$를 \[...\]로 변환, MathJax가 렌더링)
     text = re.sub(r'(?m)^\$\n([\s\S]+?)\n\$$', lambda m: '$$\n%s\n$$' % m.group(1), text)
 
-    # BOJ/Polygon 계열에서 쓰이는 %\newline, \newline → Markdown hard line break
-    text = re.sub(r'%\s*\\newline\b', '  \n', text)
-    text = re.sub(r'\\newline\b', '  \n', text)
+    # BOJ/Polygon 계열에서 쓰이는 %\newline, \newline → HTML line break
+    text = re.sub(r'%\s*\\newline\b', '<br>', text)
+    text = re.sub(r'\\newline\b', '<br>', text)
 
     # \section*{제목} → ## 제목
     text = re.sub(r'\\section\*\{([^}]+)\}', r'## \1', text)
