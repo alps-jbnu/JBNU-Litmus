@@ -540,6 +540,9 @@ class ContestParticipation(models.Model):
 
     def recompute_results(self):
         with transaction.atomic():
+            # 같은 participation에 대한 동시 recompute를 직렬화하여 race condition 방지
+            ContestParticipation.objects.select_for_update().filter(id=self.id).get()
+
             # problem_first_solved 필드가 없는 경우 초기화
             if self.problem_first_solved is None:
                 self.problem_first_solved = {}

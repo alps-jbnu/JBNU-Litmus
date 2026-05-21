@@ -48,7 +48,7 @@
     }
 
     .auth-flow-form h2 {
-        margin-bottom: 20px;
+        margin-bottom: 0;
         font-size: 24px;
         font-weight: 400;
     }
@@ -230,6 +230,36 @@
         margin-top: 10px;
         margin-bottom: 0;
     }
+
+    .login-lock-notice {
+        display: block;
+        align-self: stretch;
+        width: 100%;
+        max-width: 100%;
+        margin: -4px 0 4px;
+        font-size: 14px;
+        font-weight: 400;
+        color: var(--font-basic-black);
+        text-align: center;
+        white-space: pre-line;
+    }
+
+    .login-failure-status {
+        align-self: flex-start;
+        margin-bottom: 4px;
+        font-size: 14px;
+        font-weight: 400;
+        color: #D64545;
+    }
+
+    #form-errors.invalid_login,
+    #form-errors.invalid_login .error {
+        color: #D64545;
+    }
+
+    #form-errors.invalid_login .error {
+        white-space: pre-line;
+    }
 </style>
 {% endblock %}
 
@@ -252,15 +282,14 @@
     <form action="" method="post" class="form-area">
         {% csrf_token %}
 
+        <div class="login-lock-notice">
+            {{ form.login_lock_notice_message }}
+        </div>
         <!-- 관리자 로그인 -->
         {% if form.errors %}
             {% for field, errors in form.errors.items() %}
                 {% for error in errors %}
-                    {% if error == form.error_messages.invalid_login %}
-                    <div id="form-errors" class="invalid_login">
-                        <p class="error">{{ error }}</p>
-                    </div>
-                    {% elif error == form.error_messages.inactive %}
+                    {% if error == form.error_messages.inactive %}
                     <div id="form-errors" class="inactive">
                         <p class="error">{{ error }}</p>
                         <p>도움이 필요하신가요?</p>
@@ -270,14 +299,18 @@
                         </p>
                     </div>
                     {% else %}
-                    <div id="form-errors">
+                    <div id="form-errors" class="invalid_login">
                         <p class="error">{{ error }}</p>
                     </div>
                     {% endif %}
                 {% endfor %}
             {% endfor %}
         {% endif %}
-
+        {% if form.login_failure_status_message %}
+        <div class="form-links login-failure-status">
+            {{ form.login_failure_status_message }}
+        </div>
+        {% endif %}
         {{ form.username }}
         {{ form.password }}
         <div class="form-links">

@@ -1,6 +1,6 @@
 <head>
-  <link 
-    rel="stylesheet" 
+  <link
+    rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
     crossorigin="anonymous"
@@ -8,7 +8,7 @@
 </head>
 <form method="get">
   {% for key, value in request.GET.items %}
-      {% if key != 'is_public' and key != 'encryption_status' and key != 'authors' and key != 'name' and key != 'code' %}
+      {% if key not in spec.filter_keys %}
       <input type="hidden" name="{{ key }}" value="{{ value }}">
       {% endif %}
   {% endfor %}
@@ -35,11 +35,31 @@
 <label>
   문제 코드
   <input type="text" name="code" value="{{ request.GET.code}}" placeholder="문제 코드">
-</label>  
+</label>
 <label>
   문제 이름
   <input type="text" name="name" value="{{ request.GET.name }}" placeholder="문제 이름">
-</label>  
+</label>
+<label>
+  문제 그룹
+  <select name="problem_group">
+    <option value="">전체</option>
+    {% for value, label in spec.grouped_group_lookups.0 %}
+      <option value="{{ value }}" {% if request.GET.problem_group == value %}selected{% endif %}>
+        {{ label }}
+      </option>
+    {% endfor %}
+    {% for parent_label, children in spec.grouped_group_lookups.1 %}
+      <optgroup label="{{ parent_label }}">
+        {% for value, label in children %}
+          <option value="{{ value }}" {% if request.GET.problem_group == value %}selected{% endif %}>
+            {{ label }}
+          </option>
+        {% endfor %}
+      </optgroup>
+    {% endfor %}
+  </select>
+</label>
   <button type="submit" style="font-size: 14px;">
   <i class="fa-solid fa-filter"></i> 필터 적용
 </button>

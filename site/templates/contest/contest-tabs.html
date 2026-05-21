@@ -46,12 +46,68 @@
                 submitContestCode();
             });
         }
+        const joinContestCodeInput = document.getElementById("join-contest-code");
+        if (joinContestCodeInput) {
+            joinContestCodeInput.addEventListener("input", function() {
+                isJoinContestCodeLengthValid(this.value);
+            });
+            joinContestCodeInput.addEventListener("beforeinput", function(event) {
+                if (event.inputType && event.inputType.indexOf("delete") === 0) {
+                    toggleJoinContestCodeError("");
+                    return;
+                }
+                if (willJoinContestCodeExceedLimit(this, event.data || "")) {
+                    event.preventDefault();
+                    toggleJoinContestCodeError("비정상적인 접근입니다.");
+                }
+            });
+            joinContestCodeInput.addEventListener("paste", function(event) {
+                const pastedText = (event.clipboardData || window.clipboardData).getData("text");
+                if (willJoinContestCodeExceedLimit(this, pastedText)) {
+                    event.preventDefault();
+                    toggleJoinContestCodeError("비정상적인 접근입니다.");
+                }
+            });
+        }
     });
+
+    function toggleJoinContestCodeError(message) {
+        const errorElement = document.getElementById("join-contest-code-error");
+        if (!errorElement) return;
+        if (message) {
+            errorElement.textContent = message;
+            errorElement.style.display = "block";
+        } else {
+            errorElement.textContent = "";
+            errorElement.style.display = "none";
+        }
+    }
+
+    function isJoinContestCodeLengthValid(code) {
+        if (code.length > 30) {
+            toggleJoinContestCodeError("비정상적인 접근입니다.");
+            return false;
+        }
+        toggleJoinContestCodeError("");
+        return true;
+    }
+
+    function willJoinContestCodeExceedLimit(input, insertedText) {
+        const currentValue = input.value || "";
+        const selectionStart = input.selectionStart == null ? currentValue.length : input.selectionStart;
+        const selectionEnd = input.selectionEnd == null ? currentValue.length : input.selectionEnd;
+        const nextValue = currentValue.slice(0, selectionStart) + insertedText + currentValue.slice(selectionEnd);
+        return nextValue.length > 30;
+    }
 
     // 코드 검증 함수
     function submitContestCode() {
         const contestKey = document.getElementById("join-contest-modal").getAttribute('data-contest-key');
         const enteredCode = document.getElementById("join-contest-code").value;
+
+        if (!isJoinContestCodeLengthValid(enteredCode)) {
+            return;
+        }
 
         // 입력된 코드 검증을 위한 API 요청
         fetch(`/api/contest/${contestKey}/verify-code/`, {
@@ -227,10 +283,17 @@
         text-align: center;
         font-size: 30px;
     }
-    #join-contest-code, #join-contest-submit {
+    #join-contest-code {
         width: 266px;
         height: 40px;
         border-radius: 8px;
+        margin-bottom: 0;
+    }
+    #join-contest-submit {
+        width: 266px;
+        height: 40px;
+        border-radius: 8px;
+        margin-top: 12px;
         margin-bottom: 15px;
     }
     #contest-code-title {
@@ -274,7 +337,8 @@
         </div>
         <div class="modal_content">
             <div id="contest-code-title">대회 참여 코드</div>
-            <input type="text" id="join-contest-code" name="join-contest-code" maxlength="100" placeholder="대회 참여 코드를 입력해 주세요">
+            <input type="text" id="join-contest-code" name="join-contest-code" maxlength="30" placeholder="대회 참여 코드를 입력해 주세요">
+            <div id="join-contest-code-error" style="display:none;color:red;margin:4px 0 0 0;line-height:1.3;text-align:left;">비정상적인 접근입니다.</div>
             <button id="join-contest-submit" type="submit">대회 입장하기</button>
         </div>
     </div>
