@@ -92,3 +92,4 @@ site/resources/static/jplag_reports/*
 
 #settings.py (dev/service)
 site/dmoj/settings.py
+site/dmoj/local_settings.py
