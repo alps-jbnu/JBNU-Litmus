@@ -4,20 +4,26 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex">
-    <title>{{ code }} - Litmus</title>
-    <script{% if csp_nonce %} nonce="{{ csp_nonce }}"{% endif %}>
-        document.addEventListener('DOMContentLoaded', function () {
-            var backButton = document.getElementById('back-button');
-            if (!backButton) return;
-            backButton.addEventListener('click', function () {
-                if (window.history.length > 1) {
-                    window.history.back();
-                } else {
-                    window.location.href = '/';
-                }
+    <title>{{ title }} - Litmus</title>
+    {% if auto_redirect_home %}
+        <script{% if csp_nonce %} nonce="{{ csp_nonce }}"{% endif %}>
+            window.location.replace('/');
+        </script>
+    {% else %}
+        <script{% if csp_nonce %} nonce="{{ csp_nonce }}"{% endif %}>
+            document.addEventListener('DOMContentLoaded', function () {
+                var backButton = document.getElementById('back-button');
+                if (!backButton) return;
+                backButton.addEventListener('click', function () {
+                    if (window.history.length > 1) {
+                        window.history.back();
+                    } else {
+                        window.location.href = '/';
+                    }
+                });
             });
-        });
-    </script>
+        </script>
+    {% endif %}
     <style>
         :root {
             color-scheme: light;
@@ -26,7 +32,6 @@
             --litmus-muted: #5f6368;
             --litmus-line: #e4e7eb;
             --litmus-bg: #f8fafc;
-            --litmus-danger: #b42318;
         }
 
         * {
@@ -52,7 +57,7 @@
         }
 
         main {
-            width: min(100%, 460px);
+            width: min(100%, 420px);
             border: 1px solid var(--litmus-line);
             border-top: 4px solid var(--litmus-accent);
             border-radius: 8px;
@@ -65,14 +70,6 @@
             margin: 0 0 18px;
             color: var(--litmus-ink);
             font-size: 18px;
-            font-weight: 700;
-            letter-spacing: 0;
-        }
-
-        .code {
-            margin: 0 0 8px;
-            color: var(--litmus-danger);
-            font-size: 14px;
             font-weight: 700;
             letter-spacing: 0;
         }
@@ -123,56 +120,30 @@
         }
 
         button:focus,
-        a:focus,
-        summary:focus {
+        a:focus {
             outline: 3px solid rgba(82, 133, 196, 0.35);
             outline-offset: 2px;
-        }
-
-        details {
-            margin-top: 22px;
-            border-top: 1px solid var(--litmus-line);
-            padding-top: 16px;
-        }
-
-        summary {
-            color: var(--litmus-muted);
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 700;
-        }
-
-        pre {
-            overflow: auto;
-            max-height: 320px;
-            margin: 12px 0 0;
-            border-radius: 6px;
-            background: #111827;
-            color: #f9fafb;
-            padding: 14px;
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-            font-size: 12px;
-            line-height: 1.45;
-            white-space: pre-wrap;
         }
     </style>
 </head>
 <body>
     <main>
         <p class="brand">Litmus</p>
-        <p class="code">{{ code }} error</p>
-        <h1>요청을 처리하지 못했습니다.</h1>
-        <p>{{ description|default('일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.') }}</p>
+        <h1>페이지를 찾을 수 없습니다.</h1>
+        <p>{{ message }}</p>
+        {% if auto_redirect_home %}
+            <noscript>
+                <p>JavaScript가 꺼져 있으면 아래 버튼을 눌러 홈으로 이동하세요.</p>
+            </noscript>
+        {% endif %}
         <div class="actions">
-            <button id="back-button" type="button">이전 페이지로 돌아가기</button>
+            {% if not auto_redirect_home %}
+                <button id="back-button" type="button">
+                    이전 페이지로 돌아가기
+                </button>
+            {% endif %}
             <a href="/">홈으로 이동</a>
         </div>
-        {% if show_traceback and traceback %}
-            <details>
-                <summary>오류 상세 정보</summary>
-                <pre>{{ traceback }}</pre>
-            </details>
-        {% endif %}
     </main>
 </body>
 </html>
