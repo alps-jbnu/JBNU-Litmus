@@ -232,15 +232,10 @@
     }
 
     .login-lock-notice {
-        display: block;
-        align-self: stretch;
-        width: 100%;
-        max-width: 100%;
-        margin: -4px 0 4px;
+        margin: 4px 0 0;
         font-size: 14px;
         font-weight: 400;
-        color: var(--font-basic-black);
-        text-align: center;
+        color: inherit;
         white-space: pre-line;
     }
 
@@ -255,6 +250,10 @@
     #form-errors.invalid_login,
     #form-errors.invalid_login .error {
         color: #D64545;
+    }
+
+    #form-errors.invalid_login {
+        padding-bottom: 0.75em;
     }
 
     #form-errors.invalid_login .error {
@@ -282,9 +281,6 @@
     <form action="" method="post" class="form-area">
         {% csrf_token %}
 
-        <div class="login-lock-notice">
-            {{ form.login_lock_notice_message }}
-        </div>
         <!-- 관리자 로그인 -->
         {% if form.errors %}
             {% for field, errors in form.errors.items() %}
@@ -301,6 +297,9 @@
                     {% else %}
                     <div id="form-errors" class="invalid_login">
                         <p class="error">{{ error }}</p>
+                        {% if error == form.error_messages.invalid_login %}
+                        <p class="login-lock-notice">{{ form.login_lock_notice_message }}</p>
+                        {% endif %}
                     </div>
                     {% endif %}
                 {% endfor %}
