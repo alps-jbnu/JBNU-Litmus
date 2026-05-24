@@ -193,7 +193,7 @@ class ProfileAdmin(NoBatchDeleteMixin, VersionAdmin):
     list_filter = [
         ('id', CombinedProfileFilter),
     ]
-    actions = ('recalculate_points',)
+    actions = ('recalculate_points', 'clear_login_lock')
     actions_on_top = True
     actions_on_bottom = True
     form = ProfileForm
@@ -294,6 +294,16 @@ class ProfileAdmin(NoBatchDeleteMixin, VersionAdmin):
                                             '%d users had scores recalculated.',
                                             count) % count)
     recalculate_points.short_description = _('Recalculate scores')
+
+    def clear_login_lock(self, request, queryset):
+        count = 0
+        for profile in queryset:
+            profile.clear_login_failures()
+            count += 1
+        self.message_user(request, ngettext('%d user had login lock cleared.',
+                                            '%d users had login locks cleared.',
+                                            count) % count)
+    clear_login_lock.short_description = _('10분 로그인 잠금 해제')
 
     def get_form(self, request, obj=None, **kwargs):
         form = super(ProfileAdmin, self).get_form(request, obj, **kwargs)
