@@ -281,27 +281,15 @@
     <form action="" method="post" class="form-area">
         {% csrf_token %}
 
-        <!-- 관리자 로그인 -->
         {% if form.errors %}
             {% for field, errors in form.errors.items() %}
                 {% for error in errors %}
-                    {% if error == form.error_messages.inactive %}
-                    <div id="form-errors" class="inactive">
-                        <p class="error">{{ error }}</p>
-                        <p>도움이 필요하신가요?</p>
-                        <p>
-                            <a href="{{ url('email_change') }}">이메일 변경</a> |
-                            <a href="{{ url('resend_activation_email') }}">활성화 메일 재전송</a>
-                        </p>
-                    </div>
-                    {% else %}
                     <div id="form-errors" class="invalid_login">
                         <p class="error">{{ error }}</p>
                         {% if error == form.error_messages.invalid_login %}
                         <p class="login-lock-notice">{{ form.login_lock_notice_message }}</p>
                         {% endif %}
                     </div>
-                    {% endif %}
                 {% endfor %}
             {% endfor %}
         {% endif %}
