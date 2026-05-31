@@ -129,6 +129,10 @@ class ContestForm(ModelForm):
         # curators 필드 레이블 변경
         self.fields['curators'].label = 'TA'
         self.fields['curators'].help_text = 'TA나 협업자에게 과제/대회 관리 권한을 부여합니다. 제작자와 동일한 권한을 가지지만, 제작자로 표시되지 않습니다.'
+        self.fields['late_submission_deadline'].label = '지각 제출 마감 시각'
+        self.fields['late_submission_deadline'].help_text = (
+            '과제에서만 사용됩니다. 비워두면 정규 마감 이후 제출을 받지 않습니다.'
+        )
         # self.fields['banned_users'].widget.can_add_related = False
         # self.fields['view_contest_scoreboard'].widget.can_add_related = False
 
@@ -150,6 +154,15 @@ class ContestForm(ModelForm):
                 penalty_value = 10
             self.instance.format_config = {'penalty': penalty_value}
             cleaned_data['format_config'] = self.instance.format_config
+
+        late_submission_deadline = cleaned_data.get('late_submission_deadline')
+        end_time = cleaned_data.get('end_time')
+        is_practice = cleaned_data.get('is_practice')
+        if late_submission_deadline:
+            if not is_practice:
+                self.add_error('late_submission_deadline', '지각 제출 마감 시각은 과제에서만 설정할 수 있습니다.')
+            if end_time and late_submission_deadline <= end_time:
+                self.add_error('late_submission_deadline', '지각 제출 마감 시각은 종료 시각보다 늦어야 합니다.')
         return cleaned_data
         # cleaned_data['banned_users'].filter(current_contest__contest=self.instance).update(current_contest=None)
 
@@ -239,7 +252,7 @@ class ContestAdmin(VersionAdmin):
         #     'fields': ('key', 'name' , 'authors', )}),
         ('기본', {'fields': ('key', 'name', 'authors', 'curators', 'subject', 'school')}),
         (_('Settings'), {'fields': ('is_visible', 'is_practice', 'format_name', 'penalty')}),
-        (_('Scheduling'), {'fields': ('start_time', 'end_time')}),
+        (_('Scheduling'), {'fields': ('start_time', 'end_time', 'late_submission_deadline')}),
         (_('Details'), {'fields': ('description', )}),
         # (_('Rating'), {'fields': ('is_rated', 'rate_all', )}),
         # (_('Access'), {'fields': ('access_code', 'organizations', 'classes',
@@ -248,7 +261,8 @@ class ContestAdmin(VersionAdmin):
                                    'view_contest_submissions')}),
         # (_('Justice'), {'fields': ('banned_users',)}),
     )
-    list_display = ('name', 'visibility_status', 'practice_status', 'rating_status', 'start_time_display', 'end_time_display', 'time_limit',
+    list_display = ('name', 'visibility_status', 'practice_status', 'rating_status', 'start_time_display', 'end_time_display',
+                    'late_submission_deadline_display', 'time_limit',
                     'user_count')
     search_fields = ('key', 'name')
     inlines = [ContestProblemInline]
@@ -645,6 +659,15 @@ class ContestAdmin(VersionAdmin):
     
     end_time_display.admin_order_field = 'end_time'
     end_time_display.short_description = _('종료 시각')
+
+    def late_submission_deadline_display(self, obj):
+        """지각 제출 마감 시간을 한국 형식으로 표시"""
+        if obj.late_submission_deadline:
+            return obj.late_submission_deadline.strftime('%Y. %m. %d. %H:%M')
+        return '-'
+
+    late_submission_deadline_display.admin_order_field = 'late_submission_deadline'
+    late_submission_deadline_display.short_description = _('지각 제출 마감 시각')
 
 
 class ContestParticipationForm(ModelForm):
