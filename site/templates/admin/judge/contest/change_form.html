@@ -44,29 +44,29 @@
 
         /* Custom CSS for positioning the modal button */
         .open-modal-btn {
-            margin-left: 15px;  
+            margin-left: 15px;
         }
         .hidden {
             display: none;
         }
         td.field-points{
-            text-align: center; 
-            vertical-align: middle; 
+            text-align: center;
+            vertical-align: middle;
             height: 100%;
         }
         td.field-partial{
-            text-align: center; 
-            vertical-align: middle; 
+            text-align: center;
+            vertical-align: middle;
             height: 100%;
         }
         td.field-rejudge_column{
-            text-align: center; 
-            vertical-align: middle; 
+            text-align: center;
+            vertical-align: middle;
             height: 100%;
         }
         td.delete{
-            text-align: center; 
-            vertical-align: middle; 
+            text-align: center;
+            vertical-align: middle;
             height: 100%;
         }
         .original{
@@ -79,7 +79,7 @@
             width: 100%;
             background-position: center;
         }
-        #content .inline-group .tabular 
+        #content .inline-group .tabular
         tr.has_original td{
             padding-top:8px;
         }
@@ -110,9 +110,9 @@
                     var height = 700;
                     var left = (screen.width - width) / 2;
                     var top = (screen.height - height) / 2;
-                    
+
                     var popupOptions = "width=" + width + ",height=" + height + ",left=" + left + ",top=" + top + ",scrollbars=yes,resizable=yes,status=no,menubar=no,toolbar=no";
-                    
+
                     const popupWindow = window.open("{% url 'admin:problem_manager' original.pk %}", "ProblemManager", popupOptions);
 
                     // 주기적으로 팝업 창의 상태를 확인하여 닫혔는지 체크
@@ -134,7 +134,7 @@
                 if (h2) {
                     var button = createButton();
                     h2.appendChild(button);
-                    
+
                 }
                 // 삭제 버튼 오버라이딩
                 var fieldset = inlineGroup.querySelector('fieldset.module');
@@ -183,10 +183,10 @@
         document.addEventListener("DOMContentLoaded", function() {
             // 대상이 되는 모든 th 요소를 선택합니다.
             const thElements = document.querySelectorAll("th");
-    
+
             // 대상이 되는 모든 td 요소를 선택합니다.
             const tdElements = document.querySelectorAll("td.field-points, td.field-partial, td.delete");
-    
+
             // th 요소에 스타일 적용
             thElements.forEach(function(th) {
                 const text = th.textContent.trim();
@@ -198,25 +198,51 @@
                     th.classList.add('hidden');
                 }
             });
-    
-            
+
+
         });
     </script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             // class="required"인 th 요소를 선택합니다.
             const thElement = document.querySelector("th.required");
-    
+
             // 선택된 요소가 존재하고, colspan 속성이 있을 경우
             if (thElement && thElement.hasAttribute('colspan')) {
                 thElement.setAttribute('colspan', '1');  // 원하는 값으로 colspan을 변경합니다.
             }
         });
     </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const isPracticeInput = document.getElementById("id_is_practice");
+            const lateSubmissionRow = document.querySelector(".form-row.field-late_submission_deadline");
+
+            function setLateSubmissionVisible() {
+                if (!isPracticeInput || !lateSubmissionRow) {
+                    return;
+                }
+
+                const enabled = isPracticeInput.checked;
+                lateSubmissionRow.classList.toggle("hidden", !enabled);
+                lateSubmissionRow.querySelectorAll("input, select, textarea").forEach(function(input) {
+                    input.disabled = !enabled;
+                    if (!enabled) {
+                        input.value = "";
+                    }
+                });
+            }
+
+            setLateSubmissionVisible();
+            if (isPracticeInput) {
+                isPracticeInput.addEventListener("change", setLateSubmissionVisible);
+            }
+        });
+    </script>
 {% endblock extrahead %}
 
 {% block after_field_sets %}{{ block.super }}
-    {% if original and original.is_rated and original.ended and perms.judge.contest_rating %}
+    {% if original and original.is_rated and original.is_submission_closed and perms.judge.contest_rating %}
         <a style="display: none" title="{% trans "Rate" %}" href="{% url 'admin:judge_contest_rate' original.pk %}"
            class="button rerate-link">
             <i class="fa fa-lg fa-signal"></i>

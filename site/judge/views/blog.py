@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.db.models import Count, Max
+from django.db.models import Count, Max, Q
 from django.http import Http404
 from django.urls import reverse
 from django.utils import timezone
@@ -63,11 +63,15 @@ class PostList(ListView):
         }
 
         now = timezone.now()
+        context['now'] = now
 
         visible_contests = Contest.get_visible_contests(self.request.user).filter(is_visible=True) \
                                   .order_by('start_time')
 
-        context['current_contests'] = visible_contests.filter(start_time__lte=now, end_time__gt=now)
+        context['current_contests'] = visible_contests.filter(start_time__lte=now).filter(
+            Q(end_time__gt=now) |
+            Q(is_practice=True, late_submission_deadline__gte=now)
+        )
         context['future_contests'] = visible_contests.filter(start_time__gt=now)
 
         if self.request.user.is_authenticated:
@@ -113,4 +117,3 @@ class PostView(TitleMixin, CommentedDetailView):
         if not post.can_see(self.request.user):
             raise Http404()
         return post
-    

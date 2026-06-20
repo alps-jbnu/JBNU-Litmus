@@ -244,7 +244,11 @@
                                     <a href="{{ url('contest_view', contest.key) }}">{{ contest.name }}</a>
                                 </div>
                                 <div class="time">
-                                    {{ _('Ends in %(countdown)s.', countdown=as_countdown(contest.time_before_end)) }}
+                                    {% if contest.is_late_submission_window_open(now) %}
+                                        지각 제출
+                                    {% else %}
+                                        {{ _('Ends in %(countdown)s.', countdown=as_countdown(contest.time_before_end)) }}
+                                    {% endif %}
                                 </div>
                             </div>
                         {% endfor %}
@@ -313,7 +317,7 @@
         </a>
     <a class="alarm notice-alert">
         📢시스템 점검안내 : 7월 12일(금) 오전 2시부터 4시까지 서버 점검이 예정되어 있습니다. 점검 시간 동안 서비스 이용이 제한될 수 있습니다.
-    </a> 
+    </a>
     <a class="alarm notice-alert">
         🛠️시스템 점검안내 : 7월 12일(금) 오전 2시부터 4시까지 서버 점검이 예정되어 있습니다. 점검 시간 동안 서비스 이용이 제한될 수 있습니다.
     </a>    -->
