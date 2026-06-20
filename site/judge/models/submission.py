@@ -119,6 +119,15 @@ class Submission(models.Model):
     def is_locked(self):
         return self.locked_after is not None and self.locked_after < timezone.now()
 
+    @property
+    def is_late_submission(self):
+        contest = self.contest_object
+        if contest is None or not contest.is_practice:
+            return False
+        if contest.late_submission_deadline is None:
+            return False
+        return contest.end_time < self.date <= contest.late_submission_deadline
+
     def judge(self, *args, rejudge=False, force_judge=False, rejudge_user=None, **kwargs):
         if force_judge or not self.is_locked:
             if rejudge:
