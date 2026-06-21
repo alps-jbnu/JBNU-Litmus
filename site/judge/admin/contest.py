@@ -133,7 +133,7 @@ class ContestForm(ModelForm):
         self.fields['is_practice'].help_text = '체크하면 과제로 처리되며 지각 제출 마감 시각을 설정할 수 있습니다.'
         self.fields['late_submission_deadline'].label = '지각 제출 마감 시각'
         self.fields['late_submission_deadline'].help_text = (
-            '과제에서만 사용됩니다. 비워두면 정규 마감 이후 제출을 받지 않습니다.'
+            '과제에서만 사용됩니다. 비워두거나 종료 시각보다 빠르거나 같으면 지각 제출을 받지 않습니다.'
         )
         # self.fields['banned_users'].widget.can_add_related = False
         # self.fields['view_contest_scoreboard'].widget.can_add_related = False
@@ -163,8 +163,8 @@ class ContestForm(ModelForm):
         if late_submission_deadline:
             if not is_practice:
                 self.add_error('late_submission_deadline', '지각 제출 마감 시각은 과제에서만 설정할 수 있습니다.')
-            if end_time and late_submission_deadline <= end_time:
-                self.add_error('late_submission_deadline', '지각 제출 마감 시각은 종료 시각보다 늦어야 합니다.')
+            elif end_time and late_submission_deadline <= end_time:
+                cleaned_data['late_submission_deadline'] = None
         return cleaned_data
         # cleaned_data['banned_users'].filter(current_contest__contest=self.instance).update(current_contest=None)
 

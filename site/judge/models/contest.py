@@ -233,9 +233,16 @@ class Contest(models.Model):
 
     #자동으로 key값을 채우도록
     def save(self, *args, **kwargs):
+        self.normalize_late_submission_deadline()
         super(Contest, self).save(*args, **kwargs)
         self.key = str(self.id)
+        self.normalize_late_submission_deadline()
         super(Contest, self).save(*args, **kwargs)
+
+    def normalize_late_submission_deadline(self):
+        if (self.late_submission_deadline is not None and self.end_time and
+                self.late_submission_deadline <= self.end_time):
+            self.late_submission_deadline = None
 
     def clean(self):
         # Django will complain if you didn't fill in start_time or end_time, so we don't have to.
@@ -244,8 +251,7 @@ class Contest(models.Model):
         if self.late_submission_deadline is not None:
             if not self.is_practice:
                 raise ValidationError(_('Late submission deadline can only be set for assignments.'))
-            if self.end_time and self.late_submission_deadline <= self.end_time:
-                raise ValidationError(_('Late submission deadline must be after the regular end time.'))
+            self.normalize_late_submission_deadline()
         self.format_class.validate(self.format_config)
 
         try:
