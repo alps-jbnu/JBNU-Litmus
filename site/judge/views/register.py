@@ -31,6 +31,9 @@ from judge.widgets import Select2MultipleWidget, Select2Widget
 
 bad_mail_regex = list(map(re.compile, settings.BAD_MAIL_PROVIDER_REGEX))
 
+JBNU_EMAIL_DOMAIN = '@jbnu.ac.kr'
+EXTERNAL_SCHOOL_EMAIL_DOMAIN = '@g.jbedu.kr'
+
 
 def _current_registration_student_year():
     now = timezone.now()
@@ -50,14 +53,16 @@ def _build_registration_email(school, email_local, email_domain):
     if not email_local:
         return '', []
 
-    expected_domain = '@jbnu.ac.kr' if school and school.is_jbnu else '@gmail.com'
+    expected_domain = JBNU_EMAIL_DOMAIN if school and school.is_jbnu else EXTERNAL_SCHOOL_EMAIL_DOMAIN
     errors = []
 
     if email_domain and email_domain != expected_domain:
-        if expected_domain == '@jbnu.ac.kr':
-            errors.append(gettext('전북대학교는 @jbnu.ac.kr 이메일만 사용 가능합니다.'))
+        if expected_domain == JBNU_EMAIL_DOMAIN:
+            errors.append(gettext('전북대학교는 %(domain)s 이메일만 사용 가능합니다.') % {'domain': JBNU_EMAIL_DOMAIN})
         else:
-            errors.append(gettext('외부 학교는 Gmail(@gmail.com)만 사용 가능합니다.'))
+            errors.append(gettext('외부 학교는 %(domain)s 이메일만 사용 가능합니다.') % {
+                'domain': EXTERNAL_SCHOOL_EMAIL_DOMAIN,
+            })
 
     return f'{email_local}{expected_domain}', errors
 
@@ -311,15 +316,19 @@ class CustomRegistrationForm(RegistrationForm):
         email_domain = cleaned_data.get('email_domain')
 
         if school and school.is_jbnu:
-            email = f"{email_local}@jbnu.ac.kr"
-            if email_domain != '@jbnu.ac.kr':
+            email = f"{email_local}{JBNU_EMAIL_DOMAIN}"
+            if email_domain != JBNU_EMAIL_DOMAIN:
                 raise forms.ValidationError(
-                    gettext('전북대학교는 @jbnu.ac.kr 이메일만 사용 가능합니다.'), code='email')
+                    gettext('전북대학교는 %(domain)s 이메일만 사용 가능합니다.') % {
+                        'domain': JBNU_EMAIL_DOMAIN,
+                    }, code='email')
         else:
-            email = f"{email_local}@gmail.com"
-            if email_domain != '@gmail.com':
+            email = f"{email_local}{EXTERNAL_SCHOOL_EMAIL_DOMAIN}"
+            if email_domain != EXTERNAL_SCHOOL_EMAIL_DOMAIN:
                 raise forms.ValidationError(
-                    gettext('외부 학교는 Gmail(@gmail.com)만 사용 가능합니다.'), code='email')
+                    gettext('외부 학교는 %(domain)s 이메일만 사용 가능합니다.') % {
+                        'domain': EXTERNAL_SCHOOL_EMAIL_DOMAIN,
+                    }, code='email')
 
         cleaned_data['email'] = email
 
@@ -379,6 +388,8 @@ class RegistrationView(OldRegistrationView):
         kwargs['validate_registration_url'] = reverse('validate_registration')
         jbnu = School.objects.filter(is_jbnu=True).first()
         kwargs['jbnu_school_id'] = jbnu.id if jbnu else ''
+        kwargs['jbnu_email_domain'] = JBNU_EMAIL_DOMAIN
+        kwargs['external_school_email_domain'] = EXTERNAL_SCHOOL_EMAIL_DOMAIN
         return super(RegistrationView, self).get_context_data(**kwargs)
 
     def register(self, form):
