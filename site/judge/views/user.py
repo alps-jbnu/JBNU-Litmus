@@ -167,7 +167,21 @@ class UserPage(TitleMixin, UserMixin, DetailView):
 #             self.request.session['password_pwned'] = False
 #         return super().form_valid(form)
 
-class CustomLoginView(LoginView):
+class InactiveAccountRedirectMixin:
+    def form_invalid(self, form):
+        if self._has_inactive_error(form):
+            return HttpResponseRedirect(reverse('activation_required'))
+        return super().form_invalid(form)
+
+    def _has_inactive_error(self, form):
+        return any(
+            error.code == 'inactive'
+            for errors in form.errors.as_data().values()
+            for error in errors
+        )
+
+
+class CustomLoginView(InactiveAccountRedirectMixin, LoginView):
     template_name = 'registration/login.html'
     extra_context = {'title': gettext_lazy('Login')}
     authentication_form = CustomAuthenticationForm
@@ -185,7 +199,7 @@ class CustomLoginView(LoginView):
         return super().form_valid(form)
 
 # 관리자 로그인 추가 
-class AdminLoginView(LoginView):
+class AdminLoginView(InactiveAccountRedirectMixin, LoginView):
     template_name = 'registration/login-admin.html'
     extra_context = {'title': gettext_lazy('Login')}
     authentication_form = CustomAuthenticationForm
@@ -681,7 +695,17 @@ class IdFindCompleteView(TemplateView):
 
 # 이메일 변경 클래스 (활성화가 되지 않은 계정)   
 User = get_user_model()
-class EmailChangeView(FormView):
+class AdminOnlyMixin:
+    def dispatch(self, request, *args, **kwargs):
+        if not (
+            request.user.is_authenticated and
+            (request.user.is_staff or request.user.is_superuser)
+        ):
+            raise Http404
+        return super().dispatch(request, *args, **kwargs)
+
+
+class EmailChangeView(AdminOnlyMixin, FormView):
     title = _('이메일 변경')
     form_class = EmailChangeForm
     template_name = 'registration/email_change.html'  
@@ -719,7 +743,7 @@ class EmailChangeView(FormView):
         return super().form_valid(form)
 
 # 이메일 변경 완료 클래스 (활성화가 되지 않은 계정)  
-class EmailChangeCompleteView(TemplateView):
+class EmailChangeCompleteView(AdminOnlyMixin, TemplateView):
     template_name = 'registration/email_change_complete.html'
     title = _('이메일 변경 완료')
 
