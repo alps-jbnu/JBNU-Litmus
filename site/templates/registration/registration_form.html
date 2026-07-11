@@ -516,7 +516,7 @@
             var jbnuSchoolId = '{{ jbnu_school_id }}';
             $('#id_school').on('change', function() {
                 var isJbnu = (String(this.value) === String(jbnuSchoolId));
-                var domain = isJbnu ? '@jbnu.ac.kr' : '@gmail.com';
+                var domain = isJbnu ? '{{ jbnu_email_domain }}' : '{{ external_school_email_domain }}';
                 $('span.email_domain').text(domain);
                 $('input[name=email_domain]').val(domain);
                 document.querySelector('#id_email_local').dispatchEvent(new Event('input', { bubbles: true }));

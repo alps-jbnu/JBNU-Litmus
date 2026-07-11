@@ -180,7 +180,7 @@ class School(models.Model):
     short_name = models.CharField(max_length=20, verbose_name='약칭')
     school_type = models.CharField(max_length=20, choices=SCHOOL_TYPES)
     is_jbnu = models.BooleanField(default=False, verbose_name='전북대 여부',
-                                  help_text='True이면 @jbnu.ac.kr 이메일 강제, False이면 @gmail.com 강제')
+                                  help_text='True이면 @jbnu.ac.kr 이메일 강제, False이면 @g.jbedu.kr 강제')
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
