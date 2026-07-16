@@ -216,6 +216,7 @@
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const isPracticeInput = document.getElementById("id_is_practice");
+            const formatNameInput = document.getElementById("id_format_name");
             const lateSubmissionRow = document.querySelector(".form-row.field-late_submission_deadline");
 
             function setLateSubmissionVisible() {
@@ -223,7 +224,7 @@
                     return;
                 }
 
-                const enabled = isPracticeInput.checked;
+                const enabled = isPracticeInput.checked && (!formatNameInput || formatNameInput.value === "default");
                 lateSubmissionRow.classList.toggle("hidden", !enabled);
                 lateSubmissionRow.querySelectorAll("input, select, textarea").forEach(function(input) {
                     input.disabled = !enabled;
@@ -236,6 +237,9 @@
             setLateSubmissionVisible();
             if (isPracticeInput) {
                 isPracticeInput.addEventListener("change", setLateSubmissionVisible);
+            }
+            if (formatNameInput) {
+                formatNameInput.addEventListener("change", setLateSubmissionVisible);
             }
         });
     </script>
