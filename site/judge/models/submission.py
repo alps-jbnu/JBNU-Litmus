@@ -183,87 +183,13 @@ class Submission(models.Model):
         except AttributeError:
             return
 
-        if not contest or not contest.problem or not contest.participation:
-            return
-
-        # 로깅 설정
-        import logging
-        logger = logging.getLogger('contest_time_debug')
-        logger.setLevel(logging.DEBUG)
-        
-        try:
-            # 로그 핸들러 추가
-            import os
-            handler = logging.FileHandler('/tmp/submission_debug.log', mode='a')
-            handler.setLevel(logging.DEBUG)
-            logger.addHandler(handler)
-        except Exception as e:
-            # 로그 파일 생성 실패 시 무시 (권한 문제 등)
-            pass
-        
         contest_problem = contest.problem
-        participation = contest.participation
-        
-        logger.debug(f'처리 중인 제출: submission_id={self.id}, contest_id={participation.contest_id}, problem_id={contest_problem.id}')
-        
-        # 현재 제출에 대한 점수 계산
-        new_points = round(self.case_points / self.case_total * contest_problem.points
-                           if self.case_total > 0 else 0, 3)
-        if not contest_problem.partial and new_points != contest_problem.points:
-            new_points = 0
-        
-        logger.debug(f'계산된 점수: {new_points}, 문제 ID: {contest_problem.id}')
-
-        # 현재 제출의 점수 저장
-        contest.points = new_points
+        contest.points = round(self.case_points / self.case_total * contest_problem.points
+                               if self.case_total > 0 else 0, 3)
+        if not contest_problem.partial and contest.points != contest_problem.points:
+            contest.points = 0
         contest.save()
-        
-        # # 이 시점에서 각 문제별 최대 점수를 구해서 총점을 직접 계산
-        # from django.db import connection
-        # with connection.cursor() as cursor:
-        #     cursor.execute('''
-        #         SELECT 
-        #             problem_id, 
-        #             MAX(points) as max_points
-        #         FROM 
-        #             judge_contestsubmission 
-        #         WHERE 
-        #             participation_id = %s 
-        #         GROUP BY 
-        #             problem_id
-        #     ''', [participation.id])
-            
-        #     # 각 문제별 최대 점수 추출
-        #     problem_max_points = {}
-        #     for problem_id, max_points in cursor.fetchall():
-        #         problem_max_points[problem_id] = max_points
-                
-        #     logger.debug(f'각 문제별 최대 점수: {problem_max_points}')
-        
-        #     # 총점 계산 (각 문제별 최대 점수의 합)
-        #     total_score = sum(problem_max_points.values())
-        #     logger.debug(f'계산된 총점: {total_score}')
-            
-        #     # 직접 총점 업데이트 (중요: 이 부분에서 직접 총점을 덮어쓰기)
-        #     cursor.execute('''
-        #         UPDATE 
-        #             judge_contestparticipation 
-        #         SET 
-        #             score = %s 
-        #         WHERE 
-        #             id = %s
-        #     ''', [total_score, participation.id])
-            
-        #     logger.debug(f'총점 업데이트 완료: {participation.id} -> {total_score}')
-        participation.recompute_results()
-        logger.debug(f'참가자 결과 재계산 완료: {participation.id}')
-        
-        # 로그 핸들러 제거
-        try:
-            logger.removeHandler(handler)
-            handler.close()
-        except Exception as e:
-            pass
+        contest.participation.recompute_results()
 
     update_contest.alters_data = True
 

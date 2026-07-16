@@ -240,8 +240,10 @@ class Contest(models.Model):
         super(Contest, self).save(*args, **kwargs)
 
     def normalize_late_submission_deadline(self):
-        if (self.late_submission_deadline is not None and self.end_time and
-                self.late_submission_deadline <= self.end_time):
+        if not self.is_practice or self.format_name != 'default':
+            self.late_submission_deadline = None
+        elif (self.late_submission_deadline is not None and self.end_time and
+              self.late_submission_deadline <= self.end_time):
             self.late_submission_deadline = None
 
     def clean(self):
@@ -249,8 +251,8 @@ class Contest(models.Model):
         if self.start_time and self.end_time and self.start_time >= self.end_time:
             raise ValidationError('What is this? A contest that ended before it starts?')
         if self.late_submission_deadline is not None:
-            if not self.is_practice:
-                raise ValidationError(_('Late submission deadline can only be set for assignments.'))
+            if not self.is_practice or self.format_name != 'default':
+                raise ValidationError(_('Late submission deadline can only be set for assignment format.'))
             self.normalize_late_submission_deadline()
         self.format_class.validate(self.format_config)
 

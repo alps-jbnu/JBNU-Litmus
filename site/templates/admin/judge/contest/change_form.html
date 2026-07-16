@@ -89,6 +89,12 @@
         th.hidden {
             display: none;
         }
+        .late-submission-unavailable-notice {
+            color: #7a4f00;
+        }
+        .late-submission-unavailable-notice .help {
+            margin-top: 0;
+        }
         /* #content .form-row.field-key {
             display: none;
         } */
@@ -218,14 +224,22 @@
             const isPracticeInput = document.getElementById("id_is_practice");
             const formatNameInput = document.getElementById("id_format_name");
             const lateSubmissionRow = document.querySelector(".form-row.field-late_submission_deadline");
+            if (!isPracticeInput || !lateSubmissionRow) {
+                return;
+            }
+
+            const lateSubmissionUnavailableNotice = document.createElement("div");
+            lateSubmissionUnavailableNotice.className = "form-row late-submission-unavailable-notice hidden";
+            lateSubmissionUnavailableNotice.innerHTML = (
+                '<div><p class="help">대회용 순위 형식에서는 지각 제출 종료 시각을 설정할 수 없습니다. ' +
+                '과제 지각 제출을 사용하려면 순위 형식을 과제용으로 변경하세요.</p></div>'
+            );
 
             function setLateSubmissionVisible() {
-                if (!isPracticeInput || !lateSubmissionRow) {
-                    return;
-                }
-
                 const enabled = isPracticeInput.checked && (!formatNameInput || formatNameInput.value === "default");
+                const unavailable = isPracticeInput.checked && formatNameInput && formatNameInput.value !== "default";
                 lateSubmissionRow.classList.toggle("hidden", !enabled);
+                lateSubmissionUnavailableNotice.classList.toggle("hidden", !unavailable);
                 lateSubmissionRow.querySelectorAll("input, select, textarea").forEach(function(input) {
                     input.disabled = !enabled;
                     if (!enabled) {
@@ -234,6 +248,7 @@
                 });
             }
 
+            lateSubmissionRow.insertAdjacentElement("afterend", lateSubmissionUnavailableNotice);
             setLateSubmissionVisible();
             if (isPracticeInput) {
                 isPracticeInput.addEventListener("change", setLateSubmissionVisible);

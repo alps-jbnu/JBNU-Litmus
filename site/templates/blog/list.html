@@ -245,7 +245,8 @@
                                 </div>
                                 <div class="time">
                                     {% if contest.is_late_submission_window_open(now) %}
-                                        지각 제출
+                                        {% set late_submission_deadline=contest.late_submission_deadline|date("Y년 n월 j일 G:i") %}
+                                        지각 제출 종료: {{ late_submission_deadline }}
                                     {% else %}
                                         {{ _('Ends in %(countdown)s.', countdown=as_countdown(contest.time_before_end)) }}
                                     {% endif %}

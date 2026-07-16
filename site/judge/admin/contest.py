@@ -130,8 +130,11 @@ class ContestForm(ModelForm):
         self.fields['curators'].label = 'TA'
         self.fields['curators'].help_text = 'TA나 협업자에게 과제/대회 관리 권한을 부여합니다. 제작자와 동일한 권한을 가지지만, 제작자로 표시되지 않습니다.'
         self.fields['is_practice'].label = '과제 여부'
-        self.fields['is_practice'].help_text = '체크하면 과제로 처리되며 지각 제출 마감 시각을 설정할 수 있습니다.'
-        self.fields['late_submission_deadline'].label = '지각 제출 마감 시각'
+        self.fields['is_practice'].help_text = (
+            '체크하면 과제, 체크 해제하면 대회로 처리됩니다. '
+            '지각 제출 종료 시각은 과제용 순위 형식에서만 설정할 수 있습니다.'
+        )
+        self.fields['late_submission_deadline'].label = '지각 제출 종료 시각'
         self.fields['late_submission_deadline'].help_text = (
             '과제에서만 사용됩니다. 비워두거나 종료 시각보다 빠르거나 같으면 지각 제출을 받지 않습니다.'
         )
@@ -161,8 +164,8 @@ class ContestForm(ModelForm):
         end_time = cleaned_data.get('end_time')
         is_practice = cleaned_data.get('is_practice')
         if late_submission_deadline:
-            if not is_practice:
-                self.add_error('late_submission_deadline', '지각 제출 마감 시각은 과제에서만 설정할 수 있습니다.')
+            if not is_practice or format_name != 'default':
+                self.add_error('late_submission_deadline', '지각 제출 종료 시각은 과제용 순위 형식에서만 설정할 수 있습니다.')
             elif end_time and late_submission_deadline <= end_time:
                 cleaned_data['late_submission_deadline'] = None
         return cleaned_data
@@ -673,13 +676,13 @@ class ContestAdmin(VersionAdmin):
     end_time_display.short_description = _('종료 시각')
 
     def late_submission_deadline_display(self, obj):
-        """지각 제출 마감 시간을 한국 형식으로 표시"""
+        """지각 제출 종료 시간을 한국 형식으로 표시"""
         if obj.late_submission_deadline:
             return obj.late_submission_deadline.strftime('%Y. %m. %d. %H:%M')
         return '-'
 
     late_submission_deadline_display.admin_order_field = 'late_submission_deadline'
-    late_submission_deadline_display.short_description = _('지각 제출 마감 시각')
+    late_submission_deadline_display.short_description = _('지각 제출 종료 시각')
 
 
 class ContestParticipationForm(ModelForm):

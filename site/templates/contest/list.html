@@ -36,16 +36,22 @@
             margin-left: 4px;
             padding-top: 0.5em;
         }
-        .late-submission-list-badge {
-            display: inline-block;
-            margin-left: 6px;
-            padding: 2px 6px;
-            border-radius: 4px;
-            background: #fff3cd;
-            color: #7a4f00;
-            font-size: 12px;
-            line-height: 1.4;
+        .contest-list-time-items {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            column-gap: 14px;
+            row-gap: 4px;
+        }
+        .contest-list-time-item {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 4px;
             white-space: nowrap;
+        }
+        .late-submission-list-deadline {
+            color: #8a5a00;
+            font-weight: 500;
         }
         .text-align {
             padding-top: 2px;
@@ -594,22 +600,19 @@
 
 {% macro time_left(contest) %}
     <div class="time time-left">
-        {% if contest.time_limit %}
-            시작: {{ contest.start_time|date(_("Y년 M j일 G:i")) }}&nbsp
-            종료: {{ contest.end_time|date(_("Y년 M j일 G:i")) }}
-        {% else %}
-            시작: {{ contest.start_time|date(_("Y년 M j일 G:i")) }}&nbsp
-            종료: {{ contest.end_time|date(_("Y년 M j일 G:i")) }}
-        {% endif %}
-        {% if contest.is_late_submission_window_open(now) %}
-            <span class="late-submission-list-badge">지각 제출</span>
-        {% endif %}
-        <br>
-        {% if contest.time_limit %}
-
-        {% else %}
-
-        {% endif %}
+        {% set start_time=contest.start_time|date("Y년 n월 j일 G:i") %}
+        {% set end_time=contest.end_time|date("Y년 n월 j일 G:i") %}
+        <div class="contest-list-time-items">
+            <span class="contest-list-time-item"><span>시작:</span><span>{{ start_time }}</span></span>
+            <span class="contest-list-time-item"><span>종료:</span><span>{{ end_time }}</span></span>
+            {% if contest.is_late_submission_window_open(now) %}
+                {% set late_submission_deadline=contest.late_submission_deadline|date("Y년 n월 j일 G:i") %}
+                <span class="contest-list-time-item late-submission-list-deadline">
+                    <span>지각 제출 종료:</span>
+                    <span>{{ late_submission_deadline }}</span>
+                </span>
+            {% endif %}
+        </div>
     </div>
 {% endmacro %}
 
