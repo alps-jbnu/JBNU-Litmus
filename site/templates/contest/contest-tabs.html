@@ -1,7 +1,7 @@
 {% extends "tabs-base.html" %}
 
 {% block media %}
-    
+
 {% endblock %}
 
 {% block admin_tab %}
@@ -228,7 +228,7 @@
     }
     .button, button, input[type=submit] {
         width: 100px;
-        
+
         color: white;
         text-decoration: none !important;
         cursor: pointer;
@@ -244,7 +244,7 @@
         font-size: 14px;
         font-family: Pretendard;
         line-height: 17.5px;
-        
+
     }
     .modal_overlay {
         width: 100%;
@@ -344,10 +344,10 @@
     </div>
 </div>
     {{ make_tab('detail', 'fa-info-circle', url('contest_view', contest.key), _('Info')) }}
-    
+
     {% if request.user.is_authenticated %}
         {% if contest.start_time <= now or perms.judge.see_private_contest %}
-            {% if is_participation or can_edit or contest.ended %}
+            {% if is_participation or can_edit or contest.is_submission_closed(now) %}
                 {{ make_tab('ranking', 'fa-bar-chart', url('contest_ranking', contest.key), _('Rankings')) }}
                 {{ make_tab('submissions', 'fa-pie-chart', url('contest_all_user_submissions', contest.key), _('제출')) }}
             {% endif %}
@@ -361,7 +361,7 @@
     {% if request.user.is_authenticated %}
         {% if contest.started or is_editor or is_tester %}
             {% set in_contest = contest.is_in_contest(request.user) %}
-            {% if not contest.ended %}
+            {% if not contest.ended or contest.is_late_submission_window_open(now) %}
                 {# Allow users to leave the contest #}
                 {% if in_contest %}
                     <form action="{{ url('contest_leave', contest.key) }}" method="post"
@@ -373,7 +373,7 @@
                             {% else %}
                                 {{- _('Leave contest') -}}
                             {% endif %}">
-                    </form>                
+                    </form>
                 {% endif %}
                 {# {% elif contest.is_live_joinable_by(request.user) %}
                     <form action="{{ url('contest_join', contest.key) }}" method="post"
@@ -404,7 +404,7 @@
                             data-contest-key="{{ contest.key }}">
                             {{ _('대회 참가') }}
                         </button>
-                    
+
                     {% elif contest.is_spectatable_by(request.user) %}
                         <!-- {# <form action="{{ url('contest_join', contest.key) }}" method="post"
                             class="contest-join-pseudotab unselectable button">

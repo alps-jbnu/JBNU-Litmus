@@ -99,7 +99,7 @@
         }
 
         .point-denominator {
-            
+
             font-weight: 600;
             font-size: 16px;
         }
@@ -159,7 +159,7 @@
         .users-table .header.rank {
             width: 5% !important;
         }
-        
+
         .balloon-header {
             width: 16%;
             text-align: center;
@@ -209,7 +209,7 @@
         .h-scrollable-table {
             overflow: auto !important;
         }
-        
+
         /* contest ranking에서만 테이블 레이아웃 고정 */
         .contest-ranking .users-table,
         #users-table {
@@ -235,7 +235,7 @@
             });
         </script>
     {% endif %}
-    {% if not contest.ended %}
+    {% if not contest.is_submission_closed(now) %}
         <script type="text/javascript">
             $(function () {
                 window.install_tooltips = function () {
@@ -287,7 +287,7 @@
             //     $('.organization-column').toggle();
             //     localStorage.setItem('show-organizations', $('.organization-column').is(':visible') ? 'true' : 'false');
             // });
-            
+
             // if (localStorage.getItem('show-organizations') == 'true') {
             //     $('.organization-column').show();
             //     $('#show-organizations-checkbox').prop('checked', true);

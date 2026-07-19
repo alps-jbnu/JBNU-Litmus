@@ -167,7 +167,7 @@
                 flex-direction: column-reverse;
             }
 
-            #language-select2 .select2-results__option {   
+            #language-select2 .select2-results__option {
                 color: var(--font-grey) !important;
                 background: var(--page-bg) !important;
             }
@@ -347,6 +347,14 @@
                 </div>
             {% endif %}
         {% endif %}
+
+        {% if submission_window and submission_window.status == 'late' %}
+            <div class="alert alert-warning alert-dismissable">
+                <a class="close">x</a>
+                <b>현재 제출은 지각 제출로 처리됩니다.</b>
+                <div>정규 마감 이후 제출이므로 순위와 제출 기록에 지각 제출로 표시됩니다.</div>
+            </div>
+        {% endif %}
     {% endif %}
 
     <form id="problem_submit" action="" method="post" class="form-area">
@@ -367,9 +375,9 @@
                     </select>
                 </div>
             </div>
-            
+
         </div>
-        
+
         <div id="submit-wrapper">
             <div id="editor">
                 {{ form.source.errors }}
@@ -382,7 +390,7 @@
         {% else %}
             <div class="submit-bar">
                 {{ form.judge }}
-                <input type="submit" value="{{ _('제출하기') }}" class="button"
+                <input type="submit" value="{{ submit_action_label }}" class="button"
                        {% if request.in_contest and submission_limit and not submissions_left %}disabled{% endif %}>
             </div>
         {% endif %}

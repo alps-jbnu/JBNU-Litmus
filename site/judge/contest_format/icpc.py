@@ -50,6 +50,7 @@ class ICPCContestFormat(DefaultContestFormat):
         penalty = 0
         score = 0
         format_data = {}
+        submission_close_time = participation.get_submission_close_time()
 
         with connection.cursor() as cursor:
             cursor.execute("""
@@ -57,13 +58,15 @@ class ICPCContestFormat(DefaultContestFormat):
                     SELECT MIN(csub.date)
                         FROM judge_contestsubmission ccs LEFT OUTER JOIN
                              judge_submission csub ON (csub.id = ccs.submission_id)
-                        WHERE ccs.problem_id = cp.id AND ccs.participation_id = %s AND ccs.points = MAX(cs.points)
+                        WHERE ccs.problem_id = cp.id AND ccs.participation_id = %s
+                          AND csub.date <= %s AND ccs.points = MAX(cs.points)
                 ) AS `time`, cp.id AS `prob`, cp.points AS `max_possible`
                 FROM judge_contestproblem cp INNER JOIN
                      judge_contestsubmission cs ON (cs.problem_id = cp.id AND cs.participation_id = %s) LEFT OUTER JOIN
                      judge_submission sub ON (sub.id = cs.submission_id)
+                WHERE sub.date <= %s
                 GROUP BY cp.id
-            """, (participation.id, participation.id))
+            """, (participation.id, submission_close_time, participation.id, submission_close_time))
 
             for points, time, prob, max_possible in cursor.fetchall():
                 time = from_database_time(time)
@@ -74,9 +77,9 @@ class ICPCContestFormat(DefaultContestFormat):
                     points = 0
 
                 # Count total attempts (excluding IE/CE)
-                subs = participation.submissions.exclude(submission__result__isnull=True) \
-                                                .exclude(submission__result__in=['IE', 'CE']) \
-                                                .filter(problem_id=prob)
+                subs = participation.get_scored_submissions().exclude(submission__result__isnull=True) \
+                                                        .exclude(submission__result__in=['IE', 'CE']) \
+                                                        .filter(problem_id=prob)
                 total_attempts = subs.count()
 
                 # Compute penalty

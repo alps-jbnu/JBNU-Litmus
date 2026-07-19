@@ -91,19 +91,36 @@ class ContestList(QueryStringSortMixin, DiggPaginatorMixin, TitleMixin, ContestL
             'spectators',
         )
 
+    def _current_or_future_queryset(self):
+        return self._get_queryset().filter(is_practice=True).filter(
+            Q(start_time__gt=self._now) |
+            Q(end_time__gte=self._now) |
+            Q(late_submission_deadline__gte=self._now)
+        )
+
+    def _closed_queryset(self):
+        return self._get_queryset().filter(is_practice=True).filter(
+            Q(late_submission_deadline__isnull=True, end_time__lt=self._now) |
+            Q(late_submission_deadline__lt=self._now)
+        )
+
+    def _contest_submission_close_sort_key(self, contest):
+        return contest.get_submission_close_time(), contest.key
+
     def get_queryset(self):
-        return self._get_queryset().order_by(self.order, 'key').filter(end_time__lt=self._now)
+        return self._closed_queryset().order_by(self.order, 'key')
 
     def get_context_data(self, **kwargs):
         context = super(ContestList, self).get_context_data(**kwargs)
         present, active, future = [], [], []
         finished = set()
-        for contest in self._get_queryset().exclude(end_time__lt=self._now):
-            if contest.is_practice:  # is_practice가 True인 경우에만 실행
-                if contest.start_time > self._now:
-                    future.append(contest)
-                else:
-                    present.append(contest)
+        for contest in self._current_or_future_queryset():
+            if contest.is_submission_closed(self._now):
+                continue
+            if contest.start_time > self._now:
+                future.append(contest)
+            else:
+                present.append(contest)
 
         if self.request.user.is_authenticated:
             for participation in (
@@ -112,14 +129,14 @@ class ContestList(QueryStringSortMixin, DiggPaginatorMixin, TitleMixin, ContestL
                 .prefetch_related('contest__authors', 'contest__curators', 'contest__testers', 'contest__spectators')
                 .annotate(key=F('contest__key'))
             ):
-                if participation.ended:
+                if participation.ended and not participation.can_submit(self._now):
                     finished.add(participation.contest.key)
                 else:
                     active.append(participation)
                     present.remove(participation.contest)
 
         active.sort(key=attrgetter('end_time', 'key'))
-        present.sort(key=attrgetter('end_time', 'key'))
+        present.sort(key=self._contest_submission_close_sort_key)
         future.sort(key=attrgetter('start_time'))
         context['title_info'] = self.title_info
         context['active_participations'] = active
@@ -142,7 +159,7 @@ class ContestPastList(ContestList):
 
     #다른 기능을 수행해야된다고 판단하지만 코드가 같기에 추후 수정 필요
     def get_queryset(self):
-        return self._get_queryset().order_by(self.order, 'key').filter(end_time__lt=self._now, is_practice=True)
+        return self._closed_queryset().order_by(self.order, 'key')
 
 
 class PrivateContestError(Exception):
@@ -388,17 +405,21 @@ class ContestJoin(LoginRequiredMixin, ContestMixin, SingleObjectMixin, View):
                                      'You are permanently barred from joining this contest.'))
 
         requires_access_code = (not self.can_edit and contest.access_code and access_code != contest.access_code)
-        if contest.ended:
-            if requires_access_code:
-                raise ContestAccessDenied()
+        now = timezone.now()
+        if contest.ended and requires_access_code:
+            raise ContestAccessDenied()
+        late_participation = contest.get_late_submission_participation(profile, at=now, create=contest.ended)
 
+        if late_participation is not None:
+            participation = late_participation
+        elif contest.ended:
             while True:
                 virtual_id = max((ContestParticipation.objects.filter(contest=contest, user=profile)
                                   .aggregate(virtual_id=Max('virtual'))['virtual_id'] or 0) + 1, 1)
                 try:
                     participation = ContestParticipation.objects.create(
                         contest=contest, user=profile, virtual=virtual_id,
-                        real_start=timezone.now(),
+                        real_start=now,
                     )
                 # There is obviously a race condition here, so we keep trying until we win the race.
                 except IntegrityError:
@@ -426,13 +447,13 @@ class ContestJoin(LoginRequiredMixin, ContestMixin, SingleObjectMixin, View):
 
                 participation = ContestParticipation.objects.create(
                     contest=contest, user=profile, virtual=participation_type,
-                    real_start=timezone.now(),
+                    real_start=now,
                 )
             else:
-                if participation.ended:
+                if participation.ended and not participation.can_submit(now):
                     participation = ContestParticipation.objects.get_or_create(
                         contest=contest, user=profile, virtual=SPECTATE,
-                        defaults={'real_start': timezone.now()},
+                        defaults={'real_start': now},
                     )[0]
         
         profile.current_contest = participation
@@ -647,7 +668,7 @@ ContestRankingProfile = namedtuple(
     'ContestRankingProfile',
     # 'id user css_class username points cumtime tiebreaker organization participation '
     'id user css_class username points cumtime tiebreaker participation '
-    'participation_rating problem_cells result_cell display_name',
+    'participation_rating problem_cells result_cell display_name has_late_submission',
 )
 
 BestSolutionData = namedtuple('BestSolutionData', 'code points time state is_pretested')
@@ -677,6 +698,7 @@ def make_contest_ranking_profile(contest, participation, contest_problems):
         result_cell=contest.format.display_participation_result(participation),
         participation=participation,
         display_name=user.display_name,
+        has_late_submission=participation.has_late_submission(),
     )
 
 
