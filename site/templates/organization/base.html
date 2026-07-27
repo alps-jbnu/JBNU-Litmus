@@ -3,6 +3,7 @@
 <head>
     <title>{% block title %}{{ title }} - {{ SITE_LONG_NAME }}{% endblock %}</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token }}">
     {% if misc_config.meta_keywords %}
         <meta name="keywords" content="{{ misc_config.meta_keywords }}">
     {% endif %}

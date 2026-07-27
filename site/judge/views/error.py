@@ -110,7 +110,7 @@ def error404(request, exception=None):
 def error403(request, exception=None):
     return error(request, {
         'id': 'unauthorized_access',
-        'description': _('no permission for %s') % request.path,
+        'description': _('no permission for this request'),
         'code': 403,
     }, 403)
 
@@ -118,7 +118,7 @@ def error403(request, exception=None):
 def error500(request):
     return error(request, {
         'id': 'invalid_state',
-        'description': _('corrupt page %s') % request.path,
+        'description': _('an unexpected error occurred'),
         'traceback': traceback.format_exc(),
         'code': 500,
     }, 500)

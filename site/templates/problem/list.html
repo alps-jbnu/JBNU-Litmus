@@ -459,21 +459,6 @@
                     
                 }
             
-                function getCookie(name) {
-                    let cookieValue = null;
-                    if (document.cookie && document.cookie !== '') {
-                        const cookies = document.cookie.split(';');
-                        for (let i = 0; i < cookies.length; i++) {
-                            const cookie = cookies[i].trim();
-                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                                break;
-                            }
-                        }
-                    }
-                    return cookieValue;
-                }
-            
             });
         </script>
         <script>
@@ -519,7 +504,7 @@
                     prep_form();
                     ($('<form>').attr('action', window.location.pathname + '?' + $form.serialize())
                         .append($('<input>').attr('type', 'hidden').attr('name', 'csrfmiddlewaretoken')
-                            .attr('value', $.cookie('csrftoken')))
+                            .attr('value', window.getDmojCsrfToken()))
                         .attr('method', 'POST').appendTo($('body')).submit());
                 });
 
