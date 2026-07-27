@@ -556,6 +556,17 @@ class CustomPasswordResetForm(PasswordResetForm):
         return cleaned_data
 
 # 이메일 변경 관련 폼
+# 도메인은 회원가입 때와 동일한 기준(judge/views/register.py 참고)을 사용:
+# 전북대(is_jbnu=True) 소속이면 jbnu.ac.kr, 그 외(외부 학교)는 g.jbedu.kr
+JBNU_EMAIL_DOMAIN = '@jbnu.ac.kr'
+EXTERNAL_SCHOOL_EMAIL_DOMAIN = '@g.jbedu.kr'
+
+
+def get_email_domain_for_user(user):
+    school = getattr(getattr(user, 'profile', None), 'school', None)
+    return JBNU_EMAIL_DOMAIN if school and school.is_jbnu else EXTERNAL_SCHOOL_EMAIL_DOMAIN
+
+
 class EmailChangeForm(forms.Form):
     error_messages = {
         'invalid_login': "아이디 또는 비밀번호가 잘못되었습니다.",
@@ -598,20 +609,23 @@ class EmailChangeForm(forms.Form):
         username = self.cleaned_data.get('username')
         password = self.cleaned_data.get('password')
         email_local = self.cleaned_data.get('email_local')
-        email_domain = cleaned_data.get('email_domain')
 
-        # 이메일 주소 재구성
-        email = f"{email_local}@jbnu.ac.kr"
-        
-        # email_domain이 올바른 도메인인지 확인
-        if email_domain != "@jbnu.ac.kr":
-            raise forms.ValidationError(_('유효하지 않은 이메일 도메인입니다. (jbnu.ac.kr의 도메인 필수)'), code='email')
+        # username으로 대상 계정을 찾아 소속 학교에 맞는 도메인을 결정한다.
+        # (전북대 소속이면 jbnu.ac.kr, 외부 학교면 g.jbedu.kr)
+        target_user = User.objects.filter(username=username).first() if username else None
+        expected_domain = get_email_domain_for_user(target_user)
+
+        # 이메일 주소 재구성 (프론트에서 전달한 email_domain은 표시용일 뿐,
+        # 실제 도메인은 항상 서버에서 계정 정보 기준으로 재계산한다)
+        email = f"{email_local}{expected_domain}" if email_local else ''
+        cleaned_data['email'] = email
+        cleaned_data['target_user'] = target_user
 
         if username is not None and password:
             for backend_path in settings.AUTHENTICATION_BACKENDS:
                 backend = self._get_backend(backend_path)
                 if backend:
-                    user = self._try_login_with_backend(backend, username, password)
+                    user = self._try_login_with_backend(backend, target_user, password)
                     if user:
                         if user.is_active:  # 계정이 이미 활성화 된 경우
                             raise forms.ValidationError(_('이미 활성화된 계정입니다.'), code='active_user')
@@ -620,12 +634,11 @@ class EmailChangeForm(forms.Form):
             else:  # 아이디, 비밀번호에 맞는 계정이 존재하지 않는 경우
                 raise forms.ValidationError(_('아이디 또는 비밀번호가 잘못되었습니다.'), code='invalid_login')
 
-        if User.objects.filter(email=email).exists():  # 이미 존재하는 이메일의 경우
+        if email and User.objects.filter(email=email).exists():  # 이미 존재하는 이메일의 경우
             raise forms.ValidationError(_('이미 존재하는 이메일입니다.'), code='exists_email')
 
-        return self.cleaned_data
+        return cleaned_data
 
-        
     def _get_backend(self, backend_path):
         try:
             backend_module, backend_class = backend_path.rsplit('.', 1)
@@ -635,13 +648,12 @@ class EmailChangeForm(forms.Form):
         except (ImportError, AttributeError):
             return None
 
-    def _try_login_with_backend(self, backend, username, password):
-        try:
-            user = backend.get_user(User.objects.get(username=username).pk)
-            if user and user.check_password(password):
-                return user
-        except User.DoesNotExist:
+    def _try_login_with_backend(self, backend, target_user, password):
+        if target_user is None:
             return None
+        user = backend.get_user(target_user.pk)
+        if user and user.check_password(password):
+            return user
         return None
 
 # 활성화 메일 재전송 폼

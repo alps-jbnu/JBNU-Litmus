@@ -28,7 +28,7 @@ from django.views.decorators.http import require_POST
 from django.views.generic import DetailView, FormView, ListView, TemplateView, View
 from reversion import revisions
 
-from judge.forms import CustomAuthenticationForm, DownloadDataForm, ProfileForm, newsletter_id, IdFindForm, CustomPasswordResetForm, EmailChangeForm, ResendActivationEmailForm
+from judge.forms import CustomAuthenticationForm, DownloadDataForm, ProfileForm, newsletter_id, IdFindForm, CustomPasswordResetForm, EmailChangeForm, ResendActivationEmailForm, get_email_domain_for_user
 from judge.models import Profile, Submission, ContestParticipation
 from judge.performance_points import get_pp_breakdown
 from judge.ratings import rating_class, rating_progress
@@ -705,28 +705,37 @@ class AdminOnlyMixin:
         return super().dispatch(request, *args, **kwargs)
 
 
+# 입력한 아이디(username)의 소속 학교에 맞는 이메일 도메인을 조회하는 용도.
+# 이메일 변경 화면에서 아이디 입력 시 표시 도메인을 실시간으로 갱신하기 위해 사용한다.
+# EmailChangeView와 동일하게 관리자만 호출 가능(비관리자가 API를 직접 두드려
+# 아이디→소속 학교를 알아내는 것을 막기 위함).
+def email_change_domain_lookup(request):
+    if not (
+        request.user.is_authenticated and
+        (request.user.is_staff or request.user.is_superuser)
+    ):
+        raise Http404
+    username = (request.GET.get('username') or '').strip()
+    target_user = User.objects.filter(username=username).first() if username else None
+    return JsonResponse({'domain': get_email_domain_for_user(target_user)})
+
+
 class EmailChangeView(AdminOnlyMixin, FormView):
     title = _('이메일 변경')
     form_class = EmailChangeForm
-    template_name = 'registration/email_change.html'  
+    template_name = 'registration/email_change.html'
     success_url = reverse_lazy('email_change_complete')
-    fixed_domain = '@jbnu.ac.kr'
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['title'] = self.title
         return context
 
     def form_valid(self, form):
-        username = form.cleaned_data['username']
-        email_local = form.cleaned_data['email_local']
-        new_email = f"{email_local}{self.fixed_domain}"
-
-        try:
-            user = User.objects.get(username=username)
-        except User.DoesNotExist:
-            form.add_error('username', _('아이디 또는 비밀번호가 잘못되었습니다.'))
-            return self.form_invalid(form)
+        # user/email 모두 EmailChangeForm.clean()에서 이미 조회·계산됨
+        # (clean()을 통과했다는 것은 인증까지 성공했다는 뜻이므로 target_user는 항상 존재)
+        user = form.cleaned_data['target_user']
+        new_email = form.cleaned_data['email']
 
         # 이메일을 새로 설정하고 인증 전까지 비활성화
         user.email = new_email
@@ -742,7 +751,7 @@ class EmailChangeView(AdminOnlyMixin, FormView):
 
         return super().form_valid(form)
 
-# 이메일 변경 완료 클래스 (활성화가 되지 않은 계정)  
+# 이메일 변경 완료 클래스 (활성화가 되지 않은 계정)
 class EmailChangeCompleteView(AdminOnlyMixin, TemplateView):
     template_name = 'registration/email_change_complete.html'
     title = _('이메일 변경 완료')

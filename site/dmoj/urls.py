@@ -65,6 +65,7 @@ register_patterns = [
     # 이메일 변경 기능 라우팅
     path('email/change/', user.EmailChangeView.as_view(), name='email_change'),
     path('email/change/complete/', user.EmailChangeCompleteView.as_view(), name='email_change_complete'),
+    path('email/change/domain/', user.email_change_domain_lookup, name='email_change_domain_lookup'),
 
     # 이메일 인증 필요 안내 페이지
     path('activation/required/',
