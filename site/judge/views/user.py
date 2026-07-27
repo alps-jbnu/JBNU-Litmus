@@ -2,7 +2,7 @@ import itertools
 import json
 import os
 from datetime import datetime
-from operator import attrgetter, itemgetter
+from operator import itemgetter
 
 from django.conf import settings
 from django.contrib.auth import logout as auth_logout
@@ -562,11 +562,8 @@ class UserList(QueryStringSortMixin, DiggPaginatorMixin, TitleMixin, ListView):
         context = super(UserList, self).get_context_data(**kwargs)
         context['title_info'] = self.title_info
         context['school'] = self.get_school()
-        context['users'] = ranker(
-            context['users'],
-            key=attrgetter('performance_points', 'problem_count'),
-            rank=self.paginate_by * (context['page_obj'].number - 1),
-        )
+        start = self.paginate_by * (context['page_obj'].number - 1)
+        context['users'] = enumerate(context['users'], start=start + 1)
         context['first_page_href'] = '.'
         context.update(self.get_sort_context())
         context.update(self.get_sort_paginate_context())
