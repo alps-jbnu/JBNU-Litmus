@@ -514,11 +514,9 @@ class ProblemPdfView(ProblemMixin, SingleObjectMixin, View):
                 }).replace('"//', '"https://').replace("'//", "'https://")
                 maker.title = problem_name
 
-                assets = ['style.css']
+                maker.load('style.css', os.path.join(settings.DMOJ_RESOURCES, 'style.css'))
                 if maker.math_engine == 'jax':
-                    assets.append('mathjax_config.js')
-                for file in assets:
-                    maker.load(file, os.path.join(settings.DMOJ_RESOURCES, file))
+                    maker.load_mathjax_assets()
                 maker.make()
                 if not maker.success:
                     self.logger.error('Failed to render PDF for %s', problem.code)

@@ -55,8 +55,27 @@ class BasePdfMaker(object):
         self.footer = footer
 
     def load(self, file, source):
-        with open(os.path.join(self.dir, file), 'w') as target, open(source) as source:
+        target_path = os.path.join(self.dir, file)
+        target_dir = os.path.dirname(target_path)
+        if not os.path.exists(target_dir):
+            os.makedirs(target_dir)
+        with open(target_path, 'w') as target, open(source) as source:
             target.write(source.read())
+
+    def load_mathjax_assets(self):
+        mathjax_root = os.path.join(settings.DMOJ_RESOURCES, 'vendor/mathjax/3.2.0/es5')
+        self.load('mathjax_config.js', os.path.join(settings.DMOJ_RESOURCES, 'mathjax_config.js'))
+        self.load('tex-chtml.min.js', os.path.join(mathjax_root, 'tex-chtml.min.js'))
+        shutil.copytree(
+            os.path.join(mathjax_root, 'input/tex/extensions'),
+            os.path.join(self.dir, 'input/tex/extensions'),
+            dirs_exist_ok=True,
+        )
+        shutil.copytree(
+            os.path.join(mathjax_root, 'output/chtml/fonts/woff-v2'),
+            os.path.join(self.dir, 'output/chtml/fonts/woff-v2'),
+            dirs_exist_ok=True,
+        )
 
     def make(self, debug=False):
         self._make(debug)

@@ -119,7 +119,7 @@
                         window.MathJax.startup = {typeset: false};
                         $.ajax({
                             type: 'GET',
-                            url: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-chtml.min.js',
+                            url: '/static/vendor/mathjax/3.2.0/es5/tex-chtml.min.js',
                             dataType: 'script',
                             cache: true,
                             success: update_math
