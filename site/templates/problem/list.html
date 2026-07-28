@@ -451,6 +451,7 @@
 
                     const url = new URL(window.location.href);
                     url.searchParams.delete('groupId');
+                    url.searchParams.delete('page');
                     if (groupId != 'all'){
                         url.searchParams.append('groupId', groupId);
                     }

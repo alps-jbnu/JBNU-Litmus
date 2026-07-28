@@ -92,9 +92,9 @@
     .name {
         width: 214px;
         font-size: 17px;
-        white-space: nowrap;      
-        overflow: hidden;         
-        text-overflow: ellipsis; 
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
     .name a {
         padding-left: 15px;
@@ -128,6 +128,7 @@
         width: 85px;
         text-align: center;
     }
+
 </style>
 
 
@@ -175,15 +176,12 @@
         <div>
             <br class="xs-br">
             <span class="time">{{ relative_time(submission.date) }}</span>
-            {% if not request.in_contest and submission.contest_object_id %}
-                <a href="{{ url('contest_view', submission.contest_object.key) }}"
-                   class="submission-contest">
-                    <i title="{{ submission.contest_object.name }}" class="fa fa-dot-circle-o"></i>
-                </a>
+            {% if submission.is_late_submission %}
+                <span style="display:inline-block;margin-top:4px;padding:2px 6px;border-radius:4px;background:#fff3cd;color:#7a4f00;font-size:11px;line-height:1.4;white-space:nowrap;">지각 제출</span>
             {% endif %}
         </div>
     </div>
-    
+
     <div style="display: flex; flex-direction: column;">
         {% if submission.status == 'G' %}
             <div class="sub-testcase">
@@ -222,5 +220,3 @@
         {% endif %}
     </div>
 </div>
-
-

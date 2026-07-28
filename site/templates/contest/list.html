@@ -15,7 +15,7 @@
             flex-direction: row;
             gap: 20px;
         }
-    
+
         .contest-head-block {
             display: flex;
             flex-direction: row;
@@ -36,6 +36,23 @@
             margin-left: 4px;
             padding-top: 0.5em;
         }
+        .contest-list-time-items {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            column-gap: 14px;
+            row-gap: 4px;
+        }
+        .contest-list-time-item {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 4px;
+            white-space: nowrap;
+        }
+        .late-submission-list-deadline {
+            color: #8a5a00;
+            font-weight: 500;
+        }
         .text-align {
             padding-top: 2px;
             font-size: 18px;
@@ -44,7 +61,7 @@
 
         .text-align a {
             color: var(--font-basic-black);
-            text-decoration: none; 
+            text-decoration: none;
             transition: color 0.3s ease;
         }
 
@@ -80,7 +97,7 @@
             width: 100%;
 
         }
-    
+
         .contest-group-item {
             height: 40px;
             margin-bottom: 20px;
@@ -122,12 +139,12 @@
 
         .contest-group-item input[type="checkbox"]:checked + label .material-symbols-outlined {
             font-size: 24px;
-            border: none; 
+            border: none;
             background: var(--page-bg);
             color: var(--primary-color);
             border-radius: 50%;
         }
-        
+
         .contest-group-item input[type="checkbox"]:checked + label .fa-regular.fa-circle::before {
             content: "\f058"; /* fa-circle-check 아이콘 코드 */
             font-weight: 900; /* solid 스타일 */
@@ -148,7 +165,7 @@
         .contest-group-item.active label {
             color: var(--content-text);
         }
-       
+
         .content-description h4 {
             border-bottom: none;
             margin: 0;
@@ -161,13 +178,13 @@
             color: var(--font-basic-black);
         }
         .table td {
-            border-top: 1px solid rgba(217, 217, 217, 0.5);        
-            border-right: none;    
-            border-left: none;      
-            border-bottom: none; 
+            border-top: 1px solid rgba(217, 217, 217, 0.5);
+            border-right: none;
+            border-left: none;
+            border-bottom: none;
         }
         .table tr:first-child td {
-            border: none; 
+            border: none;
         }
         .table {
             border-spacing: 0;
@@ -343,7 +360,7 @@
             document.querySelectorAll('[data-open-contest-modal="1"]').forEach((btn) => {
                 btn.addEventListener("click", () => openModal(btn.dataset.contestKey));
             });
-            
+
             const buttonCloseModal = document.getElementById("close_modal");
             if (buttonCloseModal) {
                 buttonCloseModal.addEventListener("click", function(e) {
@@ -351,11 +368,11 @@
                     modal.style.display = "none";
                 });
             }
-    
+
             const submitButton = document.getElementById("contest-code-button");
             if (submitButton) {
                 submitButton.addEventListener("click", function(e) {
-                    // e.preventDefault(); // 기본 동작 방지 
+                    // e.preventDefault(); // 기본 동작 방지
                     submitContestCode();
                 });
             }
@@ -434,10 +451,10 @@
 
             });
 
-            
+
 
         });
-    
+
         function toggleContestCodeError(message) {
             const errorElement = document.getElementById("contest-code-error");
             if (!errorElement) return;
@@ -474,7 +491,7 @@
             if (!isContestCodeLengthValid(enteredCode)) {
                 return;
             }
-    
+
             fetch(`/api/contest/${contestKey}/verify-code/`, {
                 method: 'POST',
                 headers: {
@@ -495,7 +512,6 @@
                 console.error('Error:', error);
             });
         }
-    
         function applyFilter() {
             const selectedSubjects = [];
             document.querySelectorAll('input[name="subject_id"]:checked').forEach(function(checkbox) {
@@ -562,25 +578,25 @@
         <a href="{{ url('contest_view', contest.key) }}" class="contest-list-title">
             {{- contest.name -}}
         </a>
-        
+
     {% endspaceless %}
 {% endmacro %}
 
 {% macro time_left(contest) %}
     <div class="time time-left">
-        {% if contest.time_limit %}
-            시작: {{ contest.start_time|date(_("Y년 M j일 G:i")) }}&nbsp
-            종료: {{ contest.end_time|date(_("Y년 M j일 G:i")) }} 
-        {% else %}
-            시작: {{ contest.start_time|date(_("Y년 M j일 G:i")) }}&nbsp
-            종료: {{ contest.end_time|date(_("Y년 M j일 G:i")) }}
-        {% endif %}
-        <br>
-        {% if contest.time_limit %}
-            
-        {% else %}
-            
-        {% endif %}
+        {% set start_time=contest.start_time|date("Y년 n월 j일 G:i") %}
+        {% set end_time=contest.end_time|date("Y년 n월 j일 G:i") %}
+        <div class="contest-list-time-items">
+            <span class="contest-list-time-item"><span>시작:</span><span>{{ start_time }}</span></span>
+            <span class="contest-list-time-item"><span>종료:</span><span>{{ end_time }}</span></span>
+            {% if contest.is_late_submission_window_open(now) %}
+                {% set late_submission_deadline=contest.late_submission_deadline|date("Y년 n월 j일 G:i") %}
+                <span class="contest-list-time-item late-submission-list-deadline">
+                    <span>지각 제출 종료:</span>
+                    <span>{{ late_submission_deadline }}</span>
+                </span>
+            {% endif %}
+        </div>
     </div>
 {% endmacro %}
 
@@ -662,7 +678,7 @@
                 </div>
             </div>
         </div>
-        
+
         {% if spectate_contests %}
             <div class="contest-div">
                 <!-- <h4>{{ _('Active contests') }}</h4> -->
@@ -678,8 +694,8 @@
                     <tr>
                         <td>
                             <div class="contest-block">
-                                <!-- <div class="activity event-bar"></div> --> 
-                                
+                                <!-- <div class="activity event-bar"></div> -->
+
                                 <div class="contest-contents">
                                     <div class="contest-head-block">
                                         {% if request.path == '/contests/1/' %}
@@ -691,12 +707,12 @@
                                             {{ contest_head(contest) }}
                                         </div>
                                     </div>
- 
+
                                     <div class="contest-time">
                                         {% if contest.start_time %}
                                             <br>
                                             {% if contest.time_before_end %}
-                                                
+
                                             {% endif %}
                                             {{ time_left(contest) }}
                                         {% endif %}
@@ -762,7 +778,7 @@
         {% endif %}
 
         <!-- 진행 중인 대회 -->
-        
+
             <div class="contest-div">
                 {% if request.path == '/contests/1/' %}
                     <h4>진행 중인 과제</h4>
@@ -778,7 +794,7 @@
                                     <div class="contest-block">
 
                                         <!-- <div class="activity event-bar"></div> -->
-                                        
+
                                         <div class = "contest-contents">
                                             <div class="contest-head-block">
                                                     {% if request.path == '/contests/1/' %}
@@ -802,7 +818,7 @@
 
                                     </div>
                                 </td>
-                                
+
                                 {{ contest_join(contest, request, finished_contests) }}
                             </tr>
                         {% endfor %}
@@ -828,7 +844,7 @@
                             <td>
                                 <div class="contest-block">
                                     <!-- <div class="upcoming event-bar"></div> -->
-                                    
+
                                     <div class="contest-contents">
 
                                         <div class="contest-head-block">
@@ -853,7 +869,7 @@
 
                                     </div>
                                 </div>
-                                
+
                             </td>
                         </tr>
                     {% endfor %}
@@ -863,6 +879,6 @@
                 <i class="no-contest">{{ _('There are no scheduled contests at this time.') }}</i>
             {% endif %}
         </div>
-        
+
     </div>
 {% endblock %}

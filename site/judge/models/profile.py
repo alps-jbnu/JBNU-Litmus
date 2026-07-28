@@ -180,7 +180,7 @@ class School(models.Model):
     short_name = models.CharField(max_length=20, verbose_name='약칭')
     school_type = models.CharField(max_length=20, choices=SCHOOL_TYPES)
     is_jbnu = models.BooleanField(default=False, verbose_name='전북대 여부',
-                                  help_text='True이면 @jbnu.ac.kr 이메일 강제, False이면 @gmail.com 강제')
+                                  help_text='True이면 @jbnu.ac.kr 이메일 강제, False이면 @g.jbedu.kr 강제')
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
@@ -338,8 +338,10 @@ class Profile(models.Model):
     remove_contest.alters_data = True
 
     def update_contest(self):
-        contest = self.current_contest
-        if contest is not None and (contest.ended or not contest.contest.is_accessible_by(self.user)):
+        participation = self.current_contest
+        if participation is not None and (
+            participation.is_submission_closed() or not participation.contest.is_accessible_by(self.user)
+        ):
             self.remove_contest()
 
     update_contest.alters_data = True

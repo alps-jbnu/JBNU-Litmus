@@ -85,14 +85,14 @@ class ContestProblemInline(SortableInlineAdminMixin, admin.TabularInline):
     readonly_fields = ('rejudge_column',)
     form = ContestProblemInlineForm
     extra = 0
-    
+
     def get_formset(self, request, obj, **kwargs):
         fs = super().get_formset(request, obj, **kwargs)
         fs.form.base_fields['problem'].widget.can_add_related = False
         fs.form.base_fields['problem'].widget.can_change_related = False
         fs.form.base_fields['problem'].widget.can_delete_related = False
         return fs
-    
+
     def rejudge_column(self, obj):
         if obj.id is None:
             return ''
@@ -129,6 +129,15 @@ class ContestForm(ModelForm):
         # curators 필드 레이블 변경
         self.fields['curators'].label = 'TA'
         self.fields['curators'].help_text = 'TA나 협업자에게 과제/대회 관리 권한을 부여합니다. 제작자와 동일한 권한을 가지지만, 제작자로 표시되지 않습니다.'
+        self.fields['is_practice'].label = '과제 여부'
+        self.fields['is_practice'].help_text = (
+            '체크하면 과제, 체크 해제하면 대회로 처리됩니다. '
+            '지각 제출 종료 시각은 과제용 순위 형식에서만 설정할 수 있습니다.'
+        )
+        self.fields['late_submission_deadline'].label = '지각 제출 종료 시각'
+        self.fields['late_submission_deadline'].help_text = (
+            '과제에서만 사용됩니다. 비워두거나 종료 시각보다 빠르거나 같으면 지각 제출을 받지 않습니다.'
+        )
         # self.fields['banned_users'].widget.can_add_related = False
         # self.fields['view_contest_scoreboard'].widget.can_add_related = False
 
@@ -150,6 +159,15 @@ class ContestForm(ModelForm):
                 penalty_value = 10
             self.instance.format_config = {'penalty': penalty_value}
             cleaned_data['format_config'] = self.instance.format_config
+
+        late_submission_deadline = cleaned_data.get('late_submission_deadline')
+        end_time = cleaned_data.get('end_time')
+        is_practice = cleaned_data.get('is_practice')
+        if late_submission_deadline:
+            if not is_practice or format_name != 'default':
+                self.add_error('late_submission_deadline', '지각 제출 종료 시각은 과제용 순위 형식에서만 설정할 수 있습니다.')
+            elif end_time and late_submission_deadline <= end_time:
+                cleaned_data['late_submission_deadline'] = None
         return cleaned_data
         # cleaned_data['banned_users'].filter(current_contest__contest=self.instance).update(current_contest=None)
 
@@ -178,15 +196,15 @@ class ContestForm(ModelForm):
 class CombinedContestFilter(FieldListFilter):
     title = ' '
     template = 'admin/input_filter/input_filter_contest.html'  # 템플릿 따로 필요
-    
+
     def __init__(self, field, request, params, model, model_admin, field_path):
         super().__init__(field, request, params, model, model_admin, field_path)
         self.request = request
         self.params = params
-        
+
     def expected_parameters(self):
         return ['contest_name','is_public','is_assignment']
-    
+
     def choices(self, changelist):
         yield {
             'selected': False,
@@ -215,16 +233,16 @@ class CombinedContestFilter(FieldListFilter):
             queryset = queryset.filter(is_practice=False)
 
         return queryset
-    
+
 class CustomActionForm(forms.Form):
     action = forms.ChoiceField(
-        label="작업",   
-        choices=[],           
+        label="작업",
+        choices=[],
         required=False,
     )
     select_across = forms.CharField(
         required=False,
-        widget=forms.HiddenInput(),   
+        widget=forms.HiddenInput(),
         label=''
     )
 
@@ -239,7 +257,7 @@ class ContestAdmin(VersionAdmin):
         #     'fields': ('key', 'name' , 'authors', )}),
         ('기본', {'fields': ('key', 'name', 'authors', 'curators', 'subject', 'school')}),
         (_('Settings'), {'fields': ('is_visible', 'is_practice', 'format_name', 'penalty')}),
-        (_('Scheduling'), {'fields': ('start_time', 'end_time')}),
+        (_('Scheduling'), {'fields': ('start_time', 'end_time', 'late_submission_deadline')}),
         (_('Details'), {'fields': ('description', )}),
         # (_('Rating'), {'fields': ('is_rated', 'rate_all', )}),
         # (_('Access'), {'fields': ('access_code', 'organizations', 'classes',
@@ -248,7 +266,8 @@ class ContestAdmin(VersionAdmin):
                                    'view_contest_submissions')}),
         # (_('Justice'), {'fields': ('banned_users',)}),
     )
-    list_display = ('name', 'visibility_status', 'practice_status', 'rating_status', 'start_time_display', 'end_time_display', 'time_limit',
+    list_display = ('name', 'visibility_status', 'practice_status', 'rating_status', 'start_time_display', 'end_time_display',
+                    'late_submission_deadline_display', 'time_limit',
                     'user_count')
     search_fields = ('key', 'name')
     inlines = [ContestProblemInline]
@@ -263,13 +282,13 @@ class ContestAdmin(VersionAdmin):
     )
     action_form = CustomActionForm
 
-    
-    
+
+
     # obj여부에 따라 달라지는 기능 구현
     def get_inlines(self, request, obj=None):
         """객체가 존재하지 않더라도 인라인을 표시."""
         return [ContestProblemInline]
-    
+
     def changeform_view(self, request, object_id=None, form_url='', extra_context=None):
         extra_context = extra_context or {}
         if object_id is None:
@@ -349,7 +368,11 @@ class ContestAdmin(VersionAdmin):
         super().save_model(request, obj, form, change)
         # We need this flag because `save_related` deals with the inlines, but does not know if we have already rescored
         self._rescored = False
-        if form.changed_data and any(f in form.changed_data for f in ('format_config', 'format_name', 'penalty')):
+        rescore_fields = (
+            'format_config', 'format_name', 'penalty', 'end_time',
+            'late_submission_deadline', 'is_practice', 'time_limit',
+        )
+        if form.changed_data and any(f in form.changed_data for f in rescore_fields):
             self._rescore(obj.key)
             self._rescored = True
 
@@ -358,11 +381,11 @@ class ContestAdmin(VersionAdmin):
 
     def save_related(self, request, form, formsets, change):
         super().save_related(request, form, formsets, change)
-        
+
         # 새 대회 생성 시 현재 사용자를 authors로 설정
         if not change:
             form.instance.authors.set(Profile.objects.filter(user__username=request.user.username))
-        
+
         # Only rescored if we did not already do so in `save_model`
         if not self._rescored and any(formset.has_changed() for formset in formsets):
             self._rescore(form.cleaned_data['key'])
@@ -438,32 +461,32 @@ class ContestAdmin(VersionAdmin):
                 name='update_contest_inline',
             ),
         ] + super(ContestAdmin, self).get_urls()
-    
+
     ##Json객체에 모든 파일 정보를 담아 템플릿에 전달하는 파일 매니저 코드
     def problem_manager_view(self, request, contest_id):
-        if request.method == 'GET' and request.user.is_staff == True:        
-            #자신이 만든 문제만 필터링    
+        if request.method == 'GET' and request.user.is_staff == True:
+            #자신이 만든 문제만 필터링
             # problems = Problem.objects.filter(authors__user=request.user).distinct().select_related('group')
             problems = Problem.objects.distinct().select_related('group')
 
             #현재 대회 페이지에 대한 인라인 문제들 목록 가져오기
             contest_problems = ContestProblem.objects.filter(contest_id=contest_id).all()
             contest_problems_ids = list(contest_problems.values_list('problem_id', flat=True))
-            
+
             # ContestProblem과 Problem이 일치하는 Problem만 필터링
             matching_problems = problems.filter(id__in=contest_problems_ids)
             # 없는 키값에 접근하려 하는 경우, False반환하도록 설정
             matching_problem_ids = defaultdict(lambda: False, {problem.id: True for problem in matching_problems})
-            
+
             # 문제를 담을 파일 트리
             user_problems = {"name": "root", "is_dir": True, "children": []}
             for problem in problems:
-                ##그룹 경로에 따라, 파일 트리 구성    
+                ##그룹 경로에 따라, 파일 트리 구성
                 #파일 경로 + 파일 이름을 가진 경로로 생성
                 group_name = problem.group.full_name if problem.group else "기타"
                 names = re.sub(r'/+', '/', f"{group_name}/{problem.name}").strip("/").split("/")
                 current_level = user_problems["children"]
-                
+
                 for i, part in enumerate(names):
                     existing_node = next((node for node in current_level if node["name"] == part), None)
 
@@ -481,23 +504,23 @@ class ContestAdmin(VersionAdmin):
                             # 디렉토리 노드
                             new_node["children"] = []
                             new_node["is_dir"] = True
-                            
+
                         current_level.append(new_node)
                         if new_node.get("is_dir", False):
                             current_level = new_node["children"]
-            
+
             context = {
                 'problems': json.dumps(user_problems),
                 'contest_id': contest_id,
             }
-            
-            template_name = 'admin/judge/contest/problem_tree_manager.html' 
+
+            template_name = 'admin/judge/contest/problem_tree_manager.html'
             return render(request, template_name, context)
-        
+
         # 요청이 GET이 아니거나, 사용자가 staff가 아닌 경우 적절한 응답 반환
         return HttpResponse("Unauthorized or invalid Get request", status=401)
-    
-    
+
+
     def update_inline_view(self, request,contest_id):
         if request.method == 'POST' and request.user.is_staff == True:
             selected_items = json.loads(request.POST.get('selected_items', '{}'))
@@ -505,29 +528,29 @@ class ContestAdmin(VersionAdmin):
             # return JsonResponse({'message': f"정상적으로 받음 {selected_items}"})
             # problem objects (in mariadb)
             inline_objects = ContestProblem.objects.filter(contest_id=contest_id).all()
-            
+
             # 인라인 항목에 있는 문제와 select_item에 대해서 체크 상태를 비교하여, False로 바뀐 항목만 삭제
             # 이미 처리한 문제에 대한 id를 담아 놓기
             for inline_object in inline_objects:
                 problem_id = str(inline_object.problem.id)
-                if problem_id in selected_items: 
+                if problem_id in selected_items:
                     if selected_items[problem_id] == False:
                         inline_object.delete()
                     #이미 처리한 문제는 False처리
                     selected_items[problem_id] = False
-            
+
             query = Q()
             for key,value in selected_items.items():
                 if value == True:
                     query |= Q(id=key)
-            
+
             if query:
                 # problems = Problem.objects.filter(Q(authors__user=request.user) & (query)).distinct().select_related('group')
                 problems = Problem.objects.filter((query)).distinct().select_related('group')
             else:
                 problems = Problem.objects.none()
 
-            
+
             contest_problems = []
             for idx,problem in enumerate(problems):
                 contest_problem = ContestProblem(
@@ -540,7 +563,7 @@ class ContestAdmin(VersionAdmin):
             # 트랜잭션을 사용하여 한 번에 저장
             with transaction.atomic():
                 ContestProblem.objects.bulk_create(contest_problems)
-            
+
             return JsonResponse({'message': f"정상적으로 받음 {selected_items}"})
         # 요청이 POST가 아니거나, 사용자가 staff가 아닌 경우 적절한 응답 반환
         return HttpResponse("Unauthorized or invalid Post request", status=401)
@@ -562,7 +585,13 @@ class ContestAdmin(VersionAdmin):
             with connection.cursor() as cursor:
                 cursor.execute('TRUNCATE TABLE `%s`' % Rating._meta.db_table)
             Profile.objects.update(rating=None)
-            for contest in Contest.objects.filter(is_rated=True, end_time__lte=timezone.now()).order_by('end_time'):
+            now = timezone.now()
+            for contest in Contest.objects.filter(
+                Q(is_practice=False, end_time__lte=now) |
+                Q(is_practice=True, late_submission_deadline__isnull=True, end_time__lte=now) |
+                Q(is_practice=True, late_submission_deadline__lte=now),
+                is_rated=True,
+            ).order_by('end_time'):
                 rate_contest(contest)
         return HttpResponseRedirect(reverse('admin:judge_contest_changelist'))
 
@@ -570,7 +599,7 @@ class ContestAdmin(VersionAdmin):
         if not request.user.has_perm('judge.contest_rating'):
             raise PermissionDenied()
         contest = get_object_or_404(Contest, id=id)
-        if not contest.is_rated or not contest.ended:
+        if not contest.is_rated or not contest.is_submission_closed():
             raise Http404()
         with transaction.atomic():
             contest.rate()
@@ -587,7 +616,7 @@ class ContestAdmin(VersionAdmin):
         if obj == None:
             rand_str = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(10))
             form.base_fields['access_code'].initial = rand_str
-        
+
         perms = ('edit_own_contest', 'edit_all_contest')
         # form.base_fields['curators'].queryset = Profile.objects.filter(
         #     Q(user__is_superuser=True) |
@@ -607,7 +636,7 @@ class ContestAdmin(VersionAdmin):
             return format_html('<span class="pill pill-success">공개</span>')
         else:
             return format_html('<span class="pill pill-danger">비공개</span>')
-    
+
     visibility_status.short_description = _('공개')
 
     def practice_status(self, obj):
@@ -616,7 +645,7 @@ class ContestAdmin(VersionAdmin):
             return format_html('<span class="pill pill-warning">과제</span>')
         else:
             return format_html('<span class="pill pill-info">대회</span>')
-    
+
     practice_status.short_description = _('과제/대회')
 
     def rating_status(self, obj):
@@ -625,7 +654,7 @@ class ContestAdmin(VersionAdmin):
             return format_html('<span class="pill pill-success">있음</span>')
         else:
             return format_html('<span class="pill pill-neutral">없음</span>')
-    
+
     rating_status.short_description = _('대회 순위')
 
     def start_time_display(self, obj):
@@ -633,7 +662,7 @@ class ContestAdmin(VersionAdmin):
         if obj.start_time:
             return obj.start_time.strftime('%Y. %m. %d. %H:%M')
         return '-'
-    
+
     start_time_display.admin_order_field = 'start_time'
     start_time_display.short_description = _('시작 시각')
 
@@ -642,9 +671,18 @@ class ContestAdmin(VersionAdmin):
         if obj.end_time:
             return obj.end_time.strftime('%Y. %m. %d. %H:%M')
         return '-'
-    
+
     end_time_display.admin_order_field = 'end_time'
     end_time_display.short_description = _('종료 시각')
+
+    def late_submission_deadline_display(self, obj):
+        """지각 제출 종료 시간을 한국 형식으로 표시"""
+        if obj.late_submission_deadline:
+            return obj.late_submission_deadline.strftime('%Y. %m. %d. %H:%M')
+        return '-'
+
+    late_submission_deadline_display.admin_order_field = 'late_submission_deadline'
+    late_submission_deadline_display.short_description = _('지각 제출 종료 시각')
 
 
 class ContestParticipationForm(ModelForm):
@@ -657,7 +695,7 @@ class ContestParticipationForm(ModelForm):
 class CombinedContestParticipationFilter(FieldListFilter):
     title = ' '
     template = 'admin/input_filter/input_filter_contest_participation.html'
-    
+
     def __init__(self, field, request, params, model, model_admin, field_path):
         super().__init__(field, request, params, model, model_admin, field_path)
         self.request = request
@@ -708,7 +746,7 @@ class ContestParticipationAdmin(admin.ModelAdmin):
     list_filter=[('id',CombinedContestParticipationFilter)]
     action_form = CustomActionForm
 
-    
+
 
     def get_queryset(self, request):
         return super(ContestParticipationAdmin, self).get_queryset(request).only(
@@ -721,7 +759,7 @@ class ContestParticipationAdmin(admin.ModelAdmin):
         if obj.real_start:
             return obj.real_start.strftime('%Y. %m. %d. %H:%M')
         return '-'
-    
+
     real_start_display.admin_order_field = 'real_start'
     real_start_display.short_description = _('시작 시각')
 

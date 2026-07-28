@@ -1,7 +1,9 @@
+from dataclasses import dataclass
+
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 from django.db import models, transaction
-from django.db.models import CASCADE, Q
+from django.db.models import CASCADE, Max, Q
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -14,6 +16,11 @@ JPLAG_LANG_CC = 'cpp'
 JPLAG_LANG_JAVA = 'java'
 JPLAG_LANG_PYTHON = 'python3'
 
+SUBMISSION_NOT_STARTED = 'not_started'
+SUBMISSION_REGULAR = 'regular'
+SUBMISSION_LATE = 'late'
+SUBMISSION_CLOSED = 'closed'
+
 from judge import contest_format
 from judge.models.problem import Problem
 # from judge.models.profile import Class, Organization, Profile
@@ -23,6 +30,18 @@ from judge.models.submission import Submission
 from judge.ratings import rate_contest
 
 __all__ = ['Contest', 'ContestTag', 'ContestParticipation', 'ContestProblem', 'ContestSubmission', 'Rating']
+
+
+@dataclass(frozen=True)
+class SubmissionWindow:
+    status: str
+    regular_deadline: object
+    late_deadline: object = None
+    late_by: object = None
+
+    @property
+    def can_submit(self):
+        return self.status in (SUBMISSION_REGULAR, SUBMISSION_LATE)
 
 
 class MinValueOrNoneValidator(MinValueValidator):
@@ -99,6 +118,8 @@ class Contest(models.Model):
     problems = models.ManyToManyField(Problem, verbose_name=_('problems'), through='ContestProblem')
     start_time = models.DateTimeField(verbose_name=_('start time'), db_index=True)
     end_time = models.DateTimeField(verbose_name=_('end time'), db_index=True)
+    late_submission_deadline = models.DateTimeField(verbose_name=_('late submission deadline'), blank=True, null=True,
+                                                    db_index=True)
     time_limit = models.DurationField(verbose_name=_('time limit'), blank=True, null=True)
     is_visible = models.BooleanField(verbose_name=_('publicly visible'), default=False,
                                      help_text=_('Should be set even for organization-private contests, where it '
@@ -202,7 +223,7 @@ class Contest(models.Model):
     @cached_property
     def get_label_for_problem(self):
         if not self.problem_label_script:
-            
+
             return self.format.get_label_for_problem
         print(10)
         def DENY_ALL(obj, attr_name, is_setting):
@@ -212,14 +233,27 @@ class Contest(models.Model):
 
     #자동으로 key값을 채우도록
     def save(self, *args, **kwargs):
+        self.normalize_late_submission_deadline()
         super(Contest, self).save(*args, **kwargs)
         self.key = str(self.id)
+        self.normalize_late_submission_deadline()
         super(Contest, self).save(*args, **kwargs)
-            
+
+    def normalize_late_submission_deadline(self):
+        if not self.is_practice or self.format_name != 'default':
+            self.late_submission_deadline = None
+        elif (self.late_submission_deadline is not None and self.end_time and
+              self.late_submission_deadline <= self.end_time):
+            self.late_submission_deadline = None
+
     def clean(self):
         # Django will complain if you didn't fill in start_time or end_time, so we don't have to.
         if self.start_time and self.end_time and self.start_time >= self.end_time:
             raise ValidationError('What is this? A contest that ended before it starts?')
+        if self.late_submission_deadline is not None:
+            if not self.is_practice or self.format_name != 'default':
+                raise ValidationError(_('Late submission deadline can only be set for assignment format.'))
+            self.normalize_late_submission_deadline()
         self.format_class.validate(self.format_config)
 
         try:
@@ -269,7 +303,7 @@ class Contest(models.Model):
     def has_completed_contest(self, user):
         if user.is_authenticated:
             participation = self.users.filter(virtual=ContestParticipation.LIVE, user=user.profile).first()
-            if participation and participation.ended:
+            if participation and participation.is_submission_closed():
                 return True
         return False
 
@@ -278,7 +312,7 @@ class Contest(models.Model):
         if not self.started:
             return False
         if (self.scoreboard_visibility in (self.SCOREBOARD_AFTER_CONTEST, self.SCOREBOARD_AFTER_PARTICIPATION) and
-                not self.ended):
+                not self.is_submission_closed(self._now)):
             return False
         return self.scoreboard_visibility != self.SCOREBOARD_HIDDEN
 
@@ -309,6 +343,23 @@ class Contest(models.Model):
         else:
             return None
 
+    def get_submission_close_time(self):
+        if self.is_practice and self.late_submission_deadline is not None:
+            return self.late_submission_deadline
+        return self.end_time
+
+    @property
+    def time_before_submission_close(self):
+        submission_close_time = self.get_submission_close_time()
+        if submission_close_time >= self._now:
+            return submission_close_time - self._now
+        return None
+
+    def is_submission_closed(self, at=None):
+        if at is None:
+            at = timezone.now()
+        return self.get_submission_close_time() < at
+
     @cached_property
     def ended(self):
         return self.end_time < self._now
@@ -335,6 +386,36 @@ class Contest(models.Model):
 
     def get_absolute_url(self):
         return reverse('contest_view', args=(self.key,))
+
+    def is_late_submission_window_open(self, at=None):
+        if at is None:
+            at = timezone.now()
+        return (
+            self.is_practice and
+            self.late_submission_deadline is not None and
+            self.end_time < at <= self.late_submission_deadline
+        )
+
+    def get_late_submission_participation(self, profile, at=None, create=False):
+        if at is None:
+            at = timezone.now()
+        if not self.is_practice or self.late_submission_deadline is None or at > self.late_submission_deadline:
+            return None
+
+        try:
+            participation = self.users.get(user=profile, virtual=ContestParticipation.LIVE)
+        except ContestParticipation.DoesNotExist:
+            if not create or at <= self.end_time:
+                return None
+            participation = self.users.create(
+                user=profile,
+                virtual=ContestParticipation.LIVE,
+                real_start=at,
+            )
+
+        if participation.is_late_submission(at):
+            return participation
+        return None
 
     def update_user_count(self):
         self.user_count = self.users.filter(virtual=0).count()
@@ -496,10 +577,15 @@ class Contest(models.Model):
 
     def rate(self):
         with transaction.atomic():
-            Rating.objects.filter(contest__end_time__range=(self.end_time, self._now)).delete()
-            for contest in Contest.objects.filter(
-                is_rated=True, end_time__range=(self.end_time, self._now),
-            ).order_by('end_time'):
+            closed_contests = Contest.objects.filter(
+                Q(is_practice=False, end_time__lt=self._now) |
+                Q(is_practice=True, late_submission_deadline__isnull=True, end_time__lt=self._now) |
+                Q(is_practice=True, late_submission_deadline__lt=self._now),
+                is_rated=True,
+                end_time__range=(self.end_time, self._now),
+            ).order_by('end_time')
+            Rating.objects.filter(contest__in=closed_contests).delete()
+            for contest in closed_contests:
                 rate_contest(contest)
 
     class Meta:
@@ -523,6 +609,10 @@ class Contest(models.Model):
 class ContestParticipation(models.Model):
     LIVE = 0
     SPECTATE = -1
+    SUBMISSION_NOT_STARTED = SUBMISSION_NOT_STARTED
+    SUBMISSION_REGULAR = SUBMISSION_REGULAR
+    SUBMISSION_LATE = SUBMISSION_LATE
+    SUBMISSION_CLOSED = SUBMISSION_CLOSED
 
     contest = models.ForeignKey(Contest, verbose_name=_('associated contest'), related_name='users', on_delete=CASCADE)
     user = models.ForeignKey(Profile, verbose_name=_('user'), related_name='contest_history', on_delete=CASCADE)
@@ -546,10 +636,10 @@ class ContestParticipation(models.Model):
             # problem_first_solved 필드가 없는 경우 초기화
             if self.problem_first_solved is None:
                 self.problem_first_solved = {}
-                
+
             # 원래 방식대로 결과 계산 (점수, 최대 점수, 총 결과 데이터 등)
             self.contest.format.update_participation(self)
-            
+
             if self.is_disqualified:
                 self.score = -9999
                 self.cumtime = 0
@@ -596,6 +686,116 @@ class ContestParticipation(models.Model):
         return contest.end_time if contest.time_limit is None else \
             min(self.real_start + contest.time_limit, contest.end_time)
 
+    @property
+    def late_submission_deadline(self):
+        contest = self.contest
+        if not contest.is_practice or not self.live:
+            return None
+        return contest.late_submission_deadline
+
+    def get_regular_submission_deadline(self):
+        if self.contest.is_practice:
+            return self.contest.end_time
+        return self.end_time
+
+    def get_submission_close_time(self):
+        late_deadline = self.late_submission_deadline
+        if late_deadline is not None:
+            return late_deadline
+        return self.get_regular_submission_deadline()
+
+    def get_scored_submissions(self):
+        close_time = self.get_submission_close_time()
+        submissions = self.submissions.all()
+        if close_time is None:
+            return submissions
+        return submissions.filter(submission__date__lte=close_time)
+
+    def get_submission_window(self, at=None):
+        if at is None:
+            at = timezone.now()
+
+        regular_deadline = self.get_regular_submission_deadline()
+        late_deadline = self.late_submission_deadline
+
+        if self.spectate:
+            return SubmissionWindow(
+                status=SUBMISSION_NOT_STARTED if at < self.start else SUBMISSION_CLOSED,
+                regular_deadline=regular_deadline,
+                late_deadline=late_deadline,
+            )
+
+        if at < self.start:
+            return SubmissionWindow(
+                status=SUBMISSION_NOT_STARTED,
+                regular_deadline=regular_deadline,
+                late_deadline=late_deadline,
+            )
+
+        if at <= regular_deadline:
+            return SubmissionWindow(
+                status=SUBMISSION_REGULAR,
+                regular_deadline=regular_deadline,
+                late_deadline=late_deadline,
+            )
+
+        if late_deadline is not None and at <= late_deadline:
+            return SubmissionWindow(
+                status=SUBMISSION_LATE,
+                regular_deadline=regular_deadline,
+                late_deadline=late_deadline,
+                late_by=at - regular_deadline,
+            )
+
+        return SubmissionWindow(
+            status=SUBMISSION_CLOSED,
+            regular_deadline=regular_deadline,
+            late_deadline=late_deadline,
+            late_by=at - regular_deadline,
+        )
+
+    def can_submit(self, at=None):
+        return self.get_submission_window(at).can_submit
+
+    def is_late_submission(self, at=None):
+        return self.get_submission_window(at).status == SUBMISSION_LATE
+
+    def is_submission_closed(self, at=None):
+        return self.get_submission_window(at).status == SUBMISSION_CLOSED
+
+    def has_late_submission(self):
+        return self.has_late_scored_submission()
+
+    def has_late_scored_submission(self):
+        return bool(self.get_late_scored_problem_ids())
+
+    def get_late_scored_problem_ids(self):
+        late_deadline = self.late_submission_deadline
+        if late_deadline is None:
+            return set()
+        regular_deadline = self.contest.end_time
+        if late_deadline <= regular_deadline:
+            return set()
+
+        regular_points = self.get_best_points_by_problem(regular_deadline)
+        final_points = self.get_best_points_by_problem(late_deadline)
+        return {
+            problem_id
+            for problem_id, points in final_points.items()
+            if points > regular_points.get(problem_id, 0)
+        }
+
+    def get_best_points_by_problem(self, deadline):
+        if deadline is None:
+            return {}
+        return dict(
+            self.submissions
+            .filter(submission__date__lte=deadline)
+            .values('problem_id')
+            .annotate(points=Max('points'))
+            .values_list('problem_id', 'points')
+        )
+
     @cached_property
     def _now(self):
         # This ensures that all methods talk about the same now.
@@ -607,7 +807,7 @@ class ContestParticipation(models.Model):
 
     @property
     def time_remaining(self):
-        end = self.end_time
+        end = self.get_submission_close_time()
         if end is not None and end >= self._now:
             return end - self._now
 
@@ -702,4 +902,3 @@ class ContestJplag(models.Model):
         unique_together = ('contest', 'problem', 'language')
         verbose_name = _('contest jplag result')
         verbose_name_plural = _('contest jplag results')
-    

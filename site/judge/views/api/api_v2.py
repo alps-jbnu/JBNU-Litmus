@@ -226,6 +226,10 @@ class APIContestList(APIListView):
             'name': contest.name,
             'start_time': contest.start_time.isoformat(),
             'end_time': contest.end_time.isoformat(),
+            'late_submission_deadline': (
+                contest.late_submission_deadline and contest.late_submission_deadline.isoformat()
+            ),
+            'submission_close_time': contest.get_submission_close_time().isoformat(),
             'time_limit': contest.time_limit and contest.time_limit.total_seconds(),
             'is_rated': contest.is_rated,
             'rate_all': contest.is_rated and contest.rate_all,
@@ -247,7 +251,9 @@ class APIContestDetail(APIDetailView):
     def get_object_data(self, contest):
         in_contest = contest.is_in_contest(self.request.user)
         can_see_rankings = contest.can_see_full_scoreboard(self.request.user)
-        can_see_problems = (in_contest or contest.ended or contest.is_editable_by(self.request.user))
+        can_see_problems = (
+            in_contest or contest.is_submission_closed(self._now) or contest.is_editable_by(self.request.user)
+        )
 
         problems = list(
             contest.contest_problems
@@ -282,6 +288,10 @@ class APIContestDetail(APIDetailView):
             'name': contest.name,
             'start_time': contest.start_time.isoformat(),
             'end_time': contest.end_time.isoformat(),
+            'late_submission_deadline': (
+                contest.late_submission_deadline and contest.late_submission_deadline.isoformat()
+            ),
+            'submission_close_time': contest.get_submission_close_time().isoformat(),
             'time_limit': contest.time_limit and contest.time_limit.total_seconds(),
             'is_rated': contest.is_rated,
             'rate_all': contest.is_rated and contest.rate_all,
@@ -324,6 +334,7 @@ class APIContestDetail(APIDetailView):
                     'old_rating': participation.old_rating,
                     'new_rating': participation.new_rating,
                     'is_disqualified': participation.is_disqualified,
+                    'has_late_submission': participation.has_late_submission(),
                     'solutions': contest.format.get_problem_breakdown(participation, problems),
                 } for participation in participations
             ] if can_see_rankings else [],
@@ -349,7 +360,11 @@ class APIContestParticipationList(APIListView):
         #   2. User is the organizer or curator of the contest
         #   3. User is specified to be able to "view contest scoreboard"
         if not self.request.user.has_perm('judge.see_private_contest'):
-            q = Q(end_time__lt=self._now)
+            q = (
+                Q(is_practice=False, end_time__lt=self._now) |
+                Q(is_practice=True, late_submission_deadline__isnull=True, end_time__lt=self._now) |
+                Q(is_practice=True, late_submission_deadline__lt=self._now)
+            )
             if self.request.user.is_authenticated:
                 if self.request.user.has_perm('judge.edit_own_contest'):
                     q |= Q(authors=self.request.profile)
@@ -367,6 +382,8 @@ class APIContestParticipationList(APIListView):
                 'contest__key',
                 'contest__start_time',
                 'contest__end_time',
+                'contest__late_submission_deadline',
+                'contest__is_practice',
                 'contest__time_limit',
                 'real_start',
                 'score',
@@ -383,10 +400,12 @@ class APIContestParticipationList(APIListView):
             'contest': participation.contest.key,
             'start_time': participation.start.isoformat(),
             'end_time': participation.end_time.isoformat(),
+            'submission_close_time': participation.get_submission_close_time().isoformat(),
             'score': participation.score,
             'cumulative_time': participation.cumtime,
             'tiebreaker': participation.tiebreaker,
             'is_disqualified': participation.is_disqualified,
+            'has_late_submission': participation.has_late_submission(),
             'virtual_participation_number': participation.virtual,
         }
 
@@ -537,7 +556,12 @@ class APIUserDetail(APIDetailView):
                 user=profile,
                 virtual=ContestParticipation.LIVE,
                 contest__in=Contest.get_visible_contests(self.request.user),
-                contest__end_time__lt=self._now,
+            )
+            .filter(
+                Q(contest__is_practice=False, contest__end_time__lt=self._now) |
+                Q(contest__is_practice=True, contest__late_submission_deadline__isnull=True,
+                  contest__end_time__lt=self._now) |
+                Q(contest__is_practice=True, contest__late_submission_deadline__lt=self._now)
             )
             .order_by('contest__end_time')
         )

@@ -149,17 +149,17 @@
         }
         .contest-info .contest-problems .table .users {
             width: 8%;
-        }   
+        }
         .contest-info .contest-problems .table tr td {
             color: var(--font-black);
             font-weight: 400;
         }
         .contest-info .contest-problems .table tr td a {
             color: var(--font-basic-black);
-        } 
+        }
         .contest-info .contest-problems .table tbody .points {
             color: #78C0B9;
-        } 
+        }
         /* 참여하려면 로그인하세요 부분 */
         form.contest-join-pseudotab {
             background: none;
@@ -218,9 +218,11 @@
                 {%- else -%}
                     {% if contest.start_time > now %}
                         {{- _('Starting in %(countdown)s.', countdown=as_countdown(contest.time_before_start)) -}}
+                    {% elif contest.is_late_submission_window_open(now) %}
+                        {{- _('지각 제출 기간입니다.') -}}
                     {% elif contest.end_time < now %}
                         {%- if contest.is_practice -%}
-                            {{- _('Practice is over.') -}}
+                            {{- _('과제가 종료되었습니다.') -}}
                         {%- else -%}
                             {{- _('Contest is over.') -}}
                         {%- endif -%}
@@ -246,16 +248,20 @@
                 {%- endif -%}
             </a>
             <div id="time">
-                {% with start_time=contest.start_time|date(_("Y년 F j일 G:i")) %}
+                {% with start_time=contest.start_time|date("Y년 n월 j일 G:i") %}
                     {% if contest.time_limit %}
-                        {% set end_time=contest.end_time|date(_("F j, Y, G:i")) %}
+                        {% set end_time=contest.end_time|date("Y년 n월 j일 G:i") %}
                         {% set time_limit=contest.time_limit|timedelta('localized-no-seconds') %}
                         {{ _('%(time_limit)s window between %(start_time)s and %(end_time)s', start_time=bold(start_time), end_time=bold(end_time), time_limit=bold(time_limit)) }}
                     {% else %}
-                        {% set end_time=contest.end_time|date(_("Y년 F j일 G:i")) %}
+                        {% set end_time=contest.end_time|date("Y년 n월 j일 G:i") %}
                         {% set length=contest.contest_window_length|timedelta('localized-no-seconds') %}
                         <!--{# {{ _('%(length)s long starting on %(start_time)s', start_time=bold(start_time), length=bold(length)) }} #}-->
                         {{ _('시작: %(start_time)s 종료: %(end_time)s', start_time=bold(start_time), end_time=bold(end_time)) }}
+                    {% endif %}
+                    {% if contest.is_practice and contest.late_submission_deadline and contest.late_submission_deadline > contest.end_time %}
+                        {% set late_submission_deadline=contest.late_submission_deadline|date("Y년 n월 j일 G:i") %}
+                        <br>{{ _('지각 제출 종료: %(late_submission_deadline)s', late_submission_deadline=bold(late_submission_deadline)) }}
                     {% endif %}
                 {% endwith %}
             </div>
@@ -374,7 +380,7 @@
                 참가자 {{ contest.user_count }}명
             </div>
         </div>
-    
+
         <!-- 대회 설명 -->
         <div class="content-description">
             <h4 class="header">대회 설명</h4>
@@ -388,9 +394,9 @@
                 {% endif %}
             </div>
         </div>
-        
+
         <!-- 대회 문제 -->
-        {% if contest.ended or is_participation or request.user.is_superuser or is_editor or is_tester or (is_spectator and contest.started) %}
+        {% if contest.is_submission_closed(now) or is_participation or request.user.is_superuser or is_editor or is_tester or (is_spectator and contest.started) %}
             <div class="contest-problems">
                 {#
                 <!-- <h2 style="margin-bottom: 0.2em"><i class="fa fa-fw fa-question-circle"></i>{{ _('Problems') }} </h2> -->
@@ -442,7 +448,7 @@
                                             <g><path d="M85,100a15,15,0,1,0,15-15A15,15,0,0,0,85,100Zm-55,0A15,15,0,1,0,45,85,15,15,0,0,0,30,100Zm110,0a15,15,0,1,0,15-15,15,15,0,0,0-15,15Z" /></g>
                                         </svg>
                                     {% endif %}
-                                </td>                                
+                                </td>
                                 <td class="id">{{problem.code}}</td>
                                 <td class="problem">
                                     <a href="{{ url('problem_detail', problem.code) }}">{{ problem.i18n_name or problem.name }}</a>
@@ -472,18 +478,18 @@
                 </div>
             </div>
         {% endif %}
-    
+
         {#
         <!-- <span class="social">
             {{ post_to_facebook(request, contest, '<i class="fa fa-facebook-official"></i>') }}
             {{ post_to_twitter(request, SITE_NAME + ':', contest, '<i class="fa fa-twitter"></i>') }}
         </span> -->
         #}
-    
+
         <!-- 대회 코멘트 -->
         {% include "comments/list.html" %}
     </div>
-    
+
 {% endblock %}
 
 {% block description_end %}{% endblock %}
