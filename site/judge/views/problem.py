@@ -206,7 +206,7 @@ class ProblemDetail(ProblemMixin, SolvedProblemMixin, CommentedDetailView):
                 'vote_hide_threshold': getattr(settings, 'COMMENT_VOTE_HIDE_THRESHOLD', -5),
             })
             return minimal_context
-        
+
         # 암호화되지 않은 문제는 기존대로 처리
         authed = user.is_authenticated
         context['has_submissions'] = authed and Submission.objects.filter(user=user.profile,
@@ -214,7 +214,7 @@ class ProblemDetail(ProblemMixin, SolvedProblemMixin, CommentedDetailView):
         contest_problem = (None if not authed or user.profile.current_contest is None else
                            get_contest_problem(self.object, user.profile))
         context['contest_problem'] = contest_problem
-        
+
         if contest_problem or user.is_superuser:
             if user.is_superuser:
                 clarifications = ProblemClarification.objects.filter(problem=self.object)
@@ -318,7 +318,7 @@ class ProblemDetail(ProblemMixin, SolvedProblemMixin, CommentedDetailView):
         problem = self.get_object()
         if not problem.is_encrypted:
             return {'status': 'error', 'message': '암호화된 문제가 아닙니다.'}
-            
+
         decrypted_text = problem.get_decrypted_description(password)
         if decrypted_text:
             return {'status': 'success', 'description': decrypted_text}
@@ -331,27 +331,27 @@ def check_problem_password(request, problem):
         problem = get_object_or_404(Problem, code=problem)
         if not problem.is_encrypted:
             return JsonResponse({'status': 'error', 'message': '암호화된 문제가 아닙니다.'})
-            
+
         # XSS 방지: 사용자 입력 검증
         password = request.POST.get('password', '').strip()
         if not password:
             return JsonResponse({'status': 'error', 'message': '비밀번호를 입력해주세요.'})
-        
+
         # 길이 검증
         if len(password) < 4:
             return JsonResponse({'status': 'error', 'message': '비밀번호는 최소 4자 이상이어야 합니다.'})
-        
+
         # 입력 길이 제한
         if len(password) > 50:
             return JsonResponse({'status': 'error', 'message': '비밀번호가 너무 깁니다.'})
-        
+
         # 비밀번호 해시 검증 (UTF-8 인코딩 명시)
         input_hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
         db_hash = problem.encryption_key_hash or ''
-        
+
         if input_hash != db_hash:
             return JsonResponse({'status': 'error', 'message': '잘못된 비밀번호입니다.'})
-        
+
         # 복호화 키 생성 및 복호화
         try:
             # 암호화된 내용이 있는지 확인
@@ -360,22 +360,22 @@ def check_problem_password(request, problem):
                     'status': 'error',
                     'message': '암호화된 내용이 없습니다.'
                 }, status=400)
-            
+
             # 보안 강화: 유틸리티 함수 사용
             from judge.utils.encryption import decrypt_text
             try:
                 decrypted_text = decrypt_text(problem.encrypted_description, password)
-                
+
                 if not decrypted_text:
                     return JsonResponse({
                         'status': 'error',
                         'message': '복호화된 내용이 비어있습니다.'
                     }, status=400)
-                
+
                 # XSS 방지: 안전한 마크다운 변환
                 from judge.jinja2.markdown import markdown as judge_markdown
                 processed_description = judge_markdown(decrypted_text, problem.markdown_style, getattr(settings, 'MATH_ENGINE', None))
-                
+
                 # 성공 응답
                 return JsonResponse({
                     'status': 'success',
@@ -386,14 +386,14 @@ def check_problem_password(request, problem):
                     'status': 'error',
                     'message': str(ve)
                 }, status=400)
-            
+
         except Exception as e:
             import traceback
             return JsonResponse({
                 'status': 'error',
                 'message': '복호화 중 오류가 발생했습니다.'
             }, status=400)
-            
+
     except Problem.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': '문제를 찾을 수 없습니다.'})
     except Exception as e:
@@ -612,7 +612,7 @@ class ProblemList(QueryStringSortMixin, TitleMixin, SolvedProblemMixin, ListView
                 queryset = list(queryset)
                 queryset = list(queryset)
                 queryset.sort(key=lambda problem: ', '.join([author.user.first_name for author in problem.authors.all()]), reverse=self.order.startswith('-'))
-            
+
             paginator.object_list = queryset
         return paginator
 
@@ -702,16 +702,16 @@ class ProblemList(QueryStringSortMixin, TitleMixin, SolvedProblemMixin, ListView
             queryset = queryset.filter(points__gte=self.point_start)
         if self.point_end is not None:
             queryset = queryset.filter(points__lte=self.point_end)
-        
+
         if self.groupId is not None:
             queryset = queryset.filter(group__full_name__startswith=self.groupId)
-            
-            
+
+
         return queryset.distinct()
 
     def get_queryset(self):
         return self.get_normal_queryset()
-        # 기존 코드 - 과제/대회에 참여한 경우 
+        # 기존 코드 - 과제/대회에 참여한 경우
         # if self.in_contest:
         #     return self.get_contest_queryset()
         # else:
@@ -723,7 +723,7 @@ class ProblemList(QueryStringSortMixin, TitleMixin, SolvedProblemMixin, ListView
         #     context['title_info'] = self.contest.name + '의 문제 목록'
         # else:
         context['title_info'] = self.title_info
-        
+
         context['hide_solved'] = 0 if self.in_contest else int(self.hide_solved)
         context['show_types'] = 0 if self.in_contest else int(self.show_types)
         context['has_public_editorial'] = 0 if self.in_contest else int(self.has_public_editorial)
@@ -742,7 +742,7 @@ class ProblemList(QueryStringSortMixin, TitleMixin, SolvedProblemMixin, ListView
         context['all_groups'] = ProblemGroup.objects.all()
 
         context.update(self.get_sort_paginate_context())
-    
+
         # 기존 코드 - 대회에 참여한 경우 / 참여하지 않은 경우 문제 목록을 다르게 표기함. 지금은 문제 리스트를 교수 권한 이상만 확인할 수 있으므로, 항상 모든 문제 목록이 보이도록 수정정
         # if not self.in_contest:
         #     context.update(self.get_sort_context())
@@ -818,7 +818,7 @@ class ProblemList(QueryStringSortMixin, TitleMixin, SolvedProblemMixin, ListView
     def get(self, request, *args, **kwargs):
         self.setup_problem_list(request)
         self.groupId = None
-                
+
         try:
             if 'groupId' in request.GET:
                 self.groupId = request.GET.get('groupId')
@@ -838,7 +838,7 @@ class ProblemList(QueryStringSortMixin, TitleMixin, SolvedProblemMixin, ListView
     def problem_manager_view(self):
         groups = ProblemGroup.objects.distinct()
         data = {}
-        
+
         for group in groups:
             parts = group.full_name.split('/')
             current = data
@@ -900,6 +900,20 @@ class ProblemSubmit(LoginRequiredMixin, ProblemMixin, TitleMixin, SingleObjectFo
             ),
         )
 
+    def get_submission_window(self, at=None):
+        if self.contest_problem is None:
+            return None
+        return self.request.profile.current_contest.get_submission_window(at)
+
+    @cached_property
+    def is_late_submission_window(self):
+        submission_window = self.get_submission_window()
+        return submission_window is not None and submission_window.status == 'late'
+
+    @cached_property
+    def submit_action_label(self):
+        return _('지각 제출하기') if self.is_late_submission_window else _('제출하기')
+
     @cached_property
     def default_language(self):
         # If the old submission exists, use its language, otherwise use the user's default language.
@@ -908,8 +922,9 @@ class ProblemSubmit(LoginRequiredMixin, ProblemMixin, TitleMixin, SingleObjectFo
         return self.request.profile.language
 
     def get_content_title(self):
+        title_format = _('%s 지각 제출하기') if self.is_late_submission_window else _('%s 제출하기')
         return mark_safe(
-            escape(_('%s 제출하기')) % format_html(
+            escape(title_format) % format_html(
                 '<a href="{0}">{1}</a>',
                 reverse('problem_detail', args=[self.object.code]),
                 self.object.translated_name(self.request.LANGUAGE_CODE),
@@ -917,7 +932,8 @@ class ProblemSubmit(LoginRequiredMixin, ProblemMixin, TitleMixin, SingleObjectFo
         )
 
     def get_title(self):
-        return _('%s 제출하기') % self.object.translated_name(self.request.LANGUAGE_CODE)
+        title_format = _('%s 지각 제출하기') if self.is_late_submission_window else _('%s 제출하기')
+        return title_format % self.object.translated_name(self.request.LANGUAGE_CODE)
 
     def get_initial(self):
         initial = {'language': self.default_language}
@@ -974,10 +990,20 @@ class ProblemSubmit(LoginRequiredMixin, ProblemMixin, TitleMixin, SingleObjectFo
             return generic_message(self.request, _('Too many submissions'),
                                    _('You have exceeded the submission limit for this problem.'))
 
+        contest_problem = self.contest_problem
+        if contest_problem is not None:
+            participation = self.request.profile.current_contest
+            submission_window = participation.get_submission_window()
+            if not submission_window.can_submit:
+                if submission_window.status == participation.SUBMISSION_NOT_STARTED:
+                    message = '아직 제출 기간이 시작되지 않았습니다.'
+                else:
+                    message = '제출 기간이 종료되어 더 이상 제출할 수 없습니다.'
+                return generic_message(self.request, '제출할 수 없습니다', message)
+
         with transaction.atomic():
             self.new_submission = form.save(commit=False)
 
-            contest_problem = self.contest_problem
             if contest_problem is not None:
                 # Use the contest object from current_contest.contest because we already use it
                 # in profile.update_contest().
@@ -995,8 +1021,8 @@ class ProblemSubmit(LoginRequiredMixin, ProblemMixin, TitleMixin, SingleObjectFo
 
             source = SubmissionSource(submission=self.new_submission, source=form.cleaned_data['source'])
             source.save()
-        
-            
+
+
         # Save a query.
         self.new_submission.source = source
         self.new_submission.judge(force_judge=True, judge_id=form.cleaned_data['judge'])
@@ -1009,6 +1035,8 @@ class ProblemSubmit(LoginRequiredMixin, ProblemMixin, TitleMixin, SingleObjectFo
         context['no_judges'] = not context['form'].fields['language'].queryset
         context['submission_limit'] = self.contest_problem and self.contest_problem.max_submissions
         context['submissions_left'] = self.remaining_submission_count
+        context['submission_window'] = self.get_submission_window()
+        context['submit_action_label'] = self.submit_action_label
         context['ACE_URL'] = settings.ACE_URL
         context['default_lang'] = self.default_language
         return context

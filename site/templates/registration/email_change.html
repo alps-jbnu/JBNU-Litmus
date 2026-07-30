@@ -169,7 +169,7 @@
         <span class="email-input-wrapper{% if form.email_local.errors %}-error{% endif %}">
             {{ form.email_local }}
             {{ form.email_domain }}
-            <span class="email_domain">@jbnu.ac.kr</span>
+            <span class="email_domain" id="id_email_domain_display">{{ form.email_domain.value() or '@jbnu.ac.kr' }}</span>
         </span>
 
         {% if form.email_local.errors %}
@@ -179,4 +179,40 @@
         <button type="submit" class="button">{{ _('이메일 변경') }}</button>
     </form>
 </div>
+{% endblock %}
+
+{% block js_media %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // 아이디(username)의 소속 학교에 따라 이메일 도메인(jbnu.ac.kr / g.jbedu.kr)을 자동으로 갱신한다.
+        var usernameField = document.querySelector('#id_username');
+        var domainDisplay = document.querySelector('#id_email_domain_display');
+        var domainField = document.querySelector('input[name=email_domain]');
+        var lookupUrl = '{{ url('email_change_domain_lookup') }}';
+
+        function updateDomain() {
+            var username = usernameField.value.trim();
+            if (!username) {
+                return;
+            }
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', lookupUrl + '?username=' + encodeURIComponent(username));
+            xhr.onload = function () {
+                if (xhr.status !== 200) {
+                    return;
+                }
+                try {
+                    var data = JSON.parse(xhr.responseText);
+                    domainDisplay.textContent = data.domain;
+                    domainField.value = data.domain;
+                } catch (e) {
+                    // 무시: 조회 실패 시 기존 표시값 유지
+                }
+            };
+            xhr.send();
+        }
+
+        usernameField.addEventListener('blur', updateDomain);
+    });
+</script>
 {% endblock %}

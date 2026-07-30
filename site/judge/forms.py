@@ -20,7 +20,7 @@ from django.utils.translation import gettext_lazy as _, ngettext_lazy
 from django_ace import AceWidget
 # from judge.models import Contest, Language, Organization, Problem, ProblemPointsVote, Profile, Submission, \
 #     WebAuthnCredential
-from judge.models import Contest, Language, Problem, ProblemPointsVote, Profile, Submission, \
+from judge.models import Contest, Department, Language, Problem, ProblemPointsVote, Profile, Submission, \
     WebAuthnCredential
 from judge.utils.subscription import newsletter_id
 from judge.widgets import HeavyPreviewPageDownWidget, Select2MultipleWidget, Select2Widget
@@ -30,6 +30,7 @@ from importlib import import_module
 from django.conf import settings
 from django.contrib.auth.forms import AuthenticationForm
 from bleach import clean
+from django.utils import timezone
 
 User = get_user_model()
 
@@ -62,12 +63,14 @@ class ProfileForm(ModelForm):
     class Meta:
         model = Profile
         # fields = ['about', 'organizations', 'timezone', 'language', 'ace_theme', 'user_script']
-        fields = ['about', 'timezone', 'language', 'ace_theme', 'user_script']
+        fields = ['about', 'timezone', 'language', 'ace_theme', 'site_theme', 'user_script', 'department']
         widgets = {
             'user_script': AceWidget(theme='github'),
             'timezone': Select2Widget(attrs={'style': 'width:200px'}),
             'language': Select2Widget(attrs={'style': 'width:200px'}),
             'ace_theme': Select2Widget(attrs={'style': 'width:200px'}),
+            'site_theme': Select2Widget(attrs={'style': 'width:200px'}),
+            'department': Select2Widget(attrs={'style': 'width:200px'}),
         }
 
         has_math_config = bool(settings.MATHOID_URL)
@@ -95,14 +98,15 @@ class ProfileForm(ModelForm):
         about = self.cleaned_data['about']
         if len(about) > 1000:
             raise ValidationError(_('자기소개는 1000자 이내로 작성해주세요.'))
-        
+
+        allowed_tags = [tag for tag in settings.BLEACH_USER_SAFE_TAGS if tag != 'style']
         sanitized_about = clean(
             about,
-            tags=settings.BLEACH_USER_SAFE_TAGS,
+            tags=allowed_tags,
             attributes=settings.BLEACH_USER_SAFE_ATTRS,
             strip=True
         )
-        
+
         return sanitized_about
 
     # def clean(self):
@@ -125,6 +129,20 @@ class ProfileForm(ModelForm):
         #     )
         # if not self.fields['organizations'].queryset:
         #     self.fields.pop('organizations')
+
+        # 전과/계열제 학부 선택 등으로 학과가 바뀐 사용자가 직접 수정할 수 있도록 함.
+        # 중/고등학생(비전북대 학교 소속)은 학과 개념이 없으므로 필드를 제거.
+        school = self.instance.school if self.instance and self.instance.pk else None
+        if school is not None and not school.is_jbnu:
+            self.fields.pop('department')
+        else:
+            self.fields['department'].queryset = Department.objects.exclude(name='중/고등학생').order_by('name')
+            self.fields['department'].required = True
+            # 모델 필드가 null 허용이라 위젯이 required=False로 생성되는데,
+            # Select2가 이를 보고 clear(x) 버튼을 붙이므로 위젯에도 반영해야 함.
+            self.fields['department'].widget.is_required = True
+            self.fields['department'].empty_label = None
+            self.fields['department'].label = _('학과')
 
 
 class DownloadDataForm(Form):
@@ -193,10 +211,13 @@ class CustomAuthenticationForm(AuthenticationForm):
             "아이디 또는 비밀번호가 잘못되었습니다."
         ),
         'inactive': _("인증이 완료되지 않은 계정입니다."),
+        'account_locked': _("로그인 시도가 너무 많습니다. 10분 후 다시 시도해 주세요."),
     }
 
     def __init__(self, *args, **kwargs):
         super(CustomAuthenticationForm, self).__init__(*args, **kwargs)
+        self.login_failure_status_message = ''
+        self.login_lock_notice_message = _('아이디 또는 비밀번호를 5회 이상 잘못 입력하면\n10분 동안 로그인이 잠깁니다.')
         self.fields['username'].widget.attrs.update({
             'placeholder': _('아이디를 입력해 주세요'),
             'autocomplete': 'off'
@@ -219,19 +240,139 @@ class CustomAuthenticationForm(AuthenticationForm):
         password = self.cleaned_data.get('password')
 
         if username is not None and password:
+            profile = self._get_profile(username)
+            if profile is not None and profile.is_login_locked():
+                self.add_error('username', self.error_messages['account_locked'])
+                return self.cleaned_data
+            if profile is None and self._is_session_login_locked(username):
+                self.add_error('username', self.error_messages['account_locked'])
+                return self.cleaned_data
+
+            authenticated_user = None
+            authenticated_backend_path = None
             for backend_path in settings.AUTHENTICATION_BACKENDS:
                 backend = self._get_backend(backend_path)
                 if backend:
                     user = self._try_login_with_backend(backend, username, password)
                     if user:
-                        self.confirm_login_allowed(user)
-                        user.backend = backend_path
-                        self.user_cache = user
+                        authenticated_user = user
+                        authenticated_backend_path = backend_path
                         break
+
+            if authenticated_user is not None:
+                self.confirm_login_allowed(authenticated_user)
+                authenticated_user.backend = authenticated_backend_path
+                self.user_cache = authenticated_user
+                profile = profile or getattr(authenticated_user, 'profile', None)
+                if profile is not None:
+                    profile.clear_login_failures()
+                self._clear_session_login_failures(username)
             else:
-                self.add_error('username', self.error_messages['invalid_login'])
+                if profile is not None:
+                    if profile.register_login_failure():
+                        self.add_error('username', self.error_messages['account_locked'])
+                        return self.cleaned_data
+                    self.login_failure_status_message = self._get_login_failure_status_message(profile)
+                    self.add_error('username', self._get_invalid_login_message(profile))
+                else:
+                    current_attempt, is_locked = self._register_session_login_failure(username)
+                    if is_locked:
+                        self.add_error('username', self.error_messages['account_locked'])
+                        return self.cleaned_data
+                    self.login_failure_status_message = self._format_login_failure_status_message(current_attempt)
+                    self.add_error('username', self._format_invalid_login_message(current_attempt))
 
         return self.cleaned_data
+
+    def _get_invalid_login_message(self, profile):
+        if profile is None:
+            return self.error_messages['invalid_login']
+
+        return self._format_invalid_login_message(profile.failed_login_attempts)
+
+    def _get_login_failure_status_message(self, profile):
+        if profile is None:
+            return ''
+
+        return self._format_login_failure_status_message(profile.failed_login_attempts)
+
+    def _format_invalid_login_message(self, current_attempt):
+        return self.error_messages['invalid_login']
+
+    def _format_login_failure_status_message(self, current_attempt):
+        return _('현재 로그인 실패: %(current_attempt)d/%(max_attempts)d회') % {
+            'current_attempt': current_attempt,
+            'max_attempts': Profile.LOGIN_FAILURE_LIMIT,
+        }
+
+    def _session_login_failures(self):
+        if not hasattr(self, 'request') or self.request is None:
+            return {}
+        return self.request.session.setdefault('login_failure_tracker', {})
+
+    def _session_login_failure_key(self, username):
+        return (username or '').strip().lower()
+
+    def _is_session_login_locked(self, username):
+        if not hasattr(self, 'request') or self.request is None:
+            return False
+
+        tracker = self._session_login_failures()
+        data = tracker.get(self._session_login_failure_key(username))
+        if not data:
+            return False
+
+        locked_until = data.get('locked_until')
+        if not locked_until:
+            return False
+
+        return timezone.now().timestamp() < locked_until
+
+    def _register_session_login_failure(self, username):
+        if not hasattr(self, 'request') or self.request is None:
+            return 0, False
+
+        tracker = self._session_login_failures()
+        key = self._session_login_failure_key(username)
+        now_ts = timezone.now().timestamp()
+        data = tracker.get(key, {'count': 0, 'locked_until': None})
+
+        if data.get('locked_until') and now_ts < data['locked_until']:
+            return 0, True
+
+        data['count'] = data.get('count', 0) + 1
+        data['locked_until'] = None
+
+        if data['count'] >= Profile.LOGIN_FAILURE_LIMIT:
+            data = {
+                'count': 0,
+                'locked_until': (timezone.now() + Profile.LOGIN_LOCK_DURATION).timestamp(),
+            }
+            tracker[key] = data
+            self.request.session.modified = True
+            return 0, True
+
+        tracker[key] = data
+        self.request.session.modified = True
+        return data['count'], False
+
+    def _clear_session_login_failures(self, username):
+        if not hasattr(self, 'request') or self.request is None:
+            return
+
+        tracker = self.request.session.get('login_failure_tracker', {})
+        key = self._session_login_failure_key(username)
+        if key in tracker:
+            del tracker[key]
+            self.request.session.modified = True
+
+    def _get_profile(self, username):
+        user = User.objects.filter(username=username).first()
+        if user is None:
+            return None
+
+        profile, _ = Profile.objects.get_or_create(user=user)
+        return profile
 
     def _get_backend(self, backend_path):
         try:
@@ -430,6 +571,17 @@ class CustomPasswordResetForm(PasswordResetForm):
         return cleaned_data
 
 # 이메일 변경 관련 폼
+# 도메인은 회원가입 때와 동일한 기준(judge/views/register.py 참고)을 사용:
+# 전북대(is_jbnu=True) 소속이면 jbnu.ac.kr, 그 외(외부 학교)는 g.jbedu.kr
+JBNU_EMAIL_DOMAIN = '@jbnu.ac.kr'
+EXTERNAL_SCHOOL_EMAIL_DOMAIN = '@g.jbedu.kr'
+
+
+def get_email_domain_for_user(user):
+    school = getattr(getattr(user, 'profile', None), 'school', None)
+    return JBNU_EMAIL_DOMAIN if school and school.is_jbnu else EXTERNAL_SCHOOL_EMAIL_DOMAIN
+
+
 class EmailChangeForm(forms.Form):
     error_messages = {
         'invalid_login': "아이디 또는 비밀번호가 잘못되었습니다.",
@@ -472,20 +624,23 @@ class EmailChangeForm(forms.Form):
         username = self.cleaned_data.get('username')
         password = self.cleaned_data.get('password')
         email_local = self.cleaned_data.get('email_local')
-        email_domain = cleaned_data.get('email_domain')
 
-        # 이메일 주소 재구성
-        email = f"{email_local}@jbnu.ac.kr"
-        
-        # email_domain이 올바른 도메인인지 확인
-        if email_domain != "@jbnu.ac.kr":
-            raise forms.ValidationError(_('유효하지 않은 이메일 도메인입니다. (jbnu.ac.kr의 도메인 필수)'), code='email')
+        # username으로 대상 계정을 찾아 소속 학교에 맞는 도메인을 결정한다.
+        # (전북대 소속이면 jbnu.ac.kr, 외부 학교면 g.jbedu.kr)
+        target_user = User.objects.filter(username=username).first() if username else None
+        expected_domain = get_email_domain_for_user(target_user)
+
+        # 이메일 주소 재구성 (프론트에서 전달한 email_domain은 표시용일 뿐,
+        # 실제 도메인은 항상 서버에서 계정 정보 기준으로 재계산한다)
+        email = f"{email_local}{expected_domain}" if email_local else ''
+        cleaned_data['email'] = email
+        cleaned_data['target_user'] = target_user
 
         if username is not None and password:
             for backend_path in settings.AUTHENTICATION_BACKENDS:
                 backend = self._get_backend(backend_path)
                 if backend:
-                    user = self._try_login_with_backend(backend, username, password)
+                    user = self._try_login_with_backend(backend, target_user, password)
                     if user:
                         if user.is_active:  # 계정이 이미 활성화 된 경우
                             raise forms.ValidationError(_('이미 활성화된 계정입니다.'), code='active_user')
@@ -494,12 +649,11 @@ class EmailChangeForm(forms.Form):
             else:  # 아이디, 비밀번호에 맞는 계정이 존재하지 않는 경우
                 raise forms.ValidationError(_('아이디 또는 비밀번호가 잘못되었습니다.'), code='invalid_login')
 
-        if User.objects.filter(email=email).exists():  # 이미 존재하는 이메일의 경우
+        if email and User.objects.filter(email=email).exists():  # 이미 존재하는 이메일의 경우
             raise forms.ValidationError(_('이미 존재하는 이메일입니다.'), code='exists_email')
 
-        return self.cleaned_data
+        return cleaned_data
 
-        
     def _get_backend(self, backend_path):
         try:
             backend_module, backend_class = backend_path.rsplit('.', 1)
@@ -509,13 +663,12 @@ class EmailChangeForm(forms.Form):
         except (ImportError, AttributeError):
             return None
 
-    def _try_login_with_backend(self, backend, username, password):
-        try:
-            user = backend.get_user(User.objects.get(username=username).pk)
-            if user and user.check_password(password):
-                return user
-        except User.DoesNotExist:
+    def _try_login_with_backend(self, backend, target_user, password):
+        if target_user is None:
             return None
+        user = backend.get_user(target_user.pk)
+        if user and user.check_password(password):
+            return user
         return None
 
 # 활성화 메일 재전송 폼

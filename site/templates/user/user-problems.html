@@ -67,7 +67,7 @@
         .content-submission .pp-table .sub-table-head {
             display: flex;
             flex-direction: row;
-            background: rgba(0, 0, 0, 0.03);
+            background: var(--light-bg);
             font-size: 14px;
             font-weight: 500;
             color: var(--font-basic-black);
@@ -102,7 +102,7 @@
         .no-submission {
             width: 100%;
             text-align: center;
-            background-color: white;
+            background-color: var(--page-bg);
             font-size: 14px;
             padding-top: 5px;
             padding-bottom: 5px;
@@ -112,20 +112,20 @@
         #submissions-table {
             box-shadow: var(--standard-box-shadow);
             border-radius: 10px;
-            background: white;
+            background: var(--page-bg);
         }
         .submission-row {
-            background-color: white;
+            background-color: var(--page-bg);
             border: none;
         }
         .submission-row:nth-child(even) {
-            background: rgba(0, 0, 0, 0.02);
+            background: var(--background-second);
         }
         .submission-row:hover {
-            background: #FFF;
+            background: var(--light-bg);
         }
         .submission-row:nth-child(even):hover {
-            background: rgba(0, 0, 0, 0.02);
+            background: var(--light-bg);
         }
         .AC {
             background-color: #94D95C;

@@ -69,7 +69,9 @@ import logging
 @csrf_exempt
 def verify_contest_code(request, contest_key):
     data = json.loads(request.body)
-    entered_code = data.get('code')
+    entered_code = data.get('code') or ''
+    if len(entered_code) > 30:
+        return JsonResponse({'valid': False, 'error': '비정상적인 접근입니다.'})
     user = request.user  # 로그인된 사용자
     profile = request.profile  # 사용자의 프로필
 
@@ -77,6 +79,11 @@ def verify_contest_code(request, contest_key):
         contest = Contest.objects.get(key=contest_key)
     except Contest.DoesNotExist:
         return JsonResponse({'valid': False, 'error': 'Contest not found'})
+
+    try:
+        contest.access_check(user)
+    except (Contest.PrivateContest, Contest.Inaccessible):
+        return JsonResponse({'valid': False, 'error': 'Cannot join this contest'})
 
     if contest.access_code != entered_code:
         return JsonResponse({'valid': False, 'error': 'Invalid access code'})
@@ -89,7 +96,14 @@ def verify_contest_code(request, contest_key):
     SPECTATE = ContestParticipation.SPECTATE
     LIVE = ContestParticipation.LIVE
 
-    if contest.ended:
+    now = timezone.now()
+    late_participation = contest.get_late_submission_participation(profile, at=now, create=contest.ended)
+
+    if late_participation is not None:
+        participation = late_participation
+    elif contest.ended:
+        if contest.is_practice:
+            return JsonResponse({'valid': False, 'error': 'Assignment submission period has ended'})
         # Handle virtual participation after contest ended
         while True:
             virtual_id = max((ContestParticipation.objects.filter(contest=contest, user=profile)
@@ -97,7 +111,7 @@ def verify_contest_code(request, contest_key):
             try:
                 participation = ContestParticipation.objects.create(
                     contest=contest, user=profile, virtual=virtual_id,
-                    real_start=timezone.now(),
+                    real_start=now,
                 )
             except IntegrityError:
                 continue
@@ -118,13 +132,13 @@ def verify_contest_code(request, contest_key):
         except ContestParticipation.DoesNotExist:
             participation = ContestParticipation.objects.create(
                 contest=contest, user=profile, virtual=participation_type,
-                real_start=timezone.now(),
+                real_start=now,
             )
         else:
-            if participation.ended:
+            if participation.ended and not participation.can_submit(now):
                 participation = ContestParticipation.objects.get_or_create(
                     contest=contest, user=profile, virtual=SPECTATE,
-                    defaults={'real_start': timezone.now()},
+                    defaults={'real_start': now},
                 )[0]
 
     profile.current_contest = participation
@@ -181,6 +195,7 @@ class ContestDetailJSON(View):
                 'points': user.points,
                 'cumtime': user.cumtime,
                 'tiebreaker': user.tiebreaker,
+                'has_late_submission': user.has_late_submission,
                 'problems': [
                     {
                         'name': problem.problem.name,
@@ -208,7 +223,7 @@ class ContestDetailExcelDownload(View):
                 raise PermissionDenied("You don't have permission to download contest results.")
 
             # 권한이 있는 사용자만 엑셀 다운로드 가능
-            if not (request.user.is_staff or contest.is_editable_by(request.user) or 
+            if not (request.user.is_staff or contest.is_editable_by(request.user) or
                     request.user.has_perm('judge.see_private_contest')):
                 raise PermissionDenied("You don't have permission to download contest results.")
 
@@ -237,7 +252,11 @@ class ContestDetailExcelDownload(View):
             ws.title = "Contest Details"
 
             # 문제 이름을 열 헤더로 설정
-            headers = ["Rank", "Username", "First Name"] + [problem['name'] for problem in contest_data['problems']] + ["Total Points"]
+            headers = (
+                ["Rank", "Username", "First Name"] +
+                [problem['name'] for problem in contest_data['problems']] +
+                ["Total Points", "비고"]
+            )
             ws.append(headers)
 
             # 데이터 작성
@@ -245,14 +264,14 @@ class ContestDetailExcelDownload(View):
                 rank = user['rank']
                 username = user['username']
                 first_name = user['first_name']  # first_name 추가
+                note = '지각 제출' if user.get('has_late_submission') else ''
                 problems_points = [0.0] * len(contest_data['problems'])
-                for problem in user['problems']:
-                    problem_index = next((index for (index, d) in enumerate(contest_data['problems']) if d["name"] == problem['name']), None)
+                for problem_index, problem in enumerate(user['problems']):
                     # status에서 점수를 추출
                     point = self.extract_point_from_status(problem['status'])
                     problems_points[problem_index] = point
                 total_points = user['points']
-                ws.append([rank, username, first_name] + problems_points + [total_points])
+                ws.append([rank, username, first_name] + problems_points + [total_points, note])
 
             # 엑셀 파일을 BytesIO에 저장
             output = BytesIO()
@@ -264,7 +283,9 @@ class ContestDetailExcelDownload(View):
             response['Content-Disposition'] = f'attachment; filename={contest.name}_details.xlsx'
 
             return response
-        
+
+        except (Http404, PermissionDenied):
+            raise
         except Exception as e:
             return HttpResponseServerError(f"An error occurred: {str(e)}")
 
@@ -295,6 +316,7 @@ class ContestDetailExcelDownload(View):
                 'points': user.points,
                 'cumtime': user.cumtime,
                 'tiebreaker': user.tiebreaker,
+                'has_late_submission': user.has_late_submission,
                 'problems': [
                     {
                         'name': problem.problem.name,
@@ -307,7 +329,7 @@ class ContestDetailExcelDownload(View):
             })
 
         return ranking_list
-        
+
 
 def _find_contest(request, key, private_check=True):
     try:
@@ -323,27 +345,27 @@ def _find_contest(request, key, private_check=True):
 class ContestListMixin(object):
     def get(self, request, *args, **kwargs):
         self.subject_ids = None
-        
+
         if 'subject_id' in request.GET:
             try:
                 self.subject_ids = list(map(int, request.GET.getlist('subject_id')))
             except ValueError:
                 pass
-            
+
         return super(ContestListMixin, self).get(request, *args, **kwargs)
     def get_queryset(self):
         queryset = Contest.get_visible_contests(self.request.user)
-        
+
         querys = Q()
-        
+
         if self.subject_ids is not None:
             for id in self.subject_ids:
                 querys |= Q(subject = id)
-            
+
             queryset = queryset.filter(querys)
-            
+
         return queryset
-        
+
 
 class ContestList(QueryStringSortMixin, DiggPaginatorMixin, TitleMixin, ContestListMixin, ListView):
     model = Contest
@@ -369,18 +391,43 @@ class ContestList(QueryStringSortMixin, DiggPaginatorMixin, TitleMixin, ContestL
             'spectators',
         )
 
+    def _is_practice_view(self):
+        return bool(self.kwargs.get('is_practice'))
+
+    def _current_or_future_queryset(self):
+        queryset = self._get_queryset().filter(is_practice=self._is_practice_view())
+        if self._is_practice_view():
+            return queryset.filter(
+                Q(start_time__gt=self._now) |
+                Q(end_time__gte=self._now) |
+                Q(late_submission_deadline__gte=self._now)
+            )
+        return queryset.exclude(end_time__lt=self._now)
+
+    def _closed_queryset(self):
+        queryset = self._get_queryset().filter(is_practice=self._is_practice_view())
+        if self._is_practice_view():
+            return queryset.filter(
+                Q(late_submission_deadline__isnull=True, end_time__lt=self._now) |
+                Q(late_submission_deadline__lt=self._now)
+            )
+        return queryset.filter(end_time__lt=self._now)
+
+    def _contest_submission_close_sort_key(self, contest):
+        return contest.get_submission_close_time(), contest.key
+
     def get_queryset(self):
-        return self._get_queryset().order_by(self.order, 'key').filter(end_time__lt=self._now)
+        return self._closed_queryset().order_by(self.order, 'key')
 
     def get_context_data(self, **kwargs):
         context = super(ContestList, self).get_context_data(**kwargs)
         spectate, present, active, future = [], [], [], []
         finished = set()
-        
-        is_practice_view = self.kwargs.get('is_practice')
-        
-        for contest in self._get_queryset().exclude(end_time__lt=self._now):
-            if contest.is_practice != is_practice_view:
+
+        is_practice_view = self._is_practice_view()
+
+        for contest in self._current_or_future_queryset():
+            if contest.is_practice != is_practice_view or contest.is_submission_closed(self._now):
                 continue
             if contest.start_time > self._now:
                 future.append(contest)
@@ -394,7 +441,7 @@ class ContestList(QueryStringSortMixin, DiggPaginatorMixin, TitleMixin, ContestL
                 .prefetch_related('contest__authors', 'contest__curators', 'contest__testers', 'contest__spectators')
                 .annotate(key=F('contest__key'))
             ):
-                if participation.ended:
+                if participation.ended and not participation.can_submit(self._now):
                     finished.add(participation.contest.key)
                 else:
                     active.append(participation)
@@ -403,14 +450,14 @@ class ContestList(QueryStringSortMixin, DiggPaginatorMixin, TitleMixin, ContestL
         for contest in present:
             if contest.is_spectatable_by(self.request.user):
                 spectate.append(contest)
-                
+
         present = list(set(present) - set(spectate))
-        
-        active.sort(key=attrgetter('end_time', 'key'))
-        present.sort(key=attrgetter('end_time', 'key'))
-        spectate.sort(key=attrgetter('end_time', 'key'))
+
+        active.sort(key=lambda participation: (participation.get_submission_close_time(), participation.key))
+        present.sort(key=self._contest_submission_close_sort_key)
+        spectate.sort(key=self._contest_submission_close_sort_key)
         future.sort(key=attrgetter('start_time'))
-            
+
         context['title_info'] = self.title_info
         context['active_participations'] = active
         context['current_contests'] = present
@@ -421,17 +468,17 @@ class ContestList(QueryStringSortMixin, DiggPaginatorMixin, TitleMixin, ContestL
         context['first_page_href'] = '.'
         context['page_suffix'] = '#past-contests'
         context['is_practice'] = 0
-        
+
         subjects = Subject.objects.all()
         context['subjects'] = subjects
-        
+
         if is_practice_view:
             context['title'] = gettext_lazy(_('과제'))
             context['title_info'] = '진행 중 / 진행 예정 과제 목록'
             context['is_practice'] = 1
         context.update(self.get_sort_context())
         context.update(self.get_sort_paginate_context())
-        
+
         return context
 
     # ContestJoin의 기능 추가
@@ -453,6 +500,12 @@ class ContestList(QueryStringSortMixin, DiggPaginatorMixin, TitleMixin, ContestL
     def join_contest(self, request, access_code=None):
         contest = self.object
 
+        try:
+            contest.access_check(request.user)
+        except (Contest.PrivateContest, Contest.Inaccessible):
+            return generic_message(request, _('Cannot enter'),
+                                   _('You are not able to join this contest.'))
+
         if not contest.started and not (self.is_editor or self.is_tester):
             return generic_message(request, _('Contest not ongoing'),
                                    _('"%s" is not currently ongoing.') % contest.name)
@@ -465,17 +518,24 @@ class ContestList(QueryStringSortMixin, DiggPaginatorMixin, TitleMixin, ContestL
                                      'You are permanently barred from joining this contest.'))
 
         requires_access_code = (not self.can_edit and contest.access_code and access_code != contest.access_code)
-        if contest.ended:
-            if requires_access_code:
-                raise ContestAccessDenied()
+        now = timezone.now()
+        if contest.ended and requires_access_code:
+            raise ContestAccessDenied()
+        late_participation = contest.get_late_submission_participation(profile, at=now, create=contest.ended)
 
+        if late_participation is not None:
+            participation = late_participation
+        elif contest.ended:
+            if contest.is_practice:
+                return generic_message(request, _('Cannot enter'),
+                                       _('The assignment submission period has ended.'))
             while True:
                 virtual_id = max((ContestParticipation.objects.filter(contest=contest, user=profile)
                                   .aggregate(virtual_id=Max('virtual'))['virtual_id'] or 0) + 1, 1)
                 try:
                     participation = ContestParticipation.objects.create(
                         contest=contest, user=profile, virtual=virtual_id,
-                        real_start=timezone.now(),
+                        real_start=now,
                     )
                 except IntegrityError:
                     pass
@@ -502,13 +562,13 @@ class ContestList(QueryStringSortMixin, DiggPaginatorMixin, TitleMixin, ContestL
 
                 participation = ContestParticipation.objects.create(
                     contest=contest, user=profile, virtual=participation_type,
-                    real_start=timezone.now(),
+                    real_start=now,
                 )
             else:
-                if participation.ended:
+                if participation.ended and not participation.can_submit(now):
                     participation = ContestParticipation.objects.get_or_create(
                         contest=contest, user=profile, virtual=SPECTATE,
-                        defaults={'real_start': timezone.now()},
+                        defaults={'real_start': now},
                     )[0]
 
         profile.current_contest = participation
@@ -538,7 +598,7 @@ class ContestPastList(ContestList):
     title = gettext_lazy(_('대회'))
     title_info = '종료된 대회 목록'
     context_object_name = 'past_contests'
-    
+
     def dispatch(self, request, *args, **kwargs):
         self.is_practice_view = kwargs.get('is_practice')
         if self.is_practice_view not in [0, 1]:
@@ -546,29 +606,23 @@ class ContestPastList(ContestList):
         self.is_practice_view = bool(self.is_practice_view)
 
         return super().dispatch(request, *args, **kwargs)
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['is_practice'] = 1 if self.is_practice_view else 0
         spectate, last_other, last_own = [], [], []
 
-        is_practice_view = self.kwargs.get('is_practice')
-
-        for contest in self._get_queryset():
-            if contest.is_practice != is_practice_view:
-                continue
-            if contest.end_time > self._now:
-                last_other.append(contest)
-            else:
+        for contest in self._closed_queryset():
+            if contest.is_submission_closed(self._now):
                 spectate.append(contest)
 
         for contest in spectate:
             if contest.is_spectatable_by(self.request.user):
                 last_own.append(contest)
-                
+
         spectate = list(set(spectate) - set(last_own))
-        last_own.sort(key=attrgetter('end_time', 'key'),reverse=True)
-        spectate.sort(key=attrgetter('end_time', 'key'),reverse=True)
+        last_own.sort(key=self._contest_submission_close_sort_key, reverse=True)
+        spectate.sort(key=self._contest_submission_close_sort_key, reverse=True)
 
         # 페이지네이션
         own_page_number = self.request.GET.get('own_page', 1)
@@ -591,7 +645,7 @@ class ContestPastList(ContestList):
 
         subjects = Subject.objects.all()
         context['subjects'] = subjects
-        
+
         if self.is_practice_view:
             context['title'] = '과제'
             context['title_info'] = '종료된 과제 목록'
@@ -599,9 +653,9 @@ class ContestPastList(ContestList):
         context.update(self.get_sort_context())
         context.update(self.get_sort_paginate_context())
         return context
-    
+
     def get_queryset(self):
-        return self._get_queryset().order_by(self.order, 'key').filter(end_time__lt=self._now, is_practice=self.is_practice_view)
+        return self._closed_queryset().order_by(self.order, 'key')
 
 # class ContestSpectateList(ContestList):
 #     template_name = 'contest/spectatelist.html'
@@ -632,28 +686,28 @@ class ContestMixin(object):
         현재 사용자가 현재 대회에 참가하고 있는지 확인합니다.
         """
         if not user.is_authenticated:
-            return False  
-        
+            return False
+
         if hasattr(self, 'object') and isinstance(self.object, Contest):
             return self.object.is_in_contest(user)
         return False
 
     def get_completed_problems(self):
         if not self.request.user.is_authenticated:
-            return ()  
+            return ()
 
         if self.is_user_in_contest(self.request.user):
             return contest_completed_ids(self.request.user.profile.current_contest)
-        
+
         return user_completed_ids(self.request.user.profile) if hasattr(self.request.user, 'profile') else ()
 
     def get_attempted_problems(self):
         if not self.request.user.is_authenticated:
             return ()
-        
+
         if self.is_user_in_contest(self.request.user):
             return contest_attempted_ids(self.request.user.profile.current_contest)
-        
+
         return user_attempted_ids(self.request.user.profile) if hasattr(self.request.user, 'profile') else ()
 
 
@@ -722,9 +776,6 @@ class ContestMixin(object):
         contest = super(ContestMixin, self).get_object(queryset)
         contest.update_user_count()
         profile = self.request.profile
-        if (profile is not None and
-                ContestParticipation.objects.filter(id=profile.current_contest_id, contest_id=contest.id).exists()):
-            return contest
 
         try:
             contest.access_check(self.request.user)
@@ -735,6 +786,9 @@ class ContestMixin(object):
         except Contest.Inaccessible:
             raise Http404()
         else:
+            if (profile is not None and
+                    ContestParticipation.objects.filter(id=profile.current_contest_id, contest_id=contest.id).exists()):
+                return contest
             return contest
 
     def dispatch(self, request, *args, **kwargs):
@@ -760,11 +814,11 @@ class ContestAutoJoinMixin(object):
             contest = self.get_object()
         except Contest.DoesNotExist:
             raise Http404()
-        
-        #종료된 대회라면, 모의 참여를 직접 하기때문에, 자동 참여 기능 비활성화 
-        if request.user.is_authenticated and not contest.ended:
+
+        # 종료된 대회라면, 모의 참여를 직접 하기때문에, 자동 참여 기능 비활성화
+        if request.user.is_authenticated and not contest.is_submission_closed():
             participation = contest.users.filter(
-                virtual=ContestParticipation.LIVE, 
+                virtual=ContestParticipation.LIVE,
                 user=request.user.profile
             ).first()
             # 참가자이면서 현재 대회 상태가 해당 대회가 아닌 경우가 참여중인 대회
@@ -774,8 +828,8 @@ class ContestAutoJoinMixin(object):
                 request.participation = participation #현재 request에 참가자 정보 갱신
 
         return super(ContestAutoJoinMixin, self).dispatch(request, *args, **kwargs)
-        
-        
+
+
 
 from django.db.models import Count, Q, BooleanField, Case, When, F, Sum
 from django.db.models.functions import Coalesce
@@ -836,7 +890,7 @@ class ContestDetail(ContestMixin, TitleMixin, ContestAutoJoinMixin, CommentedDet
                 (stats['ac_submissions'] / stats['total_submissions'] * 100)
                 if stats['total_submissions'] > 0 else 0
             )
-        
+
         # 현재 contest_problems 리스트는 contestproblem 모델이 아닌 problem 모델에서 문제를 가져옴. (problems 리스트가 contestproblem 모델델)
         # 각 대회별 문제의 포인트(점수)가 반영되지 않고, 해당 문제의 포인트가 반영되어 이걸 바꿔주는 코드
         contest_points_map = { cp.problem.id: cp.points for cp in problems }
@@ -902,7 +956,7 @@ class ContestClone(ContestMixin, PermissionRequiredMixin, TitleMixin, SingleObje
             for problem in contest_problems:
                 problem.contest = contest
                 problem.pk = None
-            
+
             ContestProblem.objects.bulk_create(contest_problems)
 
             revisions.set_user(self.request.user)
@@ -916,7 +970,7 @@ class ContestAccessDenied(Exception):
 
 
 class ContestAccessCodeForm(forms.Form):
-    access_code = forms.CharField(max_length=255)
+    access_code = forms.CharField(max_length=30)
 
     def __init__(self, *args, **kwargs):
         super(ContestAccessCodeForm, self).__init__(*args, **kwargs)
@@ -941,6 +995,12 @@ class ContestJoin(LoginRequiredMixin, ContestMixin, SingleObjectMixin, View):
     def join_contest(self, request, access_code=None):
         contest = self.object
 
+        try:
+            contest.access_check(request.user)
+        except (Contest.PrivateContest, Contest.Inaccessible):
+            return generic_message(request, _('Cannot enter'),
+                                   _('You are not able to join this contest.'))
+
         if not contest.started and not (self.is_editor or self.is_tester):
             return generic_message(request, _('Contest not ongoing'),
                                    _('"%s" is not currently ongoing.') % contest.name)
@@ -953,17 +1013,24 @@ class ContestJoin(LoginRequiredMixin, ContestMixin, SingleObjectMixin, View):
                                      'You are permanently barred from joining this contest.'))
 
         requires_access_code = (not self.can_edit and contest.access_code and access_code != contest.access_code)
-        if contest.ended:
-            if requires_access_code:
-                raise ContestAccessDenied()
+        now = timezone.now()
+        if contest.ended and requires_access_code:
+            raise ContestAccessDenied()
+        late_participation = contest.get_late_submission_participation(profile, at=now, create=contest.ended)
 
+        if late_participation is not None:
+            participation = late_participation
+        elif contest.ended:
+            if contest.is_practice:
+                return generic_message(request, _('Cannot enter'),
+                                       _('The assignment submission period has ended.'))
             while True:
                 virtual_id = max((ContestParticipation.objects.filter(contest=contest, user=profile)
                                   .aggregate(virtual_id=Max('virtual'))['virtual_id'] or 0) + 1, 1)
                 try:
                     participation = ContestParticipation.objects.create(
                         contest=contest, user=profile, virtual=virtual_id,
-                        real_start=timezone.now(),
+                        real_start=now,
                     )
                 # There is obviously a race condition here, so we keep trying until we win the race.
                 except IntegrityError:
@@ -991,13 +1058,13 @@ class ContestJoin(LoginRequiredMixin, ContestMixin, SingleObjectMixin, View):
 
                 participation = ContestParticipation.objects.create(
                     contest=contest, user=profile, virtual=participation_type,
-                    real_start=timezone.now(),
+                    real_start=now,
                 )
             else:
-                if participation.ended:
+                if participation.ended and not participation.can_submit(now):
                     participation = ContestParticipation.objects.get_or_create(
                         contest=contest, user=profile, virtual=SPECTATE,
-                        defaults={'real_start': timezone.now()},
+                        defaults={'real_start': now},
                     )[0]
 
         profile.current_contest = participation
@@ -1151,7 +1218,7 @@ class ContestStats(TitleMixin, ContestMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        if not (self.object.ended or self.can_edit):
+        if not (self.object.is_submission_closed() or self.can_edit):
             raise Http404()
 
         queryset = Submission.objects.filter(contest_object=self.object)
@@ -1213,20 +1280,41 @@ ContestRankingProfile = namedtuple(
     'ContestRankingProfile',
     # 'id user css_class username points cumtime tiebreaker organization participation '
     'id user css_class username points cumtime tiebreaker participation '
-    'participation_rating problem_cells result_cell display_name',
+    'participation_rating problem_cells result_cell display_name has_late_submission',
 )
 
 BestSolutionData = namedtuple('BestSolutionData', 'code points time state is_pretested')
 
 
+def mark_late_scored_problem_cell(cell):
+    late_attrs = (
+        'title="지각 제출" '
+        'style="background:#fff3cd !important;box-shadow:inset 0 0 0 2px #f0c36d;"'
+    )
+    html = str(cell)
+    if html.startswith('<td class="'):
+        html = html.replace('<td class="', '<td %s class="late-scored-problem-cell ' % late_attrs, 1)
+    elif html.startswith('<td'):
+        html = html.replace('<td', '<td %s class="late-scored-problem-cell"' % late_attrs, 1)
+    else:
+        return cell
+
+    return mark_safe(html)
+
+
 def make_contest_ranking_profile(contest, participation, contest_problems):
+    late_scored_problem_ids = participation.get_late_scored_problem_ids()
+
     def display_user_problem(contest_problem):
         # When the contest format is changed, `format_data` might be invalid.
         # This will cause `display_user_problem` to error, so we display '???' instead.
         try:
-            return contest.format.display_user_problem(participation, contest_problem)
+            cell = contest.format.display_user_problem(participation, contest_problem)
         except (KeyError, TypeError, ValueError):
             return mark_safe('<td>???</td>')
+        if contest_problem.id in late_scored_problem_ids:
+            return mark_late_scored_problem_cell(cell)
+        return cell
 
     user = participation.user
     return ContestRankingProfile(
@@ -1243,6 +1331,7 @@ def make_contest_ranking_profile(contest, participation, contest_problems):
         result_cell=contest.format.display_participation_result(participation),
         participation=participation,
         display_name=user.display_name,
+        has_late_submission=participation.has_late_submission(),
     )
 
 
@@ -1291,6 +1380,7 @@ def contest_ranking_ajax(request, contest, participation=None):
         'problems': problems,
         'contest': contest,
         'has_rating': contest.ratings.exists(),
+        'now': timezone.now(),
     })
 
 
@@ -1473,8 +1563,8 @@ class ContestTagDetail(TitleMixin, ContestTagDetailAjax):
 
     def get_title(self):
         return _('Contest tag: %s') % self.object.name
-    
-    
+
+
 from judge.models.LatestSubmission import LatestSubmission
 import zipfile
 import io
@@ -1484,10 +1574,17 @@ class ContestDetailCodeDownload(View):
     def get(self, request, *args, **kwargs):
         try:
             contest_key = kwargs.get('contest')  # URL에서 contest key 받기
-            contest, exists = _find_contest(request, contest_key, private_check=False)
+            contest, exists = _find_contest(request, contest_key)
 
             if not exists:
                 raise Http404("Contest not found")
+
+            if not contest.can_see_full_scoreboard(request.user):
+                raise PermissionDenied("You don't have permission to download contest submissions.")
+
+            if not (request.user.is_staff or contest.is_editable_by(request.user) or
+                    request.user.has_perm('judge.see_private_contest')):
+                raise PermissionDenied("You don't have permission to download contest submissions.")
 
             submissions = LatestSubmission.objects.filter(contest_object=contest).select_related('user', 'problem', 'user__profile')
 
@@ -1518,9 +1615,10 @@ class ContestDetailCodeDownload(View):
             quoted_filename = iri_to_uri(f'{safe_name}_codes.zip')
 
             response['Content-Disposition'] = f"attachment; filename*=UTF-8''{quoted_filename}"
-            
+
             return response
 
+        except (Http404, PermissionDenied):
+            raise
         except Exception as e:
             return HttpResponseServerError(f"An error occurred: {str(e)}")
-        

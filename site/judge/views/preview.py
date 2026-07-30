@@ -19,6 +19,10 @@ def latex_to_markdown(text):
     # (Mistune block_math 규칙이 $$...$$를 \[...\]로 변환, MathJax가 렌더링)
     text = re.sub(r'(?m)^\$\n([\s\S]+?)\n\$$', lambda m: '$$\n%s\n$$' % m.group(1), text)
 
+    # BOJ/Polygon 계열에서 쓰이는 %\newline, \newline → HTML line break
+    text = re.sub(r'%\s*\\newline\b', '<br>', text)
+    text = re.sub(r'\\newline\b', '<br>', text)
+
     # \section*{제목} → ## 제목
     text = re.sub(r'\\section\*\{([^}]+)\}', r'## \1', text)
     # \subsection*{제목} → ### 제목
@@ -26,9 +30,11 @@ def latex_to_markdown(text):
     # \subsubsection*{제목} → #### 제목
     text = re.sub(r'\\subsubsection\*\{([^}]+)\}', r'#### \1', text)
     # \textbf{텍스트} → **텍스트**
-    text = re.sub(r'\\textbf\{([^}]+)\}', r'**\1**', text)
+    text = re.sub(r'\\textbf\s*\{([^}]+)\}', r'**\1**', text)
+    text = re.sub(r'\\textbf\s+([^\n]+)', r'**\1**', text)
     # \textit{텍스트} → *텍스트*
-    text = re.sub(r'\\textit\{([^}]+)\}', r'*\1*', text)
+    text = re.sub(r'\\textit\s*\{([^}]+)\}', r'*\1*', text)
+    text = re.sub(r'\\textit\s+([^\n]+)', r'*\1*', text)
     # \InputFile / \OutputFile
     text = text.replace('\\InputFile', '## 입력')
     text = text.replace('\\OutputFile', '## 출력')

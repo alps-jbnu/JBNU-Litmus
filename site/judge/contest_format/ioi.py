@@ -18,6 +18,7 @@ class IOIContestFormat(LegacyIOIContestFormat):
         cumtime = 0
         score = 0
         format_data = {}
+        submission_close_time = participation.get_submission_close_time()
 
         with connection.cursor() as cursor:
             cursor.execute("""
@@ -37,7 +38,7 @@ class IOIContestFormat(LegacyIOIContestFormat):
                               ON (cs.problem_id = cp.id AND cs.participation_id = %s)
                                   LEFT OUTER JOIN
                               judge_submission sub
-                              ON (sub.id = cs.submission_id AND sub.status = 'D')
+                              ON (sub.id = cs.submission_id AND sub.status = 'D' AND sub.date <= %s)
                                   INNER JOIN judge_submissiontestcase tc
                               ON sub.id = tc.submission_id
                          GROUP BY cp.id, tc.batch, sub.id
@@ -54,7 +55,7 @@ class IOIContestFormat(LegacyIOIContestFormat):
                                   ON (cs.problem_id = cp.id AND cs.participation_id = %s)
                                       LEFT OUTER JOIN
                                   judge_submission sub
-                                  ON (sub.id = cs.submission_id AND sub.status = 'D')
+                                  ON (sub.id = cs.submission_id AND sub.status = 'D' AND sub.date <= %s)
                                       INNER JOIN judge_submissiontestcase tc
                                   ON sub.id = tc.submission_id
                              GROUP BY cp.id, tc.batch, sub.id
@@ -64,7 +65,7 @@ class IOIContestFormat(LegacyIOIContestFormat):
                 ON p.prob = q.prob AND (p.batch = q.batch OR p.batch is NULL AND q.batch is NULL)
                 WHERE p.max_batch_points = q.batch_points
                 GROUP BY q.prob, q.batch
-            """, (participation.id, participation.id))
+            """, (participation.id, submission_close_time, participation.id, submission_close_time))
 
             for problem_id, time, subtask_points in cursor.fetchall():
                 problem_id = str(problem_id)

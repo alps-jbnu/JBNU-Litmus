@@ -2,30 +2,45 @@
 
 {% block media %}
 <style>
-    #content .title {
-        text-align: center;
-        padding-top: 35px;
+    .title-div {
+        display: none;
     }
     #page-container {
-        background: #FFF !important;
+        background: var(--page-bg) !important;
     }
     footer {
-        background: #FFF !important;
+        background: var(--page-bg) !important;
     }
     .message-container {
-        border-radius: 5px;
-        margin: 20px;
+        max-width: 500px;
+        margin: 120px auto;
+        padding: 40px 30px;
+        background-color: var(--page-bg);
+        border: 1px solid var(--border-secondary);
+        border-radius: 10px;
+        text-align: center;
+    }
+    .message-title {
+        font-size: 22px;
+        font-weight: 600;
+        color: var(--font-basic-black);
+        margin-bottom: 12px;
     }
     .message-text {
-        font-size: 18px;
-        color: #333;
-        text-align: center;
+        font-size: 15px;
+        color: var(--font-grey);
+        line-height: 1.6;
     }
 </style>
 
 {% endblock %}
 {% block body %}
     <div class="message-container">
-        <p class="message-text">{{ _('등록이 완료되었습니다.') }}</p>
+        <p class="message-title">{{ _('회원가입이 완료되었습니다!') }}</p>
+        <p class="message-text">
+            {{ _('입력하신 이메일로 인증 메일이 발송되었습니다.') }}<br>
+            {{ _('이메일을 확인하여 계정을 활성화해주세요.') }}<br><br>
+            {{ _('메일이 도착하지 않는 경우, 스팸함을 확인해주세요.') }}
+        </p>
     </div>
 {% endblock %}

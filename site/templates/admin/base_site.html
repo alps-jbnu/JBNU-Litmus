@@ -191,6 +191,15 @@
 </style>
 {% endblock %}
 
+{% block wpadmin_extrastyle %}
+<style>
+  #adminbarwrap #adminbar .wp-user-tools .wp-submenu {
+    left: auto;
+    right: 0;
+  }
+</style>
+{% endblock %}
+
 {% block title %}{{ title }} | {% wpadmin_render_custom_title %}{% endblock %}
 
 {% block branding %}

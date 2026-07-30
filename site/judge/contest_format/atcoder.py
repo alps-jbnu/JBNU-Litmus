@@ -49,6 +49,7 @@ class AtCoderContestFormat(DefaultContestFormat):
         penalty = 0
         points = 0
         format_data = {}
+        submission_close_time = participation.get_submission_close_time()
 
         with connection.cursor() as cursor:
             cursor.execute("""
@@ -56,13 +57,15 @@ class AtCoderContestFormat(DefaultContestFormat):
                     SELECT MIN(csub.date)
                         FROM judge_contestsubmission ccs LEFT OUTER JOIN
                              judge_submission csub ON (csub.id = ccs.submission_id)
-                        WHERE ccs.problem_id = cp.id AND ccs.participation_id = %s AND ccs.points = MAX(cs.points)
+                        WHERE ccs.problem_id = cp.id AND ccs.participation_id = %s
+                          AND csub.date <= %s AND ccs.points = MAX(cs.points)
                 ) AS `time`, cp.id AS `prob`
                 FROM judge_contestproblem cp INNER JOIN
                      judge_contestsubmission cs ON (cs.problem_id = cp.id AND cs.participation_id = %s) LEFT OUTER JOIN
                      judge_submission sub ON (sub.id = cs.submission_id)
+                WHERE sub.date <= %s
                 GROUP BY cp.id
-            """, (participation.id, participation.id))
+            """, (participation.id, submission_close_time, participation.id, submission_close_time))
 
             for score, time, prob in cursor.fetchall():
                 time = from_database_time(time)
@@ -71,9 +74,9 @@ class AtCoderContestFormat(DefaultContestFormat):
                 # Compute penalty
                 if self.config['penalty']:
                     # An IE can have a submission result of `None`
-                    subs = participation.submissions.exclude(submission__result__isnull=True) \
-                                                    .exclude(submission__result__in=['IE', 'CE']) \
-                                                    .filter(problem_id=prob)
+                    subs = participation.get_scored_submissions().exclude(submission__result__isnull=True) \
+                                                            .exclude(submission__result__in=['IE', 'CE']) \
+                                                            .filter(problem_id=prob)
                     if score:
                         prev = subs.filter(submission__date__lte=time).count() - 1
                         penalty += prev * self.config['penalty'] * 60

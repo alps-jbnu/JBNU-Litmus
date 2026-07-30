@@ -46,10 +46,10 @@
     } */
 
     #page-container {
-        background: #FFF;
+        background: var(--page-bg);
     }
     footer {
-        background: #FFF !important;
+        background: var(--page-bg) !important;
         position: absolute;
         bottom: 0;
     }
@@ -102,19 +102,19 @@
         text-align: right;
     }
     .blue {
-        color: #5C95D9;
+        color: var(--primary-color);
     }
     .bottom img {
         max-width: 100%;
     }
     .bottom .alarm{
-        background-color: #EBF0F8;
+        background-color: var(--background-second);
         padding: 5px 12px;
         border-radius:4px;
         transition: color 0.3s ease;
     }
     .bottom .alarm:hover {
-        color: #2f5da8;
+        color: var(--primary-hover-color);
     }
     #mobile.tabs {
         display: none;
@@ -132,7 +132,7 @@
     }
     .notice-urgent {
         background-color: #ffe3e3;
-        color: black !important;
+        color: var(--font-black) !important;
         padding: 7px 15px;
         border-radius: 8px;
         font-size: 16px;
@@ -144,7 +144,7 @@
     }
     .notice-alert {
         background-color: #fff9c4;
-        color: black !important;
+        color: var(--font-black) !important;
         padding: 7px 15px;
         border-radius: 8px;
         font-size: 16px;
@@ -244,7 +244,12 @@
                                     <a href="{{ url('contest_view', contest.key) }}">{{ contest.name }}</a>
                                 </div>
                                 <div class="time">
-                                    {{ _('Ends in %(countdown)s.', countdown=as_countdown(contest.time_before_end)) }}
+                                    {% if contest.is_late_submission_window_open(now) %}
+                                        {% set late_submission_deadline=contest.late_submission_deadline|date("Y년 n월 j일 G:i") %}
+                                        지각 제출 종료: {{ late_submission_deadline }}
+                                    {% else %}
+                                        {{ _('Ends in %(countdown)s.', countdown=as_countdown(contest.time_before_end)) }}
+                                    {% endif %}
                                 </div>
                             </div>
                         {% endfor %}
@@ -313,7 +318,7 @@
         </a>
     <a class="alarm notice-alert">
         📢시스템 점검안내 : 7월 12일(금) 오전 2시부터 4시까지 서버 점검이 예정되어 있습니다. 점검 시간 동안 서비스 이용이 제한될 수 있습니다.
-    </a> 
+    </a>
     <a class="alarm notice-alert">
         🛠️시스템 점검안내 : 7월 12일(금) 오전 2시부터 4시까지 서버 점검이 예정되어 있습니다. 점검 시간 동안 서비스 이용이 제한될 수 있습니다.
     </a>    -->

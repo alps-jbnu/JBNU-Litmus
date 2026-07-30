@@ -74,6 +74,7 @@ judges.conf.new
 
 # Development environment
 .codeium/
+.copilot/
 .windsurf-server/
 hcpark_log_temp/
 .codex/
@@ -91,3 +92,4 @@ site/resources/static/jplag_reports/*
 
 #settings.py (dev/service)
 site/dmoj/settings.py
+site/dmoj/local_settings.py
