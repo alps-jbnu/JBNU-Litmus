@@ -193,7 +193,7 @@ class ProfileAdmin(NoBatchDeleteMixin, VersionAdmin):
     list_filter = [
         ('id', CombinedProfileFilter),
     ]
-    actions = ('recalculate_points', 'clear_login_lock', 'reset_student_number')
+    actions = ('recalculate_points', 'clear_login_lock')
     actions_on_top = True
     actions_on_bottom = True
     form = ProfileForm
@@ -304,19 +304,6 @@ class ProfileAdmin(NoBatchDeleteMixin, VersionAdmin):
                                             '%d users had login locks cleared.',
                                             count) % count)
     clear_login_lock.short_description = _('10분 로그인 잠금 해제')
-
-    def reset_student_number(self, request, queryset):
-        count = 0
-        for profile in queryset:
-            if not (profile.school and profile.school.school_type in ('highschool', 'middleschool')):
-                continue
-            profile.student_number = None
-            profile.save(update_fields=['student_number'])
-            count += 1
-        self.message_user(request, ngettext('%d명의 학번이 초기화되었습니다.',
-                                            '%d명의 학번이 초기화되었습니다.',
-                                            count) % count)
-    reset_student_number.short_description = _('중/고등학생 학번 초기화')
 
     def get_form(self, request, obj=None, **kwargs):
         form = super(ProfileAdmin, self).get_form(request, obj, **kwargs)
