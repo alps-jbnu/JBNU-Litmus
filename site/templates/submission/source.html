@@ -269,7 +269,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             <a href="{{ url('admin:judge_submission_change', submission.id) }}">[{{ _('Admin') }}]</a>
                         {% endif %}
                     {% endwith %}
-                    <span style="color: #495057;">{{ submission.user.user.username }}</span>
+                    <span style="color: #495057;">{{ submission.user.student_number_display }}</span>
                 </span>
             </div>
             

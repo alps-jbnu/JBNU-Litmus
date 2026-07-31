@@ -236,7 +236,7 @@
                                 {% if object.user == request.user %} 
                                 <!-- 자기 자신의 경우 -->
                                     {% if request.user.is_superuser or request.user.is_staff %}
-                                        <p>{{ object.user.username }}</p> <!-- 교수/관리자 - 학번(사번) 표기 -->
+                                        <p>{{ object.student_number_display }}</p> <!-- 교수/관리자 - 학번(사번) 표기 -->
                                     {% else %}
                                         <p>{{object.user.first_name}}</p> <!-- 학생 - 이름 표기 -->
                                         <h4>
@@ -246,7 +246,7 @@
                                                 소속된 학과 없음
                                             {% endif %}
                                         </h4> <!-- 학과 -->
-                                        <h3>{{ object.user.username }}</h3> <!-- 학번 -->
+                                        <h3>{{ object.student_number_display }}</h3> <!-- 학번 -->
                                     {% endif %}
                                 {% elif request.user.is_superuser %}
                                 <!-- 관리자의 경우 -->
@@ -255,7 +255,7 @@
                                             {{ object.user.first_name}}
                                         </p>
                                         <h3>
-                                            {{ object.user.username }}
+                                            {{ object.student_number_display }}
                                         </h3>
                                             
                                     {% else %}
@@ -267,7 +267,7 @@
                                                 소속된 학과 없음
                                             {% endif %}
                                         </h4> <!-- 학과 -->
-                                        <h3>{{ object.user.username }}</h3> <!-- 학번 -->
+                                        <h3>{{ object.student_number_display }}</h3> <!-- 학번 -->
                                     {% endif %}
                                 {% elif request.user.is_staff %} 
                                 <!-- 교수의 경우 -->
@@ -283,12 +283,12 @@
                                                 소속된 학과 없음
                                             {% endif %}
                                         </h4> <!-- 학과 -->
-                                        <h3>{{ object.user.username }}</h3> <!-- 학번 -->
+                                        <h3>{{ object.student_number_display }}</h3> <!-- 학번 -->
                                     <!-- 학생의 경우 -->
                                     {% endif %}
                                 {% else %}
                                     <!-- 일반 사용자가 다른 사용자의 페이지를 보는 경우 -->
-                                    <p>{{ object.user.username }}</p>       <!-- 학번 --> 
+                                    <p>{{ object.student_number_display }}</p>       <!-- 학번 --> 
                                     <h4>
                                         {% if object.department.name %}
                                             {{ object.department.name }}
