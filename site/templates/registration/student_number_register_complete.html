@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block media %}
+<style>
+    #page-container {
+        background: var(--page-bg) !important;
+    }
+    footer {
+        background: var(--page-bg) !important;
+    }
+    #content {
+        margin: clamp(60px, 18vh, 200px) auto 0 !important;
+        width: 1040px;
+    }
+    #content .title {
+        text-align: center;
+        padding-top: 35px;
+    }
+    .student-number-complete {
+        max-width: 100%;
+        width: 400px;
+        margin: 0 auto;
+        text-align: center;
+        font-family: "Pretendard", "Segoe UI", "Lucida Grande", Arial, sans-serif;
+    }
+    .student-number-complete p {
+        font-size: 16px;
+        color: var(--font-basic-black);
+        margin: 0 0 28px;
+    }
+    .student-number-complete a.button {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100%;
+        height: 40px;
+        line-height: normal;
+        border-radius: 8px;
+        border: 1px solid #5C95D9;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        box-shadow: none;
+        background-image: none !important;
+        background-color: #5C95D9 !important;
+        color: #FFFFFF !important;
+        font-size: 14px;
+        font-weight: bold;
+        font-family: "Pretendard";
+        text-align: center !important;
+        text-decoration: none;
+        box-sizing: border-box;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    .student-number-complete a.button:hover {
+        background-color: #5288C8 !important;
+        color: #FAFAFA !important;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+    <div class="student-number-complete">
+        <p>학번 등록이 완료되었습니다.</p>
+        <a href="{{ url('home') }}" class="button">메인으로 돌아가기</a>
+    </div>
+{% endblock %}

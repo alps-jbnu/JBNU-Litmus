@@ -53,7 +53,14 @@ class DMOJLoginMiddleware(object):
             webauthn_path = reverse('webauthn_assert')
             change_password_path = reverse('password_change')
             change_password_done_path = reverse('password_change_done')
+            student_number_register_path = reverse('student_number_register')
+            student_number_register_complete_path = reverse('student_number_register_complete')
+            actual_logout_path = reverse('auth_logout')
             has_2fa = profile.is_totp_enabled or profile.is_webauthn_enabled
+            needs_student_number = (
+                profile.school and profile.school.school_type in ('highschool', 'middleschool') and
+                not profile.student_number
+            )
             if (has_2fa and not request.session.get('2fa_passed', False) and
                     request.path not in (login_2fa_path, logout_path, webauthn_path) and
                     not request.path.startswith(settings.STATIC_URL)):
@@ -63,6 +70,11 @@ class DMOJLoginMiddleware(object):
                                          login_2fa_path, logout_path) and
                     not request.path.startswith(settings.STATIC_URL)):
                 return HttpResponseRedirect(change_password_path + '?next=' + quote(request.get_full_path()))
+            elif (needs_student_number and
+                    request.path not in (student_number_register_path, student_number_register_complete_path,
+                                         actual_logout_path) and
+                    not request.path.startswith(settings.STATIC_URL)):
+                return HttpResponseRedirect(student_number_register_path)
         else:
             request.profile = None
         return self.get_response(request)
