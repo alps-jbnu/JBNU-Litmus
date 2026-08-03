@@ -289,7 +289,7 @@
         .bottom-pagination-bar .pagination {
             color: var(--font-grey);
         }
-        ul.pagination > li.disabled-page {
+        ul.pagination > li.disabled-page:not(.pagination-ellipsis) {
             display: none;
         }   
         ul.pagination > li > a, ul.pagination > li > span {
@@ -574,7 +574,7 @@
                             <!-- 페이지 범위 -->
                             {% for link in own_pagination.links %}
                                 {% if link.number is none %}
-                                    <li class="disabled-page"><span>...</span></li>
+                                    <li class="disabled-page pagination-ellipsis"><span>...</span></li>
                                 {% else %}
                                     {% if link.number == past_own_contests.number %}
                                         <li class="active-page"><a>{{ link.number }}</a></li>
@@ -669,7 +669,7 @@
                 
                             {% for link in other_pagination.links %}
                                 {% if link.number is none %}
-                                    <li class="disabled-page"><span>...</span></li>
+                                    <li class="disabled-page pagination-ellipsis"><span>...</span></li>
                                 {% elif link.number == past_other_contests.number %}
                                     <li class="active-page"><a>{{ link.number }}</a></li>
                                 {% else %}

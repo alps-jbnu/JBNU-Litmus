@@ -625,10 +625,10 @@ class ContestPastList(ContestList):
             ),
             'links': [
                 {
-                    'number': page_number,
-                    'url': self._make_page_url(page_key, page_number) if page_number is not None else None,
+                    'number': page_number if page_number else None,
+                    'url': self._make_page_url(page_key, page_number) if page_number else None,
                 }
-                for page_number in page.paginator.page_range
+                for page_number in page.page_range
             ],
             'next_url': (
                 self._make_page_url(page_key, page.next_page_number())
@@ -659,8 +659,8 @@ class ContestPastList(ContestList):
         own_per_page = 15
         other_per_page = 15
 
-        paginated_own = Paginator(last_own, own_per_page)
-        paginated_other = Paginator(spectate, other_per_page)
+        paginated_own = self.get_paginator(last_own, own_per_page)
+        paginated_other = self.get_paginator(spectate, other_per_page)
 
         # 요청한 페이지 번호 가져오기
         own_page_number = self.request.GET.get('own_page', 1)
