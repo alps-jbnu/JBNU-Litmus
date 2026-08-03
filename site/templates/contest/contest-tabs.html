@@ -5,12 +5,17 @@
 {% endblock %}
 
 {% block admin_tab %}
-    {% if can_edit %}
+    {% if can_edit or perms.judge.view_all_problem or perms.judge.edit_all_problem or perms.judge.edit_public_problem or perms.judge.edit_own_problem %}
     <div class="admin-tab">
-        {{ make_tab('edit', 'fa-edit', url('admin:judge_contest_change', contest.id), _('Edit')) }}
-        {{ make_tab('clone', 'fa-copy', url('contest_clone', contest.key), '복사') }}
-        {{ make_tab('download', 'fa-download', url('contest_detail_excel_download', contest.key), '결과 다운로드') }}
-        {{ make_tab('code_download', 'fa-code', url('contest_detail_code_download', contest.key), '코드 다운로드') }}
+        {% if can_edit %}
+            {{ make_tab('edit', 'fa-edit', url('admin:judge_contest_change', contest.id), _('Edit')) }}
+            {{ make_tab('clone', 'fa-copy', url('contest_clone', contest.key), '복사') }}
+            {{ make_tab('download', 'fa-download', url('contest_detail_excel_download', contest.key), '결과 다운로드') }}
+            {{ make_tab('code_download', 'fa-code', url('contest_detail_code_download', contest.key), '코드 다운로드') }}
+        {% endif %}
+        {% if perms.judge.view_all_problem or perms.judge.edit_all_problem or perms.judge.edit_public_problem or perms.judge.edit_own_problem %}
+            {{ make_tab('problem_export', 'fa-download', url('problem_export'), _('문제 다운로드')) }}
+        {% endif %}
     </div>
     {% endif %}
 {% endblock %}
@@ -114,7 +119,7 @@
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken') // CSRF 토큰 설정
+                'X-CSRFToken': window.getDmojCsrfToken()
             },
             body: JSON.stringify({ code: enteredCode })
         })
@@ -131,21 +136,6 @@
         });
     }
 
-    // CSRF 토큰 가져오기 함수
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
 </script>
 
 <style>

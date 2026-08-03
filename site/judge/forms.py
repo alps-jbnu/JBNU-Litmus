@@ -20,7 +20,7 @@ from django.utils.translation import gettext_lazy as _, ngettext_lazy
 from django_ace import AceWidget
 # from judge.models import Contest, Language, Organization, Problem, ProblemPointsVote, Profile, Submission, \
 #     WebAuthnCredential
-from judge.models import Contest, Language, Problem, ProblemPointsVote, Profile, Submission, \
+from judge.models import Contest, Department, Language, Problem, ProblemPointsVote, Profile, Submission, \
     WebAuthnCredential
 from judge.utils.subscription import newsletter_id
 from judge.widgets import HeavyPreviewPageDownWidget, Select2MultipleWidget, Select2Widget
@@ -63,13 +63,14 @@ class ProfileForm(ModelForm):
     class Meta:
         model = Profile
         # fields = ['about', 'organizations', 'timezone', 'language', 'ace_theme', 'user_script']
-        fields = ['about', 'timezone', 'language', 'ace_theme', 'site_theme', 'user_script']
+        fields = ['about', 'timezone', 'language', 'ace_theme', 'site_theme', 'user_script', 'department']
         widgets = {
             'user_script': AceWidget(theme='github'),
             'timezone': Select2Widget(attrs={'style': 'width:200px'}),
             'language': Select2Widget(attrs={'style': 'width:200px'}),
             'ace_theme': Select2Widget(attrs={'style': 'width:200px'}),
             'site_theme': Select2Widget(attrs={'style': 'width:200px'}),
+            'department': Select2Widget(attrs={'style': 'width:200px'}),
         }
 
         has_math_config = bool(settings.MATHOID_URL)
@@ -128,6 +129,20 @@ class ProfileForm(ModelForm):
         #     )
         # if not self.fields['organizations'].queryset:
         #     self.fields.pop('organizations')
+
+        # 전과/계열제 학부 선택 등으로 학과가 바뀐 사용자가 직접 수정할 수 있도록 함.
+        # 중/고등학생(비전북대 학교 소속)은 학과 개념이 없으므로 필드를 제거.
+        school = self.instance.school if self.instance and self.instance.pk else None
+        if school is not None and not school.is_jbnu:
+            self.fields.pop('department')
+        else:
+            self.fields['department'].queryset = Department.objects.exclude(name='중/고등학생').order_by('name')
+            self.fields['department'].required = True
+            # 모델 필드가 null 허용이라 위젯이 required=False로 생성되는데,
+            # Select2가 이를 보고 clear(x) 버튼을 붙이므로 위젯에도 반영해야 함.
+            self.fields['department'].widget.is_required = True
+            self.fields['department'].empty_label = None
+            self.fields['department'].label = _('학과')
 
 
 class DownloadDataForm(Form):

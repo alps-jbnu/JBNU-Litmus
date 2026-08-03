@@ -156,10 +156,15 @@ $(function () {
         $nav_list.removeClass('show-list');
     });
 
+    window.getDmojCsrfToken = function () {
+        var token = document.querySelector('meta[name="csrf-token"]');
+        return token ? token.getAttribute('content') : '';
+    };
+
     $.ajaxSetup({
         beforeSend: function (xhr, settings) {
             if (!(/^(GET|HEAD|OPTIONS|TRACE)$/.test(settings.type)) && !this.crossDomain)
-                xhr.setRequestHeader('X-CSRFToken', $.cookie('csrftoken'));
+                xhr.setRequestHeader('X-CSRFToken', window.getDmojCsrfToken());
         }
     });
 });

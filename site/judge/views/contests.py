@@ -151,9 +151,14 @@ def verify_contest_code(request, contest_key):
 class ContestDetailJSON(View):
     def get(self, request, *args, **kwargs):
         contest_key = kwargs.get('contest')
-        contest, exists = _find_contest(request, contest_key, private_check=False)
+        contest, exists = _find_contest(request, contest_key)
         if not exists:
             return JsonResponse({'error': 'Contest not found'}, status=404)
+
+        # 권한 검증 로직 추가
+        if not (request.user.is_staff or contest.is_editable_by(request.user) or
+                request.user.has_perm('judge.see_private_contest')):
+            raise PermissionDenied("You don't have permission to view contest results.")
 
         contest_data = {
             'name': contest.name,
