@@ -20,7 +20,7 @@ $(function () {
                 $preview.addClass('dmmd-preview-stale');
                 $.post(preview_url, {
                     content: text,
-                    csrfmiddlewaretoken: $.cookie('csrftoken')
+                    csrfmiddlewaretoken: window.getDmojCsrfToken()
                 }, function (result) {
                     $content.html(result);
                     $preview.addClass('dmmd-preview-has-content').removeClass('dmmd-preview-stale');
