@@ -1,3 +1,4 @@
+import csv
 import json
 import logging
 import os
@@ -5,7 +6,8 @@ import re
 import shutil
 import hashlib
 import base64
-from datetime import timedelta
+from datetime import datetime, timedelta
+from io import BytesIO
 from operator import itemgetter
 from random import randrange
 from statistics import mean, median
@@ -27,7 +29,8 @@ from django.utils.functional import cached_property
 from django.utils.html import escape, format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _, gettext_lazy
-from django.views.generic import DetailView, ListView, View
+from django.views.generic import DetailView, ListView, TemplateView, View
+from openpyxl import Workbook
 from django.views.generic.detail import SingleObjectMixin
 from django.views.decorators.http import require_POST
 from reversion import revisions
@@ -847,6 +850,116 @@ class ProblemList(QueryStringSortMixin, TitleMixin, SolvedProblemMixin, ListView
                     current[part] = {}
                 current = current[part]
         return data
+
+
+class ProblemExportView(LoginRequiredMixin, TitleMixin, TemplateView):
+    template_name = 'problem/export.html'
+    title = gettext_lazy('문제 목록 다운로드')
+
+    def has_export_permission(self):
+        required_perms = ('judge.view_all_problem', 'judge.edit_all_problem',
+                          'judge.edit_public_problem', 'judge.edit_own_problem')
+        return any(self.request.user.has_perm(perm) for perm in required_perms)
+
+    def get(self, request, *args, **kwargs):
+        if not self.has_export_permission():
+            raise PermissionDenied()
+
+        start = request.GET.get('start')
+        end = request.GET.get('end')
+        if not start or not end:
+            return self.render_to_response(self.get_context_data())
+
+        try:
+            start_date = datetime.strptime(start, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end, '%Y-%m-%d').date()
+        except ValueError:
+            return self.render_to_response(self.get_context_data(
+                start=start, end=end, error=_('날짜 형식이 올바르지 않습니다.'),
+            ))
+
+        if start_date > end_date:
+            return self.render_to_response(self.get_context_data(
+                start=start, end=end, error=_('시작일이 종료일보다 늦을 수 없습니다.'),
+            ))
+
+        problems = (
+            Problem.objects.filter(date__date__range=(start_date, end_date))
+            .select_related('group')
+            .prefetch_related('authors__user', 'allowed_languages')
+            .annotate(
+                total_submission_count=Count('submission', distinct=True),
+                ac_submission_count=Count(
+                    'submission',
+                    filter=Q(submission__result='AC', submission__case_points__gte=F('submission__case_total')),
+                    distinct=True,
+                ),
+            )
+            .order_by('date')
+        )
+
+        headers = [
+            _('문제 코드'), _('문제명'), _('출제자'), _('등록일'), _('배점'),
+            _('카테고리'), _('공개 여부'), _('대회 전용 여부'), _('푼 유저 수'), _('정답률(%)'),
+            _('부분점수 허용'), _('허용 언어'), _('제출 소스 공개 범위'), _('총 제출 수'), _('정답 제출 수'),
+        ]
+        rows = []
+        for problem in problems:
+            authors = ', '.join(author.username for author in problem.authors.all())
+            languages = ', '.join(sorted(set(lang.common_name for lang in problem.allowed_languages.all())))
+            problem_date = problem.date
+            if timezone.is_naive(problem_date):
+                problem_date = timezone.make_aware(problem_date, timezone.get_default_timezone())
+            rows.append([
+                problem.code,
+                problem.name,
+                authors,
+                timezone.localtime(problem_date).strftime('%Y-%m-%d %H:%M'),
+                problem.points,
+                problem.group.full_name if problem.group_id else '',
+                _('공개') if problem.is_public else _('비공개'),
+                _('대회 전용') if problem.is_contest_problem else _('일반'),
+                problem.user_count,
+                round(problem.ac_rate, 1),
+                _('허용') if problem.partial else _('비허용'),
+                languages,
+                problem.get_submission_source_visibility_mode_display(),
+                problem.total_submission_count,
+                problem.ac_submission_count,
+            ])
+
+        file_format = request.GET.get('format', 'xlsx')
+        if file_format == 'csv':
+            return self.build_csv_response(headers, rows, start, end)
+        return self.build_xlsx_response(headers, rows, start, end)
+
+    def build_csv_response(self, headers, rows, start, end):
+        response = HttpResponse(content_type='text/csv; charset=utf-8')
+        response['Content-Disposition'] = 'attachment; filename="problems_%s_%s.csv"' % (start, end)
+        response.write('﻿')
+        writer = csv.writer(response)
+        writer.writerow(headers)
+        writer.writerows(rows)
+        return response
+
+    def build_xlsx_response(self, headers, rows, start, end):
+        wb = Workbook()
+        ws = wb.active
+        ws.title = '문제 목록'
+        ws.append(headers)
+        for row in rows:
+            ws.append(row)
+
+        output = BytesIO()
+        wb.save(output)
+        output.seek(0)
+
+        response = HttpResponse(
+            output,
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        )
+        response['Content-Disposition'] = 'attachment; filename="problems_%s_%s.xlsx"' % (start, end)
+        return response
 
 
 class LanguageTemplateAjax(View):

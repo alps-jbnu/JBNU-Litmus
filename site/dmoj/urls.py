@@ -127,6 +127,7 @@ urlpatterns = [
     path('', include('social_django.urls')),
 
     path('problems/', problem.ProblemList.as_view(), name='problem_list'),
+    path('problems/export/', problem.ProblemExportView.as_view(), name='problem_export'),
     path('problems/random/', problem.RandomProblem.as_view(), name='problem_random'),
     path('path-to-your-view/', problem.GroupIdReceiverView.as_view(), name='group_id_receiver'),
     path('problem/<str:problem>', include([
