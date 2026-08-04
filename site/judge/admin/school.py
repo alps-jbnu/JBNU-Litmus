@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django import forms
 from django.contrib.admin.filters import FieldListFilter
+from django.db.models import Case, When, Value, IntegerField
 
 from judge.models import School
 
@@ -79,3 +80,14 @@ class SchoolAdmin(admin.ModelAdmin):
     search_fields = ['name', 'short_name']
     fields = ('name', 'short_name', 'school_type', 'is_jbnu', 'is_active')
     action_form = CustomActionForm
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.annotate(
+            type_order=Case(
+                When(school_type='highschool', then=Value(0)),
+                When(school_type='middleschool', then=Value(1)),
+                default=Value(2),
+                output_field=IntegerField(),
+            ),
+        ).order_by('-is_jbnu', 'type_order', 'name')
