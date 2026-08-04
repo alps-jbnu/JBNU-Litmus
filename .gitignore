@@ -83,6 +83,8 @@ hcpark_log_temp/
 .claude.json
 .claude.json.backup
 
+# Local report files
+/ex_files/
 
 site/resources/icons/problems_images/
 

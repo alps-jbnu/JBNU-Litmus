@@ -76,9 +76,9 @@ DMOJ_PP_BONUS_FUNCTION = lambda n: 300 * (1 - 0.997 ** n)  # noqa: E731
 
 NODEJS = '/usr/bin/node'
 EXIFTOOL = '/usr/bin/exiftool'
-ACE_URL = '//cdnjs.cloudflare.com/ajax/libs/ace/1.1.3'
-SELECT2_JS_URL = '//cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js'
-SELECT2_CSS_URL = '//cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css'
+ACE_URL = '/static/vendor/ace/1.1.3'
+SELECT2_JS_URL = '/static/libs/select2/select2.js'
+SELECT2_CSS_URL = '/static/libs/select2/select2.css'
 
 DMOJ_CAMO_URL = None
 DMOJ_CAMO_KEY = None
@@ -172,7 +172,7 @@ SELENIUM_CHROMEDRIVER_PATH = '/usr/bin/chromedriver'
 
 INLINE_JQUERY = True
 INLINE_FONTAWESOME = True
-JQUERY_JS = '//ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js'
+JQUERY_JS = '/static/libs/jquery-3.4.1.min.js'
 FONTAWESOME_CSS = '//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css'
 DMOJ_CANONICAL = ''
 
@@ -668,4 +668,3 @@ except IOError:
 
 # Check settings are consistent
 assert DMOJ_PROBLEM_MIN_USER_POINTS_VOTE >= DMOJ_PROBLEM_MIN_PROBLEM_POINTS
-

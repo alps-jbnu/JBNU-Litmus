@@ -255,8 +255,7 @@ class SimpleCSPMiddleware:
             'CSP_HEADER_VALUE',
             "default-src 'self'; "
             "base-uri 'self'; "
-            "script-src 'self' 'nonce-{nonce}' 'strict-dynamic' cdnjs.cloudflare.com ajax.googleapis.com "
-            "code.jquery.com cdn.jsdelivr.net; "
+            "script-src 'self' 'nonce-{nonce}'; "
             "style-src 'self' 'unsafe-inline' cdnjs.cloudflare.com maxcdn.bootstrapcdn.com; "
             "font-src 'self' maxcdn.bootstrapcdn.com cdnjs.cloudflare.com; "
             "img-src 'self' data: www.gravatar.com gravatar.com; "
