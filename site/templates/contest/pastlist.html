@@ -289,7 +289,7 @@
         .bottom-pagination-bar .pagination {
             color: var(--font-grey);
         }
-        ul.pagination > li.disabled-page {
+        ul.pagination > li.disabled-page:not(.pagination-ellipsis) {
             display: none;
         }   
         ul.pagination > li > a, ul.pagination > li > span {
@@ -344,6 +344,8 @@
                         // Reset to initial URL by removing all subject_id parameters
                         const url = new URL(window.location.href);
                         url.searchParams.delete('subject_id');
+                        url.searchParams.delete('own_page');
+                        url.searchParams.delete('other_page');
                         window.location.href = url.toString();
                     }
                 });
@@ -394,6 +396,8 @@
 
             const url = new URL(window.location.href);
             url.searchParams.delete('subject_id');
+            url.searchParams.delete('own_page');
+            url.searchParams.delete('other_page');
             selectedSubjects.forEach(function(subjectId) {
                 url.searchParams.append('subject_id', subjectId);
             });
@@ -561,22 +565,22 @@
                             <!-- 이전 페이지 버튼 -->
                             {% if past_own_contests.has_previous() %}
                                 <li>
-                                    <a href="?own_page={{ past_own_contests.previous_page_number() }}&other_page={{ past_other_contests.number }}" class="page-arrow"><i class="fa-solid fa-chevron-left"></i></a>
+                                    <a href="{{ own_pagination.previous_url }}" class="page-arrow"><i class="fa-solid fa-chevron-left"></i></a>
                                 </li>
                             {% else %}
                                 <li class="disabled-page"><i class="fa-solid fa-chevron-left"></i></li>
                             {% endif %}
 
                             <!-- 페이지 범위 -->
-                            {% for page in past_own_contests.paginator.page_range %}
-                                {% if not page %}
-                                    <li class="disabled-page"><span>...</span></li>
+                            {% for link in own_pagination.links %}
+                                {% if link.number is none %}
+                                    <li class="disabled-page pagination-ellipsis"><span>...</span></li>
                                 {% else %}
-                                    {% if page == past_own_contests.number %}
-                                        <li class="active-page"><a>{{ page }}</a></li>
+                                    {% if link.number == past_own_contests.number %}
+                                        <li class="active-page"><a>{{ link.number }}</a></li>
                                     {% else %}
                                         <li>
-                                            <a href="?own_page={{ page }}&other_page={{ past_other_contests.number }}">{{ page }}</a>
+                                            <a href="{{ link.url }}">{{ link.number }}</a>
                                         </li>
                                     {% endif %}
                                 {% endif %}
@@ -585,7 +589,7 @@
                             <!-- 다음 페이지 버튼 -->
                             {% if past_own_contests.has_next() %}
                                 <li>
-                                    <a href="?own_page={{ past_own_contests.next_page_number() }}&other_page={{ past_other_contests.number }}" class="page-arrow"><i class="fa-solid fa-chevron-right"></i></a>
+                                    <a href="{{ own_pagination.next_url }}" class="page-arrow"><i class="fa-solid fa-chevron-right"></i></a>
                                 </li>
                             {% else %}
                                 <li class="disabled-page"><span class="page-arrow"><i class="fa-solid fa-chevron-right"></i></span></li>
@@ -657,27 +661,27 @@
                         <ul class="pagination">
                             {% if past_other_contests.has_previous() %}
                                 <li>
-                                    <a href="?own_page={{ past_own_contests.number }}&other_page={{ past_other_contests.previous_page_number() }}" class="page-arrow"><i class="fa-solid fa-chevron-left"></i></a>
+                                    <a href="{{ other_pagination.previous_url }}" class="page-arrow"><i class="fa-solid fa-chevron-left"></i></a>
                                 </li>
                             {% else %}
                                 <li class="disabled-page"><i class="fa-solid fa-chevron-left"></i></li>
                             {% endif %}
                 
-                            {% for page in past_other_contests.paginator.page_range %}
-                                {% if page is none %}
-                                    <li class="disabled-page"><span>...</span></li>
-                                {% elif page == past_other_contests.number %}
-                                    <li class="active-page"><a>{{ page }}</a></li>
+                            {% for link in other_pagination.links %}
+                                {% if link.number is none %}
+                                    <li class="disabled-page pagination-ellipsis"><span>...</span></li>
+                                {% elif link.number == past_other_contests.number %}
+                                    <li class="active-page"><a>{{ link.number }}</a></li>
                                 {% else %}
                                     <li>
-                                        <a href="?own_page={{ past_own_contests.number }}&other_page={{ page }}">{{ page }}</a>
+                                        <a href="{{ link.url }}">{{ link.number }}</a>
                                     </li>
                                 {% endif %}
                             {% endfor %}
                 
-                            {% if past_other_contests.number < past_other_contests.paginator.num_pages %}
+                            {% if past_other_contests.has_next() %}
                                 <li>
-                                    <a href="?own_page={{ past_own_contests.number }}&other_page={{ past_other_contests.next_page_number() }}" class="page-arrow"><i class="fa-solid fa-chevron-right"></i></a>
+                                    <a href="{{ other_pagination.next_url }}" class="page-arrow"><i class="fa-solid fa-chevron-right"></i></a>
                                 </li>
                             {% endif %}
                         </ul>

@@ -612,6 +612,30 @@ class ContestPastList(ContestList):
 
         return super().dispatch(request, *args, **kwargs)
 
+    def _make_page_url(self, page_key, page_number):
+        query = self.request.GET.copy()
+        query[page_key] = page_number
+        return '?' + query.urlencode()
+
+    def _get_pagination_context(self, page, page_key):
+        return {
+            'previous_url': (
+                self._make_page_url(page_key, page.previous_page_number())
+                if page.has_previous() else None
+            ),
+            'links': [
+                {
+                    'number': page_number if page_number else None,
+                    'url': self._make_page_url(page_key, page_number) if page_number else None,
+                }
+                for page_number in page.page_range
+            ],
+            'next_url': (
+                self._make_page_url(page_key, page.next_page_number())
+                if page.has_next() else None
+            ),
+        }
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['is_practice'] = 1 if self.is_practice_view else 0
@@ -635,8 +659,8 @@ class ContestPastList(ContestList):
         own_per_page = 15
         other_per_page = 15
 
-        paginated_own = Paginator(last_own, own_per_page)
-        paginated_other = Paginator(spectate, other_per_page)
+        paginated_own = self.get_paginator(last_own, own_per_page)
+        paginated_other = self.get_paginator(spectate, other_per_page)
 
         # 요청한 페이지 번호 가져오기
         own_page_number = self.request.GET.get('own_page', 1)
@@ -647,6 +671,8 @@ class ContestPastList(ContestList):
 
         context['past_own_contests'] = past_own_contests
         context['past_other_contests'] = past_other_contests
+        context['own_pagination'] = self._get_pagination_context(past_own_contests, 'own_page')
+        context['other_pagination'] = self._get_pagination_context(past_other_contests, 'other_page')
 
         subjects = Subject.objects.all()
         context['subjects'] = subjects
