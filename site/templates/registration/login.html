@@ -190,6 +190,19 @@
         color: var(--primary-hover-color);
     }
 
+    /* 다크모드에서는 라이트용 그림자(rgba(0,0,0,.1))가 어두운 배경에 묻혀서
+       버튼 윤곽이 테두리 하나에만 의존하게 된다. 그런데 --border-secondary(#3a3a3a)는
+       --page-bg(#222) 대비 1.4:1 이라 사실상 보이지 않는다.
+       버튼 글자색과 같은 계열인 --secondary-color 로 올려 3.7:1 을 확보한다.
+       (WCAG 비텍스트 UI 요소 권장치 3:1) */
+    [data-theme="dark"] .jedutools-button {
+        border-color: var(--secondary-color);
+    }
+
+    [data-theme="dark"] .jedutools-button:hover {
+        border-color: var(--primary-color);
+    }
+
     .divider-container {
         display: flex;
         align-items: center;
