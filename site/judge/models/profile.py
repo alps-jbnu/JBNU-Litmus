@@ -178,10 +178,10 @@ class School(models.Model):
     ]
     name = models.CharField(max_length=100, verbose_name='학교 이름', unique=True)
     short_name = models.CharField(max_length=20, verbose_name='약칭')
-    school_type = models.CharField(max_length=20, choices=SCHOOL_TYPES)
+    school_type = models.CharField(max_length=20, choices=SCHOOL_TYPES, verbose_name='학교 유형')
     is_jbnu = models.BooleanField(default=False, verbose_name='전북대 여부',
                                   help_text='True이면 @jbnu.ac.kr 이메일 강제, False이면 @g.jbedu.kr 강제')
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True, verbose_name='활성 여부')
 
     def __str__(self):
         return self.name
