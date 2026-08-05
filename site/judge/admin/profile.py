@@ -182,11 +182,11 @@ class ProfileAdmin(NoBatchDeleteMixin, VersionAdmin):
     #           'math_engine', 'last_access', 'ip', 'mute', 'is_unlisted', 'is_banned_from_problem_voting',
     #           'username_display_override', 'notes', 'is_totp_enabled', 'user_script', 'current_contest')
     fields = ('user', 'display_rank', 'about', 'timezone', 'language', 'ace_theme', 'department', 'school',
-              'math_engine', 'last_access', 'ip', 'mute', 'is_unlisted', 'is_banned_from_problem_voting',
+              'student_number', 'math_engine', 'last_access', 'ip', 'mute', 'is_unlisted', 'is_banned_from_problem_voting',
               'username_display_override', 'notes', 'is_totp_enabled', 'user_script', 'current_contest')
     readonly_fields = ('user',)
-    list_display = ('admin_user_admin', 'email', 'department', 'school', 'staff_status', 'active_status', 'timezone_full',
-                    'date_joined_display', 'last_access_display', 'ip', 'show_public')
+    list_display = ('admin_user_admin', 'email', 'department', 'school', 'student_number', 'staff_status', 'active_status',
+                    'timezone_full', 'date_joined_display', 'last_access_display', 'ip', 'show_public')
     ordering = ('user__username',)
     search_fields = ('user__username', 'ip', 'user__email')
     # 커스텀 필터만 사용 - Django 기본 필터들 제거

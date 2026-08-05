@@ -28,7 +28,7 @@ from django.views.decorators.http import require_POST
 from django.views.generic import DetailView, FormView, ListView, TemplateView, View
 from reversion import revisions
 
-from judge.forms import CustomAuthenticationForm, DownloadDataForm, ProfileForm, newsletter_id, IdFindForm, CustomPasswordResetForm, EmailChangeForm, ResendActivationEmailForm, get_email_domain_for_user
+from judge.forms import CustomAuthenticationForm, DownloadDataForm, ProfileForm, newsletter_id, IdFindForm, CustomPasswordResetForm, EmailChangeForm, ResendActivationEmailForm, StudentNumberRegisterForm, get_email_domain_for_user
 from judge.models import Profile, Submission, ContestParticipation
 from judge.performance_points import get_pp_breakdown
 from judge.ratings import rating_class, rating_progress
@@ -757,6 +757,44 @@ class EmailChangeCompleteView(AdminOnlyMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         context['title'] = self.title
         return context
+
+
+# 중/고등학생 학번 등록/재등록 클래스.
+# 학번은 학년이 바뀔 때마다 관리자가 초기화(NULL)할 수 있으므로, 초기화된 이후
+# 본인이 다시 로그인해서 직접 등록할 수 있는 자기 자신 대상 페이지다.
+class StudentNumberRegisterView(LoginRequiredMixin, FormView):
+    title = _('학번 등록')
+    form_class = StudentNumberRegisterForm
+    template_name = 'registration/student_number_register.html'
+    success_url = reverse_lazy('student_number_register_complete')
+
+    def dispatch(self, request, *args, **kwargs):
+        profile = request.profile
+        if not (profile and profile.school and profile.school.school_type in ('highschool', 'middleschool')):
+            raise Http404()
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = self.title
+        return context
+
+    def form_valid(self, form):
+        profile = self.request.profile
+        profile.student_number = form.cleaned_data['student_number']
+        profile.save(update_fields=['student_number'])
+        return super().form_valid(form)
+
+
+class StudentNumberRegisterCompleteView(LoginRequiredMixin, TemplateView):
+    template_name = 'registration/student_number_register_complete.html'
+    title = _('학번 등록 완료')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = self.title
+        return context
+
 
 # 활성화 메일 재전송 클래스
 class ResendActivationEmailView(FormView):

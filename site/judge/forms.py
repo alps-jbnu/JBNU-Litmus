@@ -671,6 +671,15 @@ class EmailChangeForm(forms.Form):
             return user
         return None
 
+# 중/고등학생 학번 등록/재등록 폼
+class StudentNumberRegisterForm(forms.Form):
+    student_number = forms.CharField(
+        max_length=20,
+        widget=forms.TextInput(attrs={'placeholder': _('학번을 입력해주세요')}),
+        label=_('학번'),
+    )
+
+
 # 활성화 메일 재전송 폼
 class ResendActivationEmailForm(forms.Form):
     error_messages = {

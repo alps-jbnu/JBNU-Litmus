@@ -211,6 +211,7 @@ class Profile(models.Model):
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null = True, blank=True)
     school = models.ForeignKey('School', on_delete=models.SET_NULL,
                                null=True, blank=True, verbose_name='학교')
+    student_number = models.CharField(max_length=20, null=True, blank=True, verbose_name='학번')
     # organizations = SortedManyToManyField(Organization, verbose_name=_('organization'), blank=True,
     #                                       related_name='members', related_query_name='member')
     display_rank = models.CharField(max_length=10, default='user', verbose_name=_('display rank'),
@@ -276,7 +277,13 @@ class Profile(models.Model):
     @cached_property
     def display_name(self):
         return self.username_display_override or self.username
-    
+
+    @cached_property
+    def student_number_display(self):
+        if self.school and self.school.school_type in ('highschool', 'middleschool'):
+            return self.student_number or _('미등록')
+        return self.username
+
     def first_name(self):
         return self.user.first_name
 

@@ -67,6 +67,10 @@ register_patterns = [
     path('email/change/complete/', user.EmailChangeCompleteView.as_view(), name='email_change_complete'),
     path('email/change/domain/', user.email_change_domain_lookup, name='email_change_domain_lookup'),
 
+    # 학번 등록 기능 라우팅
+    path('student-number/register/', user.StudentNumberRegisterView.as_view(), name='student_number_register'),
+    path('student-number/register/complete/', user.StudentNumberRegisterCompleteView.as_view(), name='student_number_register_complete'),
+
     # 이메일 인증 필요 안내 페이지
     path('activation/required/',
          TitledTemplateView.as_view(template_name='registration/activation_required.html',
