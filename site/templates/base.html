@@ -72,7 +72,11 @@
     {% endif %}
     #}
     {% compress css %}
-        <link rel="stylesheet" href="{{ static(STYLE_CSS) }}">
+        {# 두 테마를 항상 함께 로드한다. dark/style.css 는 :where([data-theme="dark"]) 로 #}
+        {# 스코프돼 있어서 <html data-theme="dark"> 일 때만 적용되고, 특이도가 0이라 #}
+        {# 밝은 규칙과는 로드 순서로만 겨룬다. 순서를 바꾸면 다크모드가 깨진다. #}
+        <link rel="stylesheet" href="{{ static('style.css') }}">
+        <link rel="stylesheet" href="{{ static('dark/style.css') }}">
         {% if INLINE_FONTAWESOME %}<link rel="stylesheet" href="{{ static('libs/fontawesome/font-awesome.css') }}">{% endif %}
         <link rel="stylesheet" type="text/css" href="{{ static('libs/clipboard/tooltip.css') }}">
         <link rel="stylesheet" type="text/css" href="{{ static('libs/select2/select2.css') }}">
@@ -142,9 +146,20 @@
                 if (window.matchMedia) {
                     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
                         var profileTheme = '{{ SITE_THEME }}';
-                        if (profileTheme === 'auto') {
-                            document.cookie = 'site_theme=' + (e.matches ? 'dark' : 'light') + ';path=/;max-age=31536000;SameSite=Lax';
-                            window.location.reload();
+                        if (profileTheme !== 'auto') {
+                            return;
+                        }
+                        // 스타일시트를 서버에서 고르지 않으므로 새로고침 없이 속성만 바꾸면 된다.
+                        // 쿠키는 비로그인 사용자의 다음 요청에서 SITE_THEME 을 맞춰 깜빡임을 막는 용도.
+                        document.cookie = 'site_theme=' + (e.matches ? 'dark' : 'light') + ';path=/;max-age=31536000;SameSite=Lax';
+                        if (e.matches) {
+                            document.documentElement.setAttribute('data-theme', 'dark');
+                        } else {
+                            document.documentElement.removeAttribute('data-theme');
+                        }
+                        var metaThemeColor = document.querySelector('meta[name="theme-color"]');
+                        if (metaThemeColor) {
+                            metaThemeColor.content = e.matches ? '#222222' : '#FFBB33';
                         }
                     });
                 }

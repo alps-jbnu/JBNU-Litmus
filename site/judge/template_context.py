@@ -28,6 +28,11 @@ def get_resource(request):
     # 2. Profile.site_theme for logged-in users
     # 3. site_theme cookie for anonymous users
     # 4. Default: 'light'
+    #
+    # 여기서 나온 값은 base.html 인라인 스크립트가 <html data-theme> 를 정하는 데만 쓴다.
+    # 스타일시트는 style.css 와 dark/style.css 를 항상 같이 로드하고,
+    # 다크 규칙은 :where([data-theme="dark"]) 로 스코프돼 있으므로
+    # 서버가 알 수 없는 'auto'(시스템 기본값)도 'dark' 와 완전히 동일하게 렌더링된다.
     if 'dark' in request.GET:
         theme = 'dark'
     elif hasattr(request, 'profile') and request.profile:
@@ -35,14 +40,7 @@ def get_resource(request):
     else:
         theme = request.COOKIES.get('site_theme', 'light')
 
-    if theme == 'dark':
-        style_css = 'dark/style.css'
-    else:
-        # 'auto' defaults to light server-side; JS handles actual switching
-        style_css = 'style.css'
-
     return {
-        'STYLE_CSS': style_css,
         'SITE_THEME': theme,
         'INLINE_JQUERY': settings.INLINE_JQUERY,
         'INLINE_FONTAWESOME': settings.INLINE_FONTAWESOME,

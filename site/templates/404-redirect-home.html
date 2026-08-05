@@ -5,6 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex">
     <title>{{ title }} - Litmus</title>
+    <script{% if csp_nonce %} nonce="{{ csp_nonce }}"{% endif %}>
+        // error.html 과 동일한 테마 판정. 이 문서도 base.html 을 상속하지 않아
+        // SITE_THEME 을 쓸 수 없으므로 쿠키(저장된 설정) -> OS 설정 순으로 직접 해석한다.
+        // 첫 페인트 전에 동기 실행돼야 흰 화면 깜빡임이 없다.
+        (function () {
+            var matched = document.cookie.match(/(?:^|;)\s*site_theme=([^;]*)/);
+            var stored = matched ? decodeURIComponent(matched[1]) : '';
+            var isDark = stored === 'dark' || (
+                stored !== 'light' &&
+                window.matchMedia &&
+                window.matchMedia('(prefers-color-scheme: dark)').matches
+            );
+            if (isDark) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
     {% if auto_redirect_home %}
         <script{% if csp_nonce %} nonce="{{ csp_nonce }}"{% endif %}>
             window.location.replace('/');
@@ -32,6 +49,24 @@
             --litmus-muted: #5f6368;
             --litmus-line: #e4e7eb;
             --litmus-bg: #f8fafc;
+            --litmus-surface: #fff;
+            --litmus-primary-bg: #5285c4;
+            --litmus-primary-ink: #fff;
+            --litmus-shadow: rgba(20, 28, 36, 0.08);
+        }
+
+        /* 다크 팔레트 — error.html 과 동일한 값을 쓴다. 한쪽만 고치지 말 것. */
+        :root[data-theme="dark"] {
+            color-scheme: dark;
+            --litmus-accent: #6BA3E8;
+            --litmus-ink: #E8E8EC;
+            --litmus-muted: #A6AFBA;
+            --litmus-line: #767681;
+            --litmus-bg: #17171B;
+            --litmus-surface: #26262B;
+            --litmus-primary-bg: #3D6FA8;
+            --litmus-primary-ink: #fff;
+            --litmus-shadow: rgba(0, 0, 0, 0.5);
         }
 
         * {
@@ -61,9 +96,9 @@
             border: 1px solid var(--litmus-line);
             border-top: 4px solid var(--litmus-accent);
             border-radius: 8px;
-            background: #fff;
+            background: var(--litmus-surface);
             padding: 28px;
-            box-shadow: 0 8px 24px rgba(20, 28, 36, 0.08);
+            box-shadow: 0 8px 24px var(--litmus-shadow);
         }
 
         .brand {
@@ -108,14 +143,14 @@
 
         button {
             border: 0;
-            background: var(--litmus-accent);
-            color: #fff;
+            background: var(--litmus-primary-bg);
+            color: var(--litmus-primary-ink);
             font-family: inherit;
         }
 
         a {
             border: 1px solid var(--litmus-line);
-            background: #fff;
+            background: var(--litmus-surface);
             color: var(--litmus-ink);
         }
 
