@@ -45,7 +45,8 @@
         <link rel="stylesheet" href="{{ FONTAWESOME_CSS }}">
     {% endif %}
     {% compress css %}
-        <link rel="stylesheet" href="{{ static(STYLE_CSS) }}">
+        <link rel="stylesheet" href="{{ static('style.css') }}">
+        <link rel="stylesheet" href="{{ static('dark/style.css') }}">
         {% if INLINE_FONTAWESOME %}<link rel="stylesheet" href="{{ static('libs/fontawesome/font-awesome.css') }}">{% endif %}
         <link rel="stylesheet" type="text/css" href="{{ static('libs/clipboard/tooltip.css') }}">
         <link rel="stylesheet" type="text/css" href="{{ static('libs/select2/select2.css') }}">
