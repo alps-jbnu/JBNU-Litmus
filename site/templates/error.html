@@ -6,6 +6,24 @@
     <meta name="robots" content="noindex">
     <title>{{ code }} - Litmus</title>
     <script{% if csp_nonce %} nonce="{{ csp_nonce }}"{% endif %}>
+        // 이 문서는 base.html 을 상속하지 않는 독립 문서라 SITE_THEME(컨텍스트 프로세서)을 쓸 수 없다.
+        // 게다가 error500 은 DB 장애 상황에서도 떠야 하므로 서버에서 테마를 조회하면 위험하다.
+        // 그래서 base.html 과 같은 우선순위(저장된 설정 -> OS 설정)를 쿠키만으로 재현한다.
+        // 첫 페인트 전에 동기 실행돼야 흰 화면 깜빡임이 없으므로 DOMContentLoaded 를 쓰지 않는다.
+        (function () {
+            var matched = document.cookie.match(/(?:^|;)\s*site_theme=([^;]*)/);
+            var stored = matched ? decodeURIComponent(matched[1]) : '';
+            var isDark = stored === 'dark' || (
+                stored !== 'light' &&
+                window.matchMedia &&
+                window.matchMedia('(prefers-color-scheme: dark)').matches
+            );
+            if (isDark) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
+    <script{% if csp_nonce %} nonce="{{ csp_nonce }}"{% endif %}>
         document.addEventListener('DOMContentLoaded', function () {
             var backButton = document.getElementById('back-button');
             if (!backButton) return;
@@ -26,7 +44,30 @@
             --litmus-muted: #5f6368;
             --litmus-line: #e4e7eb;
             --litmus-bg: #f8fafc;
+            --litmus-surface: #fff;
             --litmus-danger: #b42318;
+            --litmus-primary-bg: #5285c4;
+            --litmus-primary-ink: #fff;
+            --litmus-shadow: rgba(20, 28, 36, 0.08);
+        }
+
+        /* 다크 팔레트. 위 스크립트가 <html data-theme="dark"> 를 붙였을 때만 적용된다.
+           값은 WCAG 기준으로 검증했다 — 본문 12.3:1, 설명문 6.8:1, 에러코드 6.6:1,
+           테두리는 카드 3.4:1 / 페이지 4.0:1, 주 버튼 흰 글자 5.2:1.
+           주 버튼 배경을 --litmus-accent 보다 어둡게 따로 둔 이유는, 밝은 파랑에
+           흰 글자를 얹으면 2.6:1 까지 떨어지기 때문이다. */
+        :root[data-theme="dark"] {
+            color-scheme: dark;
+            --litmus-accent: #6BA3E8;
+            --litmus-ink: #E8E8EC;
+            --litmus-muted: #A6AFBA;
+            --litmus-line: #767681;
+            --litmus-bg: #17171B;
+            --litmus-surface: #26262B;
+            --litmus-danger: #FF8A80;
+            --litmus-primary-bg: #3D6FA8;
+            --litmus-primary-ink: #fff;
+            --litmus-shadow: rgba(0, 0, 0, 0.5);
         }
 
         * {
@@ -56,9 +97,9 @@
             border: 1px solid var(--litmus-line);
             border-top: 4px solid var(--litmus-accent);
             border-radius: 8px;
-            background: #fff;
+            background: var(--litmus-surface);
             padding: 28px;
-            box-shadow: 0 8px 24px rgba(20, 28, 36, 0.08);
+            box-shadow: 0 8px 24px var(--litmus-shadow);
         }
 
         .brand {
@@ -111,14 +152,14 @@
 
         button {
             border: 0;
-            background: var(--litmus-accent);
-            color: #fff;
+            background: var(--litmus-primary-bg);
+            color: var(--litmus-primary-ink);
             font-family: inherit;
         }
 
         a {
             border: 1px solid var(--litmus-line);
-            background: #fff;
+            background: var(--litmus-surface);
             color: var(--litmus-ink);
         }
 
