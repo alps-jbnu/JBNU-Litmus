@@ -1148,7 +1148,6 @@ class ProblemSubmit(LoginRequiredMixin, ProblemMixin, TitleMixin, SingleObjectFo
         context['submissions_left'] = self.remaining_submission_count
         context['submission_window'] = self.get_submission_window()
         context['submit_action_label'] = self.submit_action_label
-        context['ACE_URL'] = settings.ACE_URL
         context['default_lang'] = self.default_language
         return context
 

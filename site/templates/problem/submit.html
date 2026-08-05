@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block js_media %}
-    <script type="text/javascript" src="{{ ACE_URL }}/ace.js"></script>
+    <script type="text/javascript" src="{{ static('vendor/ace/1.1.3/ace.js') }}"></script>
     {{ form.media.js }}
     {% compress js %}
         <script type="text/javascript">
@@ -87,13 +87,20 @@
                 //     dropdown.attr('id', 'judge-select2');
                 // });
 
-                // $('#id_language').change(function () {
-                //     var lang = $("#id_language").find("option:selected").attr('data-ace');
-                //     window.ace_source.getSession().setMode("ace/mode/" + lang);
-                //     update_language_template();
-                // });
+                function update_editor_mode() {
+                    var lang = $("#id_language").find("option:selected").attr('data-ace');
+                    if (lang) {
+                        window.ace_source.getSession().setMode("ace/mode/" + lang);
+                    }
+                }
+
+                $('#id_language').change(function () {
+                    update_editor_mode();
+                    update_language_template();
+                });
 
                 $('#ace_source').on('ace_load', function (e, editor) {
+                    update_editor_mode();
                     update_language_template();
                     editor.commands.addCommand({
                         name: 'save',
