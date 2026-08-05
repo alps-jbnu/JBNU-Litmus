@@ -2,10 +2,7 @@
 Django-ace originally from https://github.com/bradleyayers/django-ace.
 """
 
-from urllib.parse import urljoin
-
 from django import forms
-from django.conf import settings
 from django.forms.utils import flatatt
 from django.utils.safestring import mark_safe
 
@@ -23,7 +20,9 @@ class AceWidget(forms.Textarea):
 
     @property
     def media(self):
-        js = [urljoin(settings.ACE_URL, 'ace.js')] if self.ace_media else []
+        # Self-hosted so that Ace's runtime-injected <script> tags for modes,
+        # themes and workers stay same-origin and satisfy `script-src 'self'`.
+        js = ['vendor/ace/1.1.3/ace.js'] if self.ace_media else []
         js.append('django_ace/widget.js')
         css = {
             'screen': ['django_ace/widget.css'],

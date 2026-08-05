@@ -76,7 +76,9 @@ DMOJ_PP_BONUS_FUNCTION = lambda n: 300 * (1 - 0.997 ** n)  # noqa: E731
 
 NODEJS = '/usr/bin/node'
 EXIFTOOL = '/usr/bin/exiftool'
-ACE_URL = '/static/vendor/ace/1.1.3'
+# ACE_URL is no longer read anywhere. Ace is loaded straight from the vendored
+# copy in resources/vendor/ace/ by django_ace/widgets.py and problem/submit.html,
+# so that CSP (`script-src 'self'`) cannot break it via a stale setting.
 SELECT2_JS_URL = '/static/libs/select2/select2.js'
 SELECT2_CSS_URL = '/static/libs/select2/select2.css'
 
