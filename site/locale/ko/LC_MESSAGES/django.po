@@ -4683,7 +4683,7 @@ msgstr "프리뷰 업데이트"
 
 #: templates/problem/clone.html:37
 msgid "Enter a new code for the cloned problem:"
-msgstr "복제된 문제에 대해 새 코드를 입력하세요:"
+msgstr "복제된 문제에 대해 새 코드를 입력하세요."
 
 #: templates/problem/data.html:70
 msgid "precision (decimal digits)"
