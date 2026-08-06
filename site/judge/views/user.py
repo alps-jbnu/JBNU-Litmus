@@ -774,6 +774,11 @@ class StudentNumberRegisterView(LoginRequiredMixin, FormView):
             raise Http404()
         return super().dispatch(request, *args, **kwargs)
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['profile'] = self.request.profile
+        return kwargs
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['title'] = self.title

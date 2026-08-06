@@ -428,6 +428,9 @@ class Profile(models.Model):
             ('test_site', _('Shows in-progress development stuff')),
             ('totp', _('Edit TOTP settings')),
         )
+        constraints = [
+            UniqueConstraint(fields=['school', 'student_number'], name='unique_school_student_number'),
+        ]
         verbose_name = _('user profile')
         verbose_name_plural = _('user profiles')
 

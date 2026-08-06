@@ -679,6 +679,19 @@ class StudentNumberRegisterForm(forms.Form):
         label=_('학번'),
     )
 
+    def __init__(self, *args, profile=None, **kwargs):
+        self.profile = profile
+        super().__init__(*args, **kwargs)
+
+    def clean_student_number(self):
+        student_number = self.cleaned_data['student_number']
+        if self.profile and self.profile.school:
+            exists = Profile.objects.filter(school=self.profile.school, student_number=student_number) \
+                                    .exclude(pk=self.profile.pk).exists()
+            if exists:
+                raise forms.ValidationError(_('같은 학교에 동일한 학번이 이미 등록되어 있습니다.'), code='duplicate_student_number')
+        return student_number
+
 
 # 활성화 메일 재전송 폼
 class ResendActivationEmailForm(forms.Form):
