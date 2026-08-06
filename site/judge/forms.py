@@ -63,12 +63,11 @@ class ProfileForm(ModelForm):
     class Meta:
         model = Profile
         # fields = ['about', 'organizations', 'timezone', 'language', 'ace_theme', 'user_script']
-        fields = ['about', 'timezone', 'language', 'ace_theme', 'site_theme', 'user_script', 'department']
+        fields = ['about', 'timezone', 'language', 'site_theme', 'user_script', 'department']
         widgets = {
             'user_script': AceWidget(theme='github'),
             'timezone': Select2Widget(attrs={'style': 'width:200px'}),
             'language': Select2Widget(attrs={'style': 'width:200px'}),
-            'ace_theme': Select2Widget(attrs={'style': 'width:200px'}),
             'site_theme': Select2Widget(attrs={'style': 'width:200px'}),
             'department': Select2Widget(attrs={'style': 'width:200px'}),
         }
@@ -176,7 +175,7 @@ class DownloadDataForm(Form):
 
 
 class ProblemSubmitForm(ModelForm):
-    source = CharField(max_length=65536, widget=AceWidget(theme='twilight', no_ace_media=True))
+    source = CharField(max_length=65536, widget=AceWidget(no_ace_media=True))
     judge = ChoiceField(choices=(), widget=forms.HiddenInput(), required=False)
 
     def __init__(self, *args, judge_choices=(), **kwargs):

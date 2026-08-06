@@ -1076,8 +1076,6 @@ class ProblemSubmit(LoginRequiredMixin, ProblemMixin, TitleMixin, SingleObjectFo
         form_data = getattr(form, 'cleaned_data', form.initial)
         if 'language' in form_data:
             form.fields['source'].widget.mode = form_data['language'].ace
-        form.fields['source'].widget.theme = self.request.profile.ace_theme
-
         return form
 
     def get_success_url(self):
