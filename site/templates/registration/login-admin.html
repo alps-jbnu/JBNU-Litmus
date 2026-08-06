@@ -3,14 +3,14 @@
 {% block media %}
 <style>
     footer {
-        background: #FFF !important;
+        background: var(--page-bg) !important;
     }
     .title-div {
         visibility: hidden;
     }
     #page-container {
         display: flex;
-        background: #fff !important;
+        background: var(--page-bg) !important;
     }
     #content {
         display: flex;
@@ -35,13 +35,13 @@
         max-width: 100%;
         margin: 50px auto;
         padding: 20px;
-        background-color: white;
+        background: none;
         border-radius: 10px;
         text-align: center;
     }
 
     .auth-flow-form h2 {
-        margin-bottom: 20px;
+        margin-bottom: 0;
         font-size: 24px;
         font-weight: 400;
     }
@@ -50,7 +50,7 @@
         width: 354px;
         display: flex;
         flex-direction: column;
-        background-color: white;
+        background: none;
         border: none;
         gap: 10px;
         margin: 0 auto;
@@ -69,14 +69,14 @@
 
     .form-area button[type="submit"] {
         color: #FFF;
-        background-color: #5C95D9;
-        border: 1px solid #5C95D9;
+        background-color: var(--primary-color);
+        border: 1px solid var(--primary-color);
     }
 
     .form-area a.button {
-        color: #5C95D9 !important;
-        background-color: #FFF;
-        border: 1px solid #D9D9D9;
+        color: var(--primary-color) !important;
+        background-color: var(--page-bg);
+        border: 1px solid var(--input-border);
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -84,13 +84,13 @@
     }
 
     .form-area button:hover {
-        background-color: #5288C8;
+        background-color: var(--primary-hover-color);
         color: #FAFAFA;
     }
 
     .form-area a.button:hover {
-        background-color: #F7F7F7;
-        color: #5487C5;
+        background-color: var(--light-bg);
+        color: var(--primary-hover-color);
     }
 
 
@@ -99,12 +99,12 @@
         justify-content: flex-end;
         gap: 10px;
         margin-bottom: 10px;
-        color: #8391A1;
+        color: var(--font-grey);
     }
 
     .form-links a {
         text-decoration: none;
-        color: #8391A1;
+        color: var(--font-grey);
     }
 
     .form-links a:hover {
@@ -117,14 +117,14 @@
 
     .footer-content {
         text-align: center;
-        color: #808080;
+        color: var(--font-grey);
     }
 
     .form-area input[type="text"],
     .form-area input[type="password"] {
         height: 46px;
         padding: 10px 10px 10px 16px;
-        border: 1px solid #ddd;
+        border: 1px solid var(--input-border);
         border-radius: 8px;
         font-size: 14px;
         font-family: "Pretendard";
@@ -147,6 +147,35 @@
     input[type=checkbox] {
         vertical-align: middle;
     }
+
+    .login-lock-notice {
+        margin: 4px 0 0;
+        font-size: 14px;
+        font-weight: 400;
+        color: inherit;
+        white-space: pre-line;
+    }
+
+    .login-failure-status {
+        align-self: flex-start;
+        margin-bottom: 4px;
+        font-size: 14px;
+        font-weight: 400;
+        color: #D64545;
+    }
+
+    #form-errors.invalid_login,
+    #form-errors.invalid_login .error {
+        color: #D64545;
+    }
+
+    #form-errors.invalid_login {
+        padding-bottom: 0.75em;
+    }
+
+    #form-errors.invalid_login .error {
+        white-space: pre-line;
+    }
 </style>
 {% endblock %}
 
@@ -158,26 +187,19 @@
         {% if form.errors %}
             {% for field, errors in form.errors.items() %}
                 {% for error in errors %}
-                    {% if error == form.error_messages.invalid_login %}
-                        <div id="form-errors" class="invalid_login">
-                            <p class="error">{{ error }}</p>
-                        </div>
-                    {% elif error == form.error_messages.inactive %}
-                        <div id="form-errors" class="inactive">
-                            <p class="error">{{ error }}</p>
-                            <p>도움이 필요하신가요?</p>
-                            <p>
-                                <a href="{{ url('email_change') }}">이메일 변경</a> |
-                                <a href="{{ url('resend_activation_email') }}">활성화 메일 재전송</a>
-                            </p>
-                        </div>
-                    {% else %}
-                        <div id="form-errors">
-                            <p class="error">{{ error }}</p>
-                        </div>
-                    {% endif %}
+                    <div id="form-errors" class="invalid_login">
+                        <p class="error">{{ error }}</p>
+                        {% if error == form.error_messages.invalid_login %}
+                        <p class="login-lock-notice">{{ form.login_lock_notice_message }}</p>
+                        {% endif %}
+                    </div>
                 {% endfor %}
             {% endfor %}
+        {% endif %}
+        {% if form.login_failure_status_message %}
+        <div class="form-links login-failure-status">
+            {{ form.login_failure_status_message }}
+        </div>
         {% endif %}
         {{ form.username }}
         {{ form.password }}

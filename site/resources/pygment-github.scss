@@ -64,6 +64,12 @@ code {
         .vi { color: #008080 } /* Name.Variable.Instance */
         .il { color: #009999 } /* Literal.Number.Integer.Long */
     } @else {
+        /* 두 테마 스타일시트를 함께 로드하므로(밝은 것 위에 다크가 얹힌다),
+           위 라이트 분기에만 있는 선언은 여기서 명시적으로 되돌려야 한다.
+           라이트 분기에 속성을 추가할 땐 다크 분기에도 대응 선언이 있는지 확인할 것. */
+        .err { background-color: transparent } /* Error: 라이트의 #e3d2d2 제거 */
+        .k, .kc, .kd, .kn, .kp, .kr, .kt { font-weight: normal } /* Keyword: 라이트의 bold 제거 */
+
         .hll { background-color: #6e7681 }
         .c { color: #8b949e; font-style: italic } /* Comment */
         .err { color: #f85149 } /* Error */

@@ -3,11 +3,11 @@
 {% block media %}
 <style>
     footer {
-        background: #FFF !important;
+        background: var(--page-bg) !important;
     }
     #page-container {
         display: flex;
-        background: #fff !important;
+        background: var(--page-bg) !important;
     }
     .title-div {
         display: none;
@@ -25,7 +25,7 @@
         max-width: 100%;
         margin: 50px auto;
         padding: 20px;
-        background-color: white;
+        background-color: var(--page-bg);
         border-radius: 10px;
         text-align: center;
     }
@@ -40,7 +40,7 @@
         width: 354px;
         display: flex;
         flex-direction: column;
-        background-color: white;
+        background-color: var(--page-bg);
         border: none;
         gap: 10px;
         margin: 0 auto;
@@ -58,14 +58,14 @@
 
     .form-area button[type="submit"] {
         color: #FFF;
-        background-color: #5C95D9;
-        border: 1px solid #5C95D9;
+        background-color: var(--primary-color);
+        border: 1px solid var(--primary-color);
     }
 
     .form-area a.button {
-        color: #5C95D9 !important;
-        background-color: #FFF;
-        border: 1px solid #D9D9D9;
+        color: var(--primary-color) !important;
+        background-color: var(--page-bg);
+        border: 1px solid var(--input-border);
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -73,7 +73,7 @@
     }
 
     .form-area button:hover {
-        background-color: #5288C8;
+        background-color: var(--primary-hover-color);
         color: #FAFAFA;
     }
 
@@ -82,7 +82,7 @@
     .form-area input[type="email"] {
         height: 46px;
         padding: 10px 10px 10px 16px;
-        border: 1px solid #ddd;
+        border: 1px solid var(--input-border);
         border-radius: 8px;
         font-size: 14px;
         transition: border-color 0.15s ease-in-out 0s, box-shadow 0.15s ease-in-out 0s;
@@ -105,7 +105,7 @@
 
     .footer-content {
         text-align: center;
-        color: #808080;
+        color: var(--font-grey);
     }
 
     /* 이메일 입력 전체 영역 스타일 */
@@ -117,9 +117,9 @@
 
     /* 로컬 이메일 입력 필드 스타일 정의 */
     input[type=text].email_local {
-        color: #000;
-        background: #fff;
-        border: 1px solid #ddd;
+        color: var(--font-basic-black);
+        background: var(--page-bg);
+        border: 1px solid var(--input-border);
         border-right: none;
         border-radius: 8px 0 0 8px;
         padding: 10px 10px 10px 16px;

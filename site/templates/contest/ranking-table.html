@@ -9,6 +9,18 @@
     table-layout: fixed;
 }
 
+.late-submission-badge {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: #fff3cd;
+    color: #7a4f00;
+    font-size: 11px;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
 </style>
 
 {% block after_rank_head %}
@@ -25,8 +37,8 @@
 {% endblock %}
 
 {% block user_data %}
-    {% if not contest.ended %}
-        {% if not user.participation.ended %}
+    {% if not contest.is_submission_closed(now) %}
+        {% if user.participation.can_submit(now) %}
             <div class="start-time active">
                 {% with abs=_('Started on {time}'), rel=_('Started {time}') %}
                     {{ relative_time(user.participation.start, abs=abs, rel=rel) }}
@@ -76,7 +88,7 @@
 {% block before_point %}
     <td class="balloon-cell">
         {% set balloon_colors = ['#74b9ff', '#ff7675', '#55efc4', '#fdcb6e', '#6c5ce7', '#fab1a0', '#ffeaa7', '#fd79a8', '#a29bfe', '#00b894', '#e17055', '#00cec9', '#636e72', '#0984e3', '#00cec9', '#81ecec', '#fab1a0'] %}
-        
+
         {# 해결한 문제 개수 세기 #}
         {% set solved_problems = [] %}
         {% for i in range(problems|length) %}
@@ -85,7 +97,7 @@
                 {% set _ = solved_problems.append(i) %}
             {% endif %}
         {% endfor %}
-        
+
         {% if solved_problems|length >= 10 %}
             {# 10개 이상이면 풍선 하나 + 개수 표시 #}
             <svg width="24" height="38" viewBox="0 0 24 38" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block; vertical-align:middle;">

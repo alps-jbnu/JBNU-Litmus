@@ -260,7 +260,7 @@
             padding-bottom: 30px;
         }
         .title-div p.title-info {
-            color: rgb(128, 128, 128);
+            color: var(--font-grey);
             font-size: 16px;
             margin: 0;
             margin-top: auto;
@@ -371,7 +371,7 @@
             margin-top:20px;
         }
         .table th {
-            background:white;
+            background:var(--page-bg);
             color:var(--font-dark-grey);
             font-weight: 400;
             font-size:16px;
@@ -380,7 +380,7 @@
         }
         .table td {
             color:var(--font-dark-grey);
-            background-color: white;
+            background-color: var(--page-bg);
             border-color: var(--border-color);
         }
         #id_problem-data-zipfile {
@@ -408,7 +408,7 @@
         .file-selected {
             display: inline-flex;
             align-items: center;
-            background-color: #f5f5f5;
+            background-color: var(--light-bg);
             border-radius: 5px;
             padding: 5px 10px;
         }
@@ -421,37 +421,37 @@
         .file-selected #file-name-display {
             margin-right: 10px;
             font-size: 14px;
-            color: #333;
+            color: var(--font-basic-black);
         }
         
         .file-selected .remove-file {
             cursor: pointer;
-            color: #999;
+            color: var(--font-grey);
             margin-left: 10px;
             font-size: 14px;
         }
         
         .file-selected .remove-file:hover {
-            color: #000;
+            color: var(--font-black);
         }
         .far.fa-folder{
             margin-right:10px;
-            color:#5C95D9;
+            color:var(--primary-color);
         }
         #id_problem-data-unicode, 
         #id_problem-data-nobigmath, 
         #id_problem-data-checker {
-            background-color: white; 
-            border: 1px solid var(--border-color); 
-            border-radius: 12px; 
-            padding: 5px 10px; 
-            font-size: 14px; 
+            background-color: var(--page-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 5px 10px;
+            font-size: 14px;
             font-weight: 400;
             line-height: 20px;
-            color: var(--font-basic-black); 
-            cursor: pointer; 
-            width: auto; 
-            transition: all 0.3s ease; 
+            color: var(--font-basic-black);
+            cursor: pointer;
+            width: auto;
+            transition: all 0.3s ease;
         }
         
         #id_problem-data-checker:focus,
@@ -464,7 +464,7 @@
         #id_problem-data-nobigmath option,
         #id_problem-data-unicode option {
             padding: 10px;
-            background-color: white; 
+            background-color: var(--page-bg);
             color: var(--font-basic-black);
             border: 1px solid var(--border-color); 
             border-radius: 12px; 
@@ -494,8 +494,8 @@
             text-decoration: underline;
         }
         button:hover {
-            background-color: #5288C8;
-            color: #FAFAFA;
+            background-color: var(--primary-hover-color);
+            color: var(--white-hover-color);
         }
     </style>
 {% endblock %}

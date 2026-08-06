@@ -11,7 +11,7 @@
         margin-top: 0;
     }
     .status-card {
-        background: white;
+        background: var(--page-bg);
         border-radius: 12px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         margin-bottom: 20px;
@@ -190,18 +190,18 @@
         width: 100%;
         border-collapse: separate;
         border-spacing: 0;
-        background: white;
+        background: var(--page-bg);
         border-top-left-radius: 8px;
         border-top-right-radius: 8px;
         border: 1px solid var(--border-color);
     }
     
     .testcase-table th {
-        background: #f8f9fa;
+        background: var(--light-bg);
         padding: 6px 16px;
         text-align: center;
         font-weight: 600;
-        color: #495057;
+        color: var(--font-dark-grey);
         border-bottom: 1px solid var(--border-color);
         font-size: 14px;
     }
@@ -244,11 +244,11 @@
     }
     
     .testcase-row:hover {
-        background-color: #f8f9fa;
+        background-color: var(--light-bg);
     }
     
     .testcase-row {
-        background-color: white;
+        background-color: var(--page-bg);
     }
     
     .status-ac, .AC {
@@ -281,7 +281,7 @@
     
     .case-number {
         font-weight: 600;
-        color: #495057;
+        color: var(--font-dark-grey);
     }
     
     .execution-time {
@@ -296,7 +296,7 @@
     
     .testcase-table td.score-points {
         font-weight: 400;
-        color: #495057;
+        color: var(--font-dark-grey);
         font-size: 13px;
     }
     
@@ -312,7 +312,7 @@
         width: 20px;
         height: 20px;
         border: 3px solid #f3f3f3;
-        border-top: 3px solid #5C95D9;
+        border-top: 3px solid var(--primary-color);
         border-radius: 50%;
         animation: spin 1s linear infinite;
         margin-right: 8px;
@@ -522,7 +522,7 @@ function confirm_rejudge() {
                                 {% endif %}
                             {% endfor %}
                             {% if not submission.is_graded %}
-                                <span class="fa fa-spinner fa-pulse" style="color: #5C95D9; font-size: 18px; margin-left: 8px;"></span>
+                                <span class="fa fa-spinner fa-pulse" style="color: var(--primary-color); font-size: 18px; margin-left: 8px;"></span>
                             {% endif %}
                         </div>
                     {% endif %}
@@ -587,7 +587,7 @@ function confirm_rejudge() {
                                     {% for batch in batches %}
                                         {% if batch.id %}
                                             <tr>
-                                                <td colspan="6" style="background: #f8f9fa; font-weight: 600; color: #17171B; padding: 12px 16px;">
+                                                <td colspan="6" style="background: var(--light-bg); font-weight: 600; color: var(--font-black); padding: 12px 16px;">
                                                     {{ _('Batch #%(id)d', id=test_case_id()) }}
                                                     ({{ _('%(points)s/%(total)s points', points=batch.points|floatformat(0), total=batch.total|floatformat(0)) }})
                                                 </td>

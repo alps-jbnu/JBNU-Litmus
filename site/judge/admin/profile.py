@@ -30,7 +30,7 @@ class ProfileForm(ModelForm):
         widgets = {
             'timezone': AdminSelect2Widget,
             'language': AdminSelect2Widget,
-            'ace_theme': AdminSelect2Widget,
+            'site_theme': AdminSelect2Widget,
             'current_contest': AdminSelect2Widget,
             'about': AdminMartorWidget(attrs={'data-markdownfy-url': reverse_lazy('profile_preview')}),
         }
@@ -180,19 +180,19 @@ class ProfileAdmin(NoBatchDeleteMixin, VersionAdmin):
     # fields = ('user', 'display_rank', 'about', 'organizations', 'timezone', 'language', 'ace_theme',
     #           'math_engine', 'last_access', 'ip', 'mute', 'is_unlisted', 'is_banned_from_problem_voting',
     #           'username_display_override', 'notes', 'is_totp_enabled', 'user_script', 'current_contest')
-    fields = ('user', 'display_rank', 'about', 'timezone', 'language', 'ace_theme', 'department', 'school',
-              'math_engine', 'last_access', 'ip', 'mute', 'is_unlisted', 'is_banned_from_problem_voting',
+    fields = ('user', 'display_rank', 'about', 'timezone', 'language', 'department', 'school',
+              'student_number', 'math_engine', 'last_access', 'ip', 'mute', 'is_unlisted', 'is_banned_from_problem_voting',
               'username_display_override', 'notes', 'is_totp_enabled', 'user_script', 'current_contest')
     readonly_fields = ('user',)
-    list_display = ('admin_user_admin', 'email', 'department', 'school', 'staff_status', 'active_status', 'timezone_full',
-                    'date_joined_display', 'last_access_display', 'ip', 'show_public')
+    list_display = ('admin_user_admin', 'email', 'department', 'school', 'student_number', 'staff_status', 'active_status',
+                    'timezone_full', 'date_joined_display', 'last_access_display', 'ip', 'show_public')
     ordering = ('user__username',)
     search_fields = ('user__username', 'ip', 'user__email')
     # 커스텀 필터만 사용 - Django 기본 필터들 제거
     list_filter = [
         ('id', CombinedProfileFilter),
     ]
-    actions = ('recalculate_points',)
+    actions = ('recalculate_points', 'clear_login_lock')
     actions_on_top = True
     actions_on_bottom = True
     form = ProfileForm
@@ -294,9 +294,19 @@ class ProfileAdmin(NoBatchDeleteMixin, VersionAdmin):
                                             count) % count)
     recalculate_points.short_description = _('Recalculate scores')
 
+    def clear_login_lock(self, request, queryset):
+        count = 0
+        for profile in queryset:
+            profile.clear_login_failures()
+            count += 1
+        self.message_user(request, ngettext('%d user had login lock cleared.',
+                                            '%d users had login locks cleared.',
+                                            count) % count)
+    clear_login_lock.short_description = _('10분 로그인 잠금 해제')
+
     def get_form(self, request, obj=None, **kwargs):
         form = super(ProfileAdmin, self).get_form(request, obj, **kwargs)
         if 'user_script' in form.base_fields:
             # form.base_fields['user_script'] does not exist when the user has only view permission on the model.
-            form.base_fields['user_script'].widget = AceWidget('javascript', request.profile.ace_theme)
+            form.base_fields['user_script'].widget = AceWidget('javascript')
         return form

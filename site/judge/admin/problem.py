@@ -27,8 +27,8 @@ from django.utils.html import format_html
 from django.template.response import TemplateResponse
 from django.utils.translation import gettext, gettext_lazy as _, ngettext
 
-from judge.models import (Judge, Language, LanguageLimit, Problem, ProblemClarification, 
-                         ProblemData, ProblemPointsVote, ProblemTestCase, 
+from judge.models import (Judge, Language, LanguageLimit, Problem, ProblemClarification,
+                         ProblemData, ProblemGroup, ProblemPointsVote, ProblemTestCase,
                          ProblemTranslation, Profile, Solution)
 from judge.utils.views import NoBatchDeleteMixin
 #TestCase 처리를 위한 import
@@ -252,6 +252,7 @@ from django.db.models import Q
 class ProblemCombinedInputFilter(FieldListFilter):
     title=' '
     template = 'admin/input_filter/input_filter_problem.html'  # 커스텀 템플릿
+    filter_keys = ['is_public', 'encryption_status', 'authors', 'name', 'code', 'problem_group']
 
     def __init__(self, field, request, params, model, model_admin, field_path):
         super().__init__(field, request, params, model, model_admin, field_path)
@@ -264,10 +265,38 @@ class ProblemCombinedInputFilter(FieldListFilter):
             .values_list('user__username', flat=True)
             .distinct()
         )
+        self.__group_lookups = tuple(
+            (str(group_id), full_name)
+            for group_id, full_name in ProblemGroup.objects.values_list('id', 'full_name')
+        )
+        self.__group_handles = {group_id for group_id, _ in self.__group_lookups}
+
+    @property
+    def group_lookups(self):
+        return self.__group_lookups
+
+    @property
+    def grouped_group_lookups(self):
+        ungrouped = []
+        grouped = {}
+
+        for group_id, full_name in ProblemGroup.objects.order_by('full_name').values_list('id', 'full_name'):
+            parts = [part.strip() for part in full_name.split('/') if part.strip()]
+            if len(parts) <= 1:
+                ungrouped.append((str(group_id), full_name))
+                continue
+
+            parent_label = ' / '.join(parts[:-1])
+            child_label = parts[-1]
+            grouped.setdefault(parent_label, []).append((str(group_id), child_label))
+
+        return (
+            tuple(ungrouped),
+            tuple((parent_label, tuple(children)) for parent_label, children in grouped.items()),
+        )
 
     def expected_parameters(self):
-        # 여러 필드를 필터하므로 각 필드 이름을 명시
-        return ['is_public', 'encryption_status', 'authors', 'name','code']
+        return self.filter_keys
 
     def choices(self, changelist):
         yield {
@@ -282,6 +311,7 @@ class ProblemCombinedInputFilter(FieldListFilter):
         authors = request.GET.get('authors')
         name = request.GET.get('name')
         code = request.GET.get('code')
+        problem_group = request.GET.get('problem_group')
 
         if is_public in ['True', 'False']:
             queryset = queryset.filter(is_public=(is_public == 'True'))
@@ -299,6 +329,9 @@ class ProblemCombinedInputFilter(FieldListFilter):
             
         if name:
             queryset = queryset.filter(name__icontains=name)
+
+        if problem_group and problem_group in self.__group_handles:
+            queryset = queryset.filter(group_id=problem_group)
 
             
         return queryset

@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block media %}
+<style>
+    footer {
+        background: var(--page-bg) !important;
+    }
+    #page-container {
+        background: var(--page-bg) !important;
+    }
+    .title-div {
+        display: none;
+    }
+    #content {
+        margin: clamp(24px, 17vh, 140px) auto 0 !important;
+        width: 1040px;
+    }
+    .student-number-card {
+        max-width: 100%;
+        width: 400px;
+        margin: 0 auto;
+        padding: 40px 32px 32px;
+        background-color: var(--page-bg);
+        border-radius: 16px;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+        text-align: center;
+        font-family: "Pretendard", "Segoe UI", "Lucida Grande", Arial, sans-serif;
+        box-sizing: border-box;
+    }
+
+    .student-number-icon {
+        width: 56px;
+        height: 56px;
+        margin: 0 auto 16px;
+        border-radius: 50%;
+        background-color: var(--light-blue-bg);
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 30px;
+    }
+
+    .student-number-card h2 {
+        margin: 0 0 8px;
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--font-black);
+    }
+
+    .required-notice {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        margin: 0 0 12px;
+        padding: 14px 16px;
+        border-radius: 10px;
+        background-color: rgba(230, 69, 69, 0.08);
+        color: #e64545;
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.5;
+        text-align: center;
+    }
+
+    .form-area {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .student-number-card #form-errors {
+        margin: 8px 0 0;
+        padding: 0;
+        background: none;
+        border: none;
+        text-align: center;
+    }
+    #form-errors .error {
+        margin: 0;
+        font-size: 13px;
+        font-weight: 700;
+        color: #e64545;
+    }
+
+    .form-area input[type="text"] {
+        height: 48px;
+        padding: 0 16px;
+        border: 1px solid var(--input-border);
+        border-radius: 10px;
+        font-size: 14px;
+        font-family: inherit;
+        background-color: var(--page-bg);
+        color: var(--font-basic-black);
+        box-sizing: border-box;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+    .form-area input[type="text"]:focus {
+        outline: 0;
+        border-color: var(--secondary-color);
+        box-shadow: 0 0 0 3px rgba(92, 149, 217, 0.15);
+    }
+
+    .form-area button[type="submit"] {
+        height: 40px;
+        margin-top: 4px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: bold;
+        font-family: "Pretendard";
+        text-align: center;
+        cursor: pointer;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        box-shadow: none;
+        background-image: none !important;
+        color: #FFFFFF !important;
+        background-color: #5C95D9 !important;
+        border: 1px solid #5C95D9;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .form-area button[type="submit"]:hover {
+        background-color: #5288C8 !important;
+        color: #FAFAFA !important;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="student-number-card">
+    <div class="student-number-icon material-symbols-outlined">school</div>
+    <h2>학번 등록</h2>
+    <div class="required-notice">
+        <span>학번이 등록되어 있지 않아 서비스를 이용하실 수 없습니다.<br>학번 등록은 필수입니다.</span>
+    </div>
+    <form action="" method="post" class="form-area">
+        {% csrf_token %}
+        {% if form.errors %}
+            <div id="form-errors">
+                {% for field, errors in form.errors.items() %}
+                    {% for error in errors %}
+                        <p class="error">{{ error }}</p>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {{ form.student_number }}
+
+        <button type="submit">{{ _('학번 등록') }}</button>
+    </form>
+</div>
+{% endblock %}

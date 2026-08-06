@@ -1,39 +1,219 @@
-<html>
+<!doctype html>
+<html lang="{{ language_code|default('ko') }}">
 <head>
-    <title>{{ code }} - {{ id }}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex">
+    <title>{{ code }} - Litmus</title>
+    <script{% if csp_nonce %} nonce="{{ csp_nonce }}"{% endif %}>
+        // 이 문서는 base.html 을 상속하지 않는 독립 문서라 SITE_THEME(컨텍스트 프로세서)을 쓸 수 없다.
+        // 게다가 error500 은 DB 장애 상황에서도 떠야 하므로 서버에서 테마를 조회하면 위험하다.
+        // 그래서 base.html 과 같은 우선순위(저장된 설정 -> OS 설정)를 쿠키만으로 재현한다.
+        // 첫 페인트 전에 동기 실행돼야 흰 화면 깜빡임이 없으므로 DOMContentLoaded 를 쓰지 않는다.
+        (function () {
+            var matched = document.cookie.match(/(?:^|;)\s*site_theme=([^;]*)/);
+            var stored = matched ? decodeURIComponent(matched[1]) : '';
+            var isDark = stored === 'dark' || (
+                stored !== 'light' &&
+                window.matchMedia &&
+                window.matchMedia('(prefers-color-scheme: dark)').matches
+            );
+            if (isDark) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
+    <script{% if csp_nonce %} nonce="{{ csp_nonce }}"{% endif %}>
+        document.addEventListener('DOMContentLoaded', function () {
+            var backButton = document.getElementById('back-button');
+            if (!backButton) return;
+            backButton.addEventListener('click', function () {
+                if (window.history.length > 1) {
+                    window.history.back();
+                } else {
+                    window.location.href = '/';
+                }
+            });
+        });
+    </script>
     <style>
+        :root {
+            color-scheme: light;
+            --litmus-accent: #5285c4;
+            --litmus-ink: #202124;
+            --litmus-muted: #5f6368;
+            --litmus-line: #e4e7eb;
+            --litmus-bg: #f8fafc;
+            --litmus-surface: #fff;
+            --litmus-danger: #b42318;
+            --litmus-primary-bg: #5285c4;
+            --litmus-primary-ink: #fff;
+            --litmus-shadow: rgba(20, 28, 36, 0.08);
+        }
+
+        /* 다크 팔레트. 위 스크립트가 <html data-theme="dark"> 를 붙였을 때만 적용된다.
+           값은 WCAG 기준으로 검증했다 — 본문 12.3:1, 설명문 6.8:1, 에러코드 6.6:1,
+           테두리는 카드 3.4:1 / 페이지 4.0:1, 주 버튼 흰 글자 5.2:1.
+           주 버튼 배경을 --litmus-accent 보다 어둡게 따로 둔 이유는, 밝은 파랑에
+           흰 글자를 얹으면 2.6:1 까지 떨어지기 때문이다. */
+        :root[data-theme="dark"] {
+            color-scheme: dark;
+            --litmus-accent: #6BA3E8;
+            --litmus-ink: #E8E8EC;
+            --litmus-muted: #A6AFBA;
+            --litmus-line: #767681;
+            --litmus-bg: #17171B;
+            --litmus-surface: #26262B;
+            --litmus-danger: #FF8A80;
+            --litmus-primary-bg: #3D6FA8;
+            --litmus-primary-ink: #fff;
+            --litmus-shadow: rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
         body {
-            color: #FFFFFF;
-            background-color: #000080;
-            font-family: Lucida Console, Monospace, serif;
+            min-height: 100%;
+        }
+
+        body {
+            margin: 0;
+            display: grid;
+            min-height: 100vh;
+            place-items: center;
+            padding: 32px 20px;
+            background: var(--litmus-bg);
+            color: var(--litmus-ink);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        main {
+            width: min(100%, 460px);
+            border: 1px solid var(--litmus-line);
+            border-top: 4px solid var(--litmus-accent);
+            border-radius: 8px;
+            background: var(--litmus-surface);
+            padding: 28px;
+            box-shadow: 0 8px 24px var(--litmus-shadow);
+        }
+
+        .brand {
+            margin: 0 0 18px;
+            color: var(--litmus-ink);
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0;
+        }
+
+        .code {
+            margin: 0 0 8px;
+            color: var(--litmus-danger);
             font-size: 14px;
-            font-smooth: never;
-            -webkit-font-smoothing: none;
-            margin-left: 50px;
+            font-weight: 700;
+            letter-spacing: 0;
+        }
+
+        h1 {
+            margin: 0 0 10px;
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: 0;
+            line-height: 1.25;
+        }
+
+        p {
+            margin: 0;
+            color: var(--litmus-muted);
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
             margin-top: 20px;
         }
 
+        button,
         a {
-            color: #FFFFFF;
-            font-weight: bold
+            display: inline-block;
+            border-radius: 6px;
+            padding: 10px 14px;
+            font-size: 15px;
+            font-weight: 700;
+            line-height: 1.2;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        button {
+            border: 0;
+            background: var(--litmus-primary-bg);
+            color: var(--litmus-primary-ink);
+            font-family: inherit;
+        }
+
+        a {
+            border: 1px solid var(--litmus-line);
+            background: var(--litmus-surface);
+            color: var(--litmus-ink);
+        }
+
+        button:focus,
+        a:focus,
+        summary:focus {
+            outline: 3px solid rgba(82, 133, 196, 0.35);
+            outline-offset: 2px;
+        }
+
+        details {
+            margin-top: 22px;
+            border-top: 1px solid var(--litmus-line);
+            padding-top: 16px;
+        }
+
+        summary {
+            color: var(--litmus-muted);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 700;
         }
 
         pre {
-            font-family: Lucida Console, Monospace, serif;
-            line-height: 1.3;
-            font-smooth: never;
-            -webkit-font-smoothing: none;
+            overflow: auto;
+            max-height: 320px;
+            margin: 12px 0 0;
+            border-radius: 6px;
+            background: #111827;
+            color: #f9fafb;
+            padding: 14px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            font-size: 12px;
+            line-height: 1.45;
             white-space: pre-wrap;
         }
     </style>
 </head>
 <body>
-<h2>SIGSEGV: {{ id }}</h2>
-<pre>{{ description }}
-site: fatal signal: Segmentation fault
-site died (signal <b>{{ code }}</b>, exit -11)<br><br>panic: <a href="javascript:history.back()">go back</a></pre>
-{% if request.user.is_superuser and traceback %}
-    <pre>{{ traceback }}</pre>
-{% endif %}
+    <main>
+        <p class="brand">Litmus</p>
+        <p class="code">{{ code }} error</p>
+        <h1>요청을 처리하지 못했습니다.</h1>
+        <p>{{ description|default('일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.') }}</p>
+        <div class="actions">
+            <button id="back-button" type="button">이전 페이지로 돌아가기</button>
+            <a href="/">홈으로 이동</a>
+        </div>
+        {% if show_traceback and traceback %}
+            <details>
+                <summary>오류 상세 정보</summary>
+                <pre>{{ traceback }}</pre>
+            </details>
+        {% endif %}
+    </main>
 </body>
 </html>

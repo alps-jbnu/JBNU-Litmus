@@ -49,7 +49,7 @@ class LanguageAdmin(VersionAdmin):
     def get_form(self, request, obj=None, **kwargs):
         form = super(LanguageAdmin, self).get_form(request, obj, **kwargs)
         if obj is not None:
-            form.base_fields['template'].widget = AceWidget(obj.ace, request.profile.ace_theme)
+            form.base_fields['template'].widget = AceWidget(obj.ace)
         return form
 
     def save_model(self, request, obj, form, change):

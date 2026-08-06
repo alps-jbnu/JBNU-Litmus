@@ -1,0 +1,178 @@
+{% extends "common-content.html" %}
+
+{% block title_ruler %}{% endblock %}
+
+{% block title_row %}
+    {% set tab = 'problem_export' %}
+    {% include "problem/problem-list-tabs.html" %}
+{% endblock %}
+
+{% block content_media %}
+<style>
+    .export-form {
+        max-width: 480px;
+        margin: 40px auto;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+    .export-form h3 {
+        margin: 0;
+    }
+    .export-form p {
+        margin: 0;
+        color: var(--font-grey);
+    }
+    .export-form .field-row {
+        display: flex;
+        gap: 12px;
+    }
+    .export-form .field {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .export-form label {
+        font-weight: 500;
+    }
+    .export-form input[type="date"] {
+        height: 38px;
+        border-radius: 8px;
+        border: 1px solid var(--input-border);
+        padding: 0 10px;
+        cursor: pointer;
+    }
+    .export-form input[type="date"]::-webkit-calendar-picker-indicator {
+        cursor: pointer;
+    }
+    .export-form .format-options {
+        display: flex;
+        gap: 20px;
+    }
+    .export-form .format-options label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: normal;
+    }
+    .export-form button {
+        height: 40px;
+        border-radius: 10px;
+        background: var(--LITMUS-Primary, #5C95D9);
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 14px;
+    }
+    .export-error {
+        color: red;
+    }
+    .export-form button:disabled {
+        opacity: 0.6;
+        cursor: default;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<form id="export-form" class="export-form" method="get" action="{{ url('problem_export') }}">
+    <h3>{{ _('문제 목록 다운로드') }}</h3>
+    <p>{{ _('설정한 기간 동안 새로 등록된 문제 목록을 CSV 또는 엑셀 파일로 다운로드합니다.') }}</p>
+
+    <div id="export-error" class="export-error" {% if not error %}style="display: none;"{% endif %}>{{ error or '' }}</div>
+
+    <div class="field-row">
+        <div class="field">
+            <label for="export-start">{{ _('시작일') }}</label>
+            <input type="date" id="export-start" name="start" value="{{ start or '' }}" required>
+        </div>
+        <div class="field">
+            <label for="export-end">{{ _('종료일') }}</label>
+            <input type="date" id="export-end" name="end" value="{{ end or '' }}" required>
+        </div>
+    </div>
+
+    <div class="field">
+        <label>{{ _('파일 형식') }}</label>
+        <div class="format-options">
+            <label><input type="radio" name="format" value="xlsx" checked> xlsx</label>
+            <label><input type="radio" name="format" value="csv"> csv</label>
+        </div>
+    </div>
+
+    <button id="export-submit" type="submit">{{ _('다운로드') }}</button>
+</form>
+{% endblock %}
+
+{% block content_js_media %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var form = document.getElementById('export-form');
+        var button = document.getElementById('export-submit');
+        var errorBox = document.getElementById('export-error');
+
+        ['export-start', 'export-end'].forEach(function (id) {
+            var input = document.getElementById(id);
+            input.addEventListener('click', function () {
+                if (typeof input.showPicker === 'function') {
+                    input.showPicker();
+                }
+            });
+        });
+
+        function showError(message) {
+            errorBox.textContent = message;
+            errorBox.style.display = message ? 'block' : 'none';
+        }
+
+        function parseFilename(disposition) {
+            if (!disposition) return 'download';
+            var utf8Match = disposition.match(/filename\*=UTF-8''([^;]+)/);
+            if (utf8Match) return decodeURIComponent(utf8Match[1]);
+            var plainMatch = disposition.match(/filename="?([^";]+)"?/);
+            return plainMatch ? plainMatch[1] : 'download';
+        }
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            showError('');
+            button.disabled = true;
+
+            var params = new URLSearchParams(new FormData(form));
+            var url = form.action + '?' + params.toString();
+
+            fetch(url, { credentials: 'same-origin' })
+                .then(function (response) {
+                    var contentType = response.headers.get('Content-Type') || '';
+                    if (contentType.indexOf('text/html') !== -1) {
+                        return response.text().then(function (html) {
+                            var doc = new DOMParser().parseFromString(html, 'text/html');
+                            var errorEl = doc.querySelector('#export-error');
+                            showError(errorEl && errorEl.textContent.trim() ? errorEl.textContent.trim() : '{{ _("다운로드에 실패했습니다.") }}');
+                        });
+                    }
+
+                    var filename = parseFilename(response.headers.get('Content-Disposition'));
+                    return response.blob().then(function (blob) {
+                        var blobUrl = window.URL.createObjectURL(blob);
+                        var a = document.createElement('a');
+                        a.href = blobUrl;
+                        a.download = filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        window.URL.revokeObjectURL(blobUrl);
+                    });
+                })
+                .catch(function () {
+                    showError('{{ _("다운로드에 실패했습니다.") }}');
+                })
+                .finally(function () {
+                    button.disabled = false;
+                });
+        });
+    });
+</script>
+{% endblock %}

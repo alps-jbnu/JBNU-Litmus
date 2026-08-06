@@ -53,7 +53,14 @@ class DMOJLoginMiddleware(object):
             webauthn_path = reverse('webauthn_assert')
             change_password_path = reverse('password_change')
             change_password_done_path = reverse('password_change_done')
+            student_number_register_path = reverse('student_number_register')
+            student_number_register_complete_path = reverse('student_number_register_complete')
+            actual_logout_path = reverse('auth_logout')
             has_2fa = profile.is_totp_enabled or profile.is_webauthn_enabled
+            needs_student_number = (
+                profile.school and profile.school.school_type in ('highschool', 'middleschool') and
+                not profile.student_number
+            )
             if (has_2fa and not request.session.get('2fa_passed', False) and
                     request.path not in (login_2fa_path, logout_path, webauthn_path) and
                     not request.path.startswith(settings.STATIC_URL)):
@@ -63,6 +70,11 @@ class DMOJLoginMiddleware(object):
                                          login_2fa_path, logout_path) and
                     not request.path.startswith(settings.STATIC_URL)):
                 return HttpResponseRedirect(change_password_path + '?next=' + quote(request.get_full_path()))
+            elif (needs_student_number and
+                    request.path not in (student_number_register_path, student_number_register_complete_path,
+                                         actual_logout_path) and
+                    not request.path.startswith(settings.STATIC_URL)):
+                return HttpResponseRedirect(student_number_register_path)
         else:
             request.profile = None
         return self.get_response(request)
@@ -254,14 +266,48 @@ class SimpleCSPMiddleware:
             settings,
             'CSP_HEADER_VALUE',
             "default-src 'self'; "
-            "script-src 'self' 'nonce-{nonce}' 'strict-dynamic' https: cdnjs.cloudflare.com ajax.googleapis.com; "
+            "base-uri 'self'; "
+            "script-src 'self' 'nonce-{nonce}'; "
             "style-src 'self' 'unsafe-inline' cdnjs.cloudflare.com maxcdn.bootstrapcdn.com; "
             "font-src 'self' maxcdn.bootstrapcdn.com cdnjs.cloudflare.com; "
             "img-src 'self' data: www.gravatar.com gravatar.com; "
+            "connect-src 'self'; "
+            "form-action 'self'; "
             "frame-ancestors 'none'; "
+            "manifest-src 'self'; "
             "object-src 'none'; "
+            "require-trusted-types-for 'script'; "
+        )
+        self.feed_csp_value = getattr(
+            settings,
+            'CSP_FEED_HEADER_VALUE',
+            "default-src 'none'; "
+            "base-uri 'none'; "
+            "script-src 'none'; "
+            "style-src 'none'; "
+            "font-src 'none'; "
+            "img-src 'none'; "
+            "connect-src 'none'; "
+            "form-action 'none'; "
+            "frame-ancestors 'none'; "
+            "manifest-src 'none'; "
+            "object-src 'none'; "
+            "require-trusted-types-for 'script'; "
         )
         self.csp_report_only_value = getattr(settings, 'CSP_REPORT_ONLY_VALUE', '')
+        self.trusted_types_bootstrap = (
+            '<script nonce="{nonce}" data-trusted-types-bootstrap>'
+            '(function(){{'
+            'if(window.trustedTypes&&!window.trustedTypes.defaultPolicy){{'
+            'window.trustedTypes.createPolicy("default",{{'
+            'createHTML:function(value){{return value;}},'
+            'createScript:function(value){{return value;}},'
+            'createScriptURL:function(value){{return value;}}'
+            '}});'
+            '}}'
+            '}})();'
+            '</script>'
+        )
 
     def __call__(self, request):
         request.csp_nonce = secrets.token_urlsafe(16)
@@ -270,6 +316,9 @@ class SimpleCSPMiddleware:
             csp_value = self.csp_value.format(nonce=request.csp_nonce)
         else:
             csp_value = self.csp_value
+        content_type = response.get('Content-Type', '').lower()
+        if content_type.startswith(('application/atom+xml', 'application/rss+xml')):
+            csp_value = self.feed_csp_value
         response['Content-Security-Policy'] = csp_value
         if self.csp_report_only_value:
             if '{nonce}' in self.csp_report_only_value:
@@ -278,11 +327,21 @@ class SimpleCSPMiddleware:
                 csp_ro_value = self.csp_report_only_value
             response['Content-Security-Policy-Report-Only'] = csp_ro_value
         # Inject nonce into script tags (inline and external) for HTML responses.
-        content_type = response.get('Content-Type', '')
         if (not response.streaming and 'text/html' in content_type and hasattr(response, 'content')):
             try:
                 content = response.content
                 if isinstance(content, bytes):
+                    if b'data-trusted-types-bootstrap' not in content:
+                        bootstrap = self.trusted_types_bootstrap.format(nonce=request.csp_nonce).encode()
+                        html_pattern = re.compile(br'(<html\b[^>]*>)', re.IGNORECASE)
+                        content, count = html_pattern.subn(
+                            lambda match: match.group(1) + bootstrap, content, count=1,
+                        )
+                        if not count:
+                            head_pattern = re.compile(br'(<head\b[^>]*>)', re.IGNORECASE)
+                            content = head_pattern.sub(
+                                lambda match: match.group(1) + bootstrap, content, count=1,
+                            )
                     pattern = re.compile(br'<script(?![^>]*\bnonce=)([^>]*)>')
                     replacement = br'<script nonce="' + request.csp_nonce.encode() + br'"\1>'
                     new_content = pattern.sub(replacement, content)
@@ -291,6 +350,17 @@ class SimpleCSPMiddleware:
                         if response.has_header('Content-Length'):
                             response['Content-Length'] = str(len(response.content))
                 else:
+                    if 'data-trusted-types-bootstrap' not in content:
+                        bootstrap = self.trusted_types_bootstrap.format(nonce=request.csp_nonce)
+                        html_pattern = re.compile(r'(<html\b[^>]*>)', re.IGNORECASE)
+                        content, count = html_pattern.subn(
+                            lambda match: match.group(1) + bootstrap, content, count=1,
+                        )
+                        if not count:
+                            head_pattern = re.compile(r'(<head\b[^>]*>)', re.IGNORECASE)
+                            content = head_pattern.sub(
+                                lambda match: match.group(1) + bootstrap, content, count=1,
+                            )
                     pattern = re.compile(r'<script(?![^>]*\bnonce=)([^>]*)>')
                     replacement = r'<script nonce="' + request.csp_nonce + r'"\1>'
                     new_content = pattern.sub(replacement, content)

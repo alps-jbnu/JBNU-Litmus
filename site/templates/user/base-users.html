@@ -72,10 +72,10 @@
             margin-top: 21px;
             padding-left: 15px;
             font-size: 12px;
-            color: black;
+            color: var(--font-black);
         }
         .input-box::placeholder {
-            color: #8391A1;
+            color: var(--font-grey);
             font-size: 12px;
             /* font-size: 14px; */
         }
@@ -113,7 +113,7 @@
         }
         
         .top-pagination-bar .select2-selection__rendered {
-            color: #8391A1;
+            color: var(--font-grey);
             font-size: 12px;
         }
 
@@ -138,7 +138,7 @@
             outline: 1px solid var(--border-color);
         }
         .select2-results__option--highlighted {
-            background-color: #d9d9d956 !important;
+            background-color: var(--tab-active-bg) !important;
         }
         .bottom-pagination-bar {
             margin: 0 auto;
@@ -149,26 +149,26 @@
             justify-content: center;
         }
         .bottom-pagination-bar .pagination {
-            color: #8391A1;
+            color: var(--font-grey);
         }
         ul.pagination > li > a, ul.pagination > li > span {
             margin: 0 3px;
             background: none;
             border: none;
-            color: #8391A1;
+            color: var(--font-grey);
             border-radius: 20px !important;
             transition: background-color 0.3s, box-shadow 0.3s;
         }
         ul.pagination > .active-page > a, ul.pagination > .active-page > span {
             margin: 0 3px;
             background: none;
-            color: #5C95D9;
+            color: var(--primary-color);
             border-radius: 20px !important;
             transition: background-color 0.3s, box-shadow 0.3s;
-            background-color: #f2f3f4;
+            background-color: var(--light-bg);
         }
         ul.pagination > li > a:hover {
-            background-color: #f2f3f4;
+            background-color: var(--light-bg);
         }
     </style>
 {% endblock %}

@@ -114,6 +114,7 @@
     color: $color_primary50;
 }
 
+/* 문제, 유저 필터링 추가 */
 label[for="language"], label[for="status"], label[for=problem], label[for=user]  {
     padding-bottom: 0.25em;
     display: block;

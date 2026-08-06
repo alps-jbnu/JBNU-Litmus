@@ -24,6 +24,8 @@ def api_v1_contest_list(request):
         'name': c.name,
         'start_time': c.start_time.isoformat(),
         'end_time': c.end_time.isoformat(),
+        'late_submission_deadline': c.late_submission_deadline and c.late_submission_deadline.isoformat(),
+        'submission_close_time': c.get_submission_close_time().isoformat(),
         'time_limit': c.time_limit and sane_time_repr(c.time_limit),
         'labels': list(map(attrgetter('name'), c.tag_list)),
     } for c in queryset})
@@ -51,12 +53,14 @@ def api_v1_contest_detail(request, contest):
                     #   .prefetch_related('user__organizations')
                       .annotate(username=F('user__user__username'))
                       .order_by('-score', 'cumtime', 'tiebreaker') if can_see_rankings else [])
-    can_see_problems = (in_contest or contest.ended or contest.is_editable_by(request.user))
+    can_see_problems = (in_contest or contest.is_submission_closed() or contest.is_editable_by(request.user))
 
     return JsonResponse({
         'time_limit': contest.time_limit and contest.time_limit.total_seconds(),
         'start_time': contest.start_time.isoformat(),
         'end_time': contest.end_time.isoformat(),
+        'late_submission_deadline': contest.late_submission_deadline and contest.late_submission_deadline.isoformat(),
+        'submission_close_time': contest.get_submission_close_time().isoformat(),
         'tags': list(contest.tags.values_list('name', flat=True)),
         'is_rated': contest.is_rated,
         'rate_all': contest.is_rated and contest.rate_all,
@@ -83,6 +87,7 @@ def api_v1_contest_detail(request, contest):
                 'old_rating': participation.old_rating,
                 'new_rating': participation.new_rating,
                 'is_disqualified': participation.is_disqualified,
+                'has_late_submission': participation.has_late_submission(),
                 'solutions': contest.format.get_problem_breakdown(participation, problems),
             } for participation in participations],
     })
@@ -175,7 +180,7 @@ def api_v1_user_submissions(request, user):
     profile = get_object_or_404(Profile, user__username=user)
     # subs = Submission.objects.filter(user=profile, problem__is_public=True, problem__is_organization_private=False)
     subs = Submission.objects.filter(user=profile, problem__is_public=True)
-    
+
     return JsonResponse({sub['id']: {
         'problem': sub['problem__code'],
         'time': sub['time'],

@@ -32,10 +32,12 @@ import logging
 
 
 def submission_related(queryset):
-    return queryset.select_related('user__user', 'problem', 'language') \
+    return queryset.select_related('user__user', 'problem', 'language', 'contest_object') \
         .only('id', 'user__user__username', 'user__display_rank', 'user__rating', 'problem__name',
               'problem__code', 'problem__is_public', 'language__short_name', 'language__key', 'date', 'time', 'memory',
               'points', 'result', 'status', 'case_points', 'case_total', 'current_testcase', 'contest_object',
+              'contest_object__key', 'contest_object__name', 'contest_object__is_practice',
+              'contest_object__end_time', 'contest_object__late_submission_deadline',
               'locked_after', 'problem__submission_source_visibility_mode', 'user__username_display_override') \
         .prefetch_related('contest_object__authors', 'contest_object__curators')
 
@@ -198,7 +200,7 @@ class SubmissionTestCaseQuery(SubmissionStatus):
             return HttpResponseBadRequest()
         self.kwargs[self.pk_url_kwarg] = kwargs[self.pk_url_kwarg] = int(request.GET['id'])
         return super(SubmissionTestCaseQuery, self).get(request, *args, **kwargs)
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         submission = self.object
@@ -208,8 +210,8 @@ class SubmissionTestCaseQuery(SubmissionStatus):
             for case in batch['cases']:
                 test_case = submission.test_cases.filter(id=case['id']).first()
                 if test_case:
-                    case['expected_output'] = test_case.expected_output 
-                    
+                    case['expected_output'] = test_case.expected_output
+
 
 class SubmissionSourceRaw(SubmissionSource):
     def get(self, request, *args, **kwargs):
@@ -249,7 +251,7 @@ class SubmissionsListBase(DiggPaginatorMixin, TitleMixin, ListView):
     template_name = 'submission/list.html'
     context_object_name = 'submissions'
     first_page_href = None
-    
+
 
     def get_result_data(self):
         result = self._get_result_data()
@@ -306,13 +308,19 @@ class SubmissionsListBase(DiggPaginatorMixin, TitleMixin, ListView):
 
             if not self.request.user.has_perm('judge.see_private_contest'):
                 # Show submissions for any contest you can edit or where you can see submissions
+                now = timezone.now()
+                contest_scoreboard_done = (
+                    Q(is_practice=False, end_time__lt=now) |
+                    Q(is_practice=True, late_submission_deadline__isnull=True, end_time__lt=now) |
+                    Q(is_practice=True, late_submission_deadline__lt=now)
+                )
                 contest_queryset = Contest.objects.filter(
                     Q(authors=self.request.profile) |
                     Q(curators=self.request.profile) |
                     Q(tester_see_submissions=True, testers=self.request.profile) |
                     Q(view_contest_submissions=self.request.profile) |
                     Q(scoreboard_visibility=Contest.SCOREBOARD_VISIBLE) |
-                    Q(end_time__lt=timezone.now(), scoreboard_visibility__in=(
+                    Q(contest_scoreboard_done, scoreboard_visibility__in=(
                         Contest.SCOREBOARD_AFTER_PARTICIPATION,
                         Contest.SCOREBOARD_AFTER_CONTEST,
                     )),
@@ -355,12 +363,12 @@ class SubmissionsListBase(DiggPaginatorMixin, TitleMixin, ListView):
         if not self.request.user.is_superuser and not self.request.user.is_staff:
             hidden_codes += ['IE']
         return [(key, value) for key, value in Submission.RESULT if key not in hidden_codes]
-    
+
     def get_searchable_problems(self):
         # 비로그인 유저는 문제 확인 불가능
         if not self.request.user or not self.request.user.is_authenticated:
             return Problem.objects.none().values_list('code', 'name')
-        
+
         # 학생의 경우는 본인이 "if 현재 참여한 대회: 대회 문제 else 참여한 대회 없음: 빈 문제" 로 보인다.
         if not self.request.user.is_superuser and not self.request.user.is_staff:
             if self.in_contest:
@@ -369,16 +377,16 @@ class SubmissionsListBase(DiggPaginatorMixin, TitleMixin, ListView):
                 return Problem.objects.none().values_list('code', 'name')
         # 교수는 모든 문제를 검색할 수 있다.
         return Problem.objects.all().values_list('code', 'name')
-    
+
     def get_searchable_users(self):
         # 비로그인 유저는 유저 확인 불가능
         if not self.request.user or not self.request.user.is_authenticated:
             return Profile.objects.none().values_list('user', 'user__username')
-        
+
         # 학생의 경우는 본인만 검색 가능
         if not self.request.user.is_superuser and not self.request.user.is_staff:
             return Profile.objects.filter(user=self.request.user).values_list('user', 'user__username')
-        
+
         # 교수는 모두 검색 가능
         return Profile.objects.all().values_list('user', 'user__username')
 
@@ -401,14 +409,14 @@ class SubmissionsListBase(DiggPaginatorMixin, TitleMixin, ListView):
 
         context['all_statuses'] = self.get_searchable_status_codes()
         context['selected_statuses'] = self.selected_statuses
-        
+
         # 문제 필터 및 유저 필터 기능 추가
         context['all_problems'] = self.get_searchable_problems()
         context['selected_problems'] = self.selected_problems
 
         context['all_users'] = self.get_searchable_users()
         #user의 id는 int형이므로 필터 기능을 위해 string
-        context['selected_users'] = {str(user_id) for user_id in self.selected_users} 
+        context['selected_users'] = {str(user_id) for user_id in self.selected_users}
         # End
 
         context['results_json'] = mark_safe(json.dumps(self.get_result_data()))
@@ -417,7 +425,7 @@ class SubmissionsListBase(DiggPaginatorMixin, TitleMixin, ListView):
         context['page_suffix'] = suffix = ('?' + self.request.GET.urlencode()) if self.request.GET else ''
         context['first_page_href'] = (self.first_page_href or '.') + suffix
         context['my_submissions_link'] = self.get_my_submissions_page()
-        
+
         # context['all_submissions_link'] = self.get_all_submissions_page()
         context['tab'] = self.tab
         return context
@@ -430,7 +438,7 @@ class SubmissionsListBase(DiggPaginatorMixin, TitleMixin, ListView):
 
         self.selected_languages = set(request.GET.getlist('language'))
         self.selected_statuses = set(request.GET.getlist('status'))
-        
+
         # 문제 필터 및 유저 필터 기능 추가
         self.selected_problems = set(request.GET.getlist('problem'))
         self.selected_users = set(request.GET.getlist('user'))
@@ -471,7 +479,7 @@ class AllUserSubmissions(ConditionalUserTabMixin, UserMixin, SubmissionsListBase
     @cached_property
     def in_contest(self):
         return False
-    
+
     def get_queryset(self):
         return super(AllUserSubmissions, self).get_queryset().filter(user_id=self.profile.id)
 
@@ -571,7 +579,7 @@ class ProblemSubmissions(ProblemSubmissionsBase):
 class UserProblemSubmissions(ConditionalUserTabMixin, UserMixin, ProblemSubmissionsBase):
     title_info = '해당 문제에 대한 내 제출 목록'
     check_contest_in_access_check = False
-    
+
     def get_my_submissions_page(self):
         if self.request.user.is_authenticated:
             return reverse('user_submissions', kwargs={'problem': self.problem.code,
@@ -653,10 +661,10 @@ class AllSubmissions(InfinitePaginationMixin, SubmissionsListBase):
     def get_context_data(self, **kwargs):
         context = super(AllSubmissions, self).get_context_data(**kwargs)
         # contest 이름 가져오기
-        submission_list = context.get('submissions') 
+        submission_list = context.get('submissions')
         contest = None
         if submission_list and len(submission_list) > 0:
-            first_object = submission_list[0] 
+            first_object = submission_list[0]
             if first_object and hasattr(first_object, 'contest_object') and first_object.contest_object is not None:
                 contest = first_object.contest_object
         if contest:
@@ -665,12 +673,12 @@ class AllSubmissions(InfinitePaginationMixin, SubmissionsListBase):
         context['last_msg'] = event.last()
         context['stats_update_interval'] = self.stats_update_interval
         return context
-    
+
     # 부모 _get_queryset 오버라이딩
     def _get_queryset(self):
         queryset = super()._get_queryset()
         queryset = queryset.filter(contest_object_id = self.kwargs['contest'])
-        
+
         # contest가 존재하는지 확인하기
         contest = None
         first_object = queryset.first()
@@ -680,7 +688,7 @@ class AllSubmissions(InfinitePaginationMixin, SubmissionsListBase):
         # contest가 없거나, 로그인하지 않았거나, 인증되지 않은 사용자의 경우 none 반환
         if contest is None or not self.request.user or not self.request.user.is_authenticated:
             return Submission.objects.none()
-        
+
         # contest 수정 권한이 있는 경우 contest의 모든 제출 기록 반환, 없는 경우 contest의 본인 제출 기록 반환
         if contest.is_editable_by(self.request.user):
             return queryset
@@ -697,7 +705,7 @@ class AllSubmissions(InfinitePaginationMixin, SubmissionsListBase):
             return result
         # result = super(AllSubmissions, self)._get_result_data(Submission.objects.filter(contest_object_id = self.kwargs['contest']))
         result = super(AllSubmissions, self)._get_result_data()
-        
+
         cache.set(key, result, self.stats_update_interval)
         return result
 

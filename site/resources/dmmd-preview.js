@@ -20,7 +20,7 @@ $(function () {
                 $preview.addClass('dmmd-preview-stale');
                 $.post(preview_url, {
                     content: text,
-                    csrfmiddlewaretoken: $.cookie('csrftoken')
+                    csrfmiddlewaretoken: window.getDmojCsrfToken()
                 }, function (result) {
                     $content.html(result);
                     $preview.addClass('dmmd-preview-has-content').removeClass('dmmd-preview-stale');
@@ -36,7 +36,7 @@ $(function () {
                                 success: function () {
                                     $.ajax({
                                         type: 'GET',
-                                        url: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-chtml.min.js',
+                                        url: '/static/vendor/mathjax/3.2.0/es5/tex-chtml.min.js',
                                         dataType: 'script',
                                         cache: true,
                                         success: function () {

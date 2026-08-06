@@ -2,7 +2,7 @@ import itertools
 import json
 import os
 from datetime import datetime
-from operator import attrgetter, itemgetter
+from operator import itemgetter
 
 from django.conf import settings
 from django.contrib.auth import logout as auth_logout
@@ -28,7 +28,7 @@ from django.views.decorators.http import require_POST
 from django.views.generic import DetailView, FormView, ListView, TemplateView, View
 from reversion import revisions
 
-from judge.forms import CustomAuthenticationForm, DownloadDataForm, ProfileForm, newsletter_id, IdFindForm, CustomPasswordResetForm, EmailChangeForm, ResendActivationEmailForm
+from judge.forms import CustomAuthenticationForm, DownloadDataForm, ProfileForm, newsletter_id, IdFindForm, CustomPasswordResetForm, EmailChangeForm, ResendActivationEmailForm, StudentNumberRegisterForm, get_email_domain_for_user
 from judge.models import Profile, Submission, ContestParticipation
 from judge.performance_points import get_pp_breakdown
 from judge.ratings import rating_class, rating_progress
@@ -167,7 +167,21 @@ class UserPage(TitleMixin, UserMixin, DetailView):
 #             self.request.session['password_pwned'] = False
 #         return super().form_valid(form)
 
-class CustomLoginView(LoginView):
+class InactiveAccountRedirectMixin:
+    def form_invalid(self, form):
+        if self._has_inactive_error(form):
+            return HttpResponseRedirect(reverse('activation_required'))
+        return super().form_invalid(form)
+
+    def _has_inactive_error(self, form):
+        return any(
+            error.code == 'inactive'
+            for errors in form.errors.as_data().values()
+            for error in errors
+        )
+
+
+class CustomLoginView(InactiveAccountRedirectMixin, LoginView):
     template_name = 'registration/login.html'
     extra_context = {'title': gettext_lazy('Login')}
     authentication_form = CustomAuthenticationForm
@@ -185,7 +199,7 @@ class CustomLoginView(LoginView):
         return super().form_valid(form)
 
 # 관리자 로그인 추가 
-class AdminLoginView(LoginView):
+class AdminLoginView(InactiveAccountRedirectMixin, LoginView):
     template_name = 'registration/login-admin.html'
     extra_context = {'title': gettext_lazy('Login')}
     authentication_form = CustomAuthenticationForm
@@ -465,6 +479,17 @@ def edit_profile(request):
 
 @require_POST
 @login_required
+def set_theme(request):
+    theme = request.POST.get('theme', 'light')
+    if theme not in ('light', 'dark', 'auto'):
+        theme = 'light'
+    request.profile.site_theme = theme
+    request.profile.save(update_fields=['site_theme'])
+    return JsonResponse({'status': 'ok', 'theme': theme})
+
+
+@require_POST
+@login_required
 def generate_api_token(request):
     profile = request.profile
     with revisions.create_revision(atomic=True):
@@ -537,11 +562,8 @@ class UserList(QueryStringSortMixin, DiggPaginatorMixin, TitleMixin, ListView):
         context = super(UserList, self).get_context_data(**kwargs)
         context['title_info'] = self.title_info
         context['school'] = self.get_school()
-        context['users'] = ranker(
-            context['users'],
-            key=attrgetter('performance_points', 'problem_count'),
-            rank=self.paginate_by * (context['page_obj'].number - 1),
-        )
+        start = self.paginate_by * (context['page_obj'].number - 1)
+        context['users'] = enumerate(context['users'], start=start + 1)
         context['first_page_href'] = '.'
         context.update(self.get_sort_context())
         context.update(self.get_sort_paginate_context())
@@ -670,43 +692,64 @@ class IdFindCompleteView(TemplateView):
 
 # 이메일 변경 클래스 (활성화가 되지 않은 계정)   
 User = get_user_model()
-class EmailChangeView(FormView):
+class AdminOnlyMixin:
+    def dispatch(self, request, *args, **kwargs):
+        if not (
+            request.user.is_authenticated and
+            (request.user.is_staff or request.user.is_superuser)
+        ):
+            raise Http404
+        return super().dispatch(request, *args, **kwargs)
+
+
+# 입력한 아이디(username)의 소속 학교에 맞는 이메일 도메인을 조회하는 용도.
+# 이메일 변경 화면에서 아이디 입력 시 표시 도메인을 실시간으로 갱신하기 위해 사용한다.
+# EmailChangeView와 동일하게 관리자만 호출 가능(비관리자가 API를 직접 두드려
+# 아이디→소속 학교를 알아내는 것을 막기 위함).
+def email_change_domain_lookup(request):
+    if not (
+        request.user.is_authenticated and
+        (request.user.is_staff or request.user.is_superuser)
+    ):
+        raise Http404
+    username = (request.GET.get('username') or '').strip()
+    target_user = User.objects.filter(username=username).first() if username else None
+    return JsonResponse({'domain': get_email_domain_for_user(target_user)})
+
+
+class EmailChangeView(AdminOnlyMixin, FormView):
     title = _('이메일 변경')
     form_class = EmailChangeForm
-    template_name = 'registration/email_change.html'  
+    template_name = 'registration/email_change.html'
     success_url = reverse_lazy('email_change_complete')
-    fixed_domain = '@jbnu.ac.kr'
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['title'] = self.title
         return context
 
     def form_valid(self, form):
-        username = form.cleaned_data['username']
-        email_local = form.cleaned_data['email_local']
-        new_email = f"{email_local}{self.fixed_domain}"
+        # user/email 모두 EmailChangeForm.clean()에서 이미 조회·계산됨
+        # (clean()을 통과했다는 것은 인증까지 성공했다는 뜻이므로 target_user는 항상 존재)
+        user = form.cleaned_data['target_user']
+        new_email = form.cleaned_data['email']
 
-        try:
-            user = User.objects.get(username=username)
-        except User.DoesNotExist:
-            form.add_error('username', _('아이디 또는 비밀번호가 잘못되었습니다.'))
-            return self.form_invalid(form)
-
-        # 이메일을 새로 설정하고 계정을 바로 활성화
+        # 이메일을 새로 설정하고 인증 전까지 비활성화
         user.email = new_email
-        user.is_active = True
-        user.save() # 유저 데이터 저장
+        user.is_active = False
+        user.save()
 
-        # 이미 프로필이 있는지 확인
+        # 새 인증 키를 발급하고 인증 이메일 발송
         registration_profile, created = RegistrationProfile.objects.get_or_create(user=user)
-        registration_profile.activated = True
-        registration_profile.save()
+        registration_profile.create_new_activation_key(save=True)
+
+        site = get_current_site(self.request)
+        registration_profile.send_activation_email(site=site, request=self.request)
 
         return super().form_valid(form)
 
-# 이메일 변경 완료 클래스 (활성화가 되지 않은 계정)  
-class EmailChangeCompleteView(TemplateView):
+# 이메일 변경 완료 클래스 (활성화가 되지 않은 계정)
+class EmailChangeCompleteView(AdminOnlyMixin, TemplateView):
     template_name = 'registration/email_change_complete.html'
     title = _('이메일 변경 완료')
 
@@ -714,6 +757,49 @@ class EmailChangeCompleteView(TemplateView):
         context = super().get_context_data(**kwargs)
         context['title'] = self.title
         return context
+
+
+# 중/고등학생 학번 등록/재등록 클래스.
+# 학번은 학년이 바뀔 때마다 관리자가 초기화(NULL)할 수 있으므로, 초기화된 이후
+# 본인이 다시 로그인해서 직접 등록할 수 있는 자기 자신 대상 페이지다.
+class StudentNumberRegisterView(LoginRequiredMixin, FormView):
+    title = _('학번 등록')
+    form_class = StudentNumberRegisterForm
+    template_name = 'registration/student_number_register.html'
+    success_url = reverse_lazy('student_number_register_complete')
+
+    def dispatch(self, request, *args, **kwargs):
+        profile = request.profile
+        if not (profile and profile.school and profile.school.school_type in ('highschool', 'middleschool')):
+            raise Http404()
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['profile'] = self.request.profile
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = self.title
+        return context
+
+    def form_valid(self, form):
+        profile = self.request.profile
+        profile.student_number = form.cleaned_data['student_number']
+        profile.save(update_fields=['student_number'])
+        return super().form_valid(form)
+
+
+class StudentNumberRegisterCompleteView(LoginRequiredMixin, TemplateView):
+    template_name = 'registration/student_number_register_complete.html'
+    title = _('학번 등록 완료')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = self.title
+        return context
+
 
 # 활성화 메일 재전송 클래스
 class ResendActivationEmailView(FormView):
@@ -735,12 +821,11 @@ class ResendActivationEmailView(FormView):
             # 이미 프로필이 있는지 확인
             profile, created = RegistrationProfile.objects.get_or_create(user=user)
 
-            # 활성화 키를 새로 생성
+            # 활성화 키를 새로 생성하고 인증 이메일 재전송
             profile.create_new_activation_key(save=True)
 
-            # 활성화 메일 재전송 대신 바로 활성화
-            profile.activated = True
-            profile.save()
+            site = get_current_site(self.request)
+            profile.send_activation_email(site=site, request=self.request)
 
         except User.DoesNotExist:
             form.add_error('username', _('아이디 또는 비밀번호가 잘못되었습니다.'))

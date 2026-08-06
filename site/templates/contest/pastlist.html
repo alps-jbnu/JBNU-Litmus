@@ -6,7 +6,7 @@
 {% block js_media %}
     <style>
         .content-body-box {
-            background-color: #f9fafb;
+            background-color: var(--background-second);
             font-family: "Pretendard";
             width: 100%;
         }
@@ -21,7 +21,7 @@
             flex-direction: row;
             padding: 0;
             margin: 0;
-            color: #8391A1;
+            color: var(--font-grey);
             list-style-type: none;
             border-radius: 10px;
             visibility: hidden;
@@ -41,7 +41,7 @@
             transition: background-color 0.3s ease;
         }
         .contest-group-item:hover {
-            background-color: #D9D9D936;
+            background-color: var(--tab-active-bg);
             transition: background-color 0.3s ease;
         }
         .contest-group-item input[type="checkbox"] {
@@ -63,7 +63,7 @@
             box-sizing: border-box;
             margin-right: 10px;
             font-size: 24px;
-            color: #D9D9D9;
+            color: var(--font-grey);
         }
         .contest-group-item input[type="checkbox"]:checked + label .material-symbols-outlined {
             font-size: 24px;
@@ -83,11 +83,11 @@
         }
         .contest-group-item.active {
             background: none;
-            background-color: #D9D9D936;
-            color: #373D47;
+            background-color: var(--tab-active-bg);
+            color: var(--content-text);
         }
         .contest-group-item.active label {
-            color: #373D47;
+            color: var(--content-text);
         }
         .contest-head-block {
             display: flex;
@@ -126,11 +126,11 @@
         }
         .contest-div {
             background: none;
-            background-color: white;
+            background-color: var(--page-bg);
             border-radius: 10px;
             padding: 18px 24px 12px 24px;
             margin: 0 0 20px 0;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            box-shadow: var(--standard-box-shadow);
         }
         .content-description h4 {
             border-bottom: none;
@@ -158,13 +158,13 @@
             margin-left: auto;
             margin-right: auto;
             margin-bottom: 0.5em;
-            background: rgba(255,255,255,1.0);
+            background: var(--page-bg);
         }
         .contest-list td:last-child {
             width: 200px;
         }
         .table.striped tr:nth-child(even) {
-            background: #ffffff;
+            background: var(--page-bg);
         }
         .active {
             background: linear-gradient(90deg, rgba(159, 205, 242, 0.2) 0.62%, rgba(167, 231, 244, 0) 100.62%);
@@ -256,13 +256,13 @@
             border-radius: 8px;
             padding-left: 12px;
             font-size: 12px;
-            color: black;
+            color: var(--font-black);
             display: flex;
             flex-direction: column;
             justify-content: center;
         }
         .top-pagination-bar .select2-selection__rendered {
-            color: #8391A1;
+            color: var(--font-grey);
             font-size: 12px;
         }
 
@@ -287,29 +287,29 @@
             justify-content: center;
         }
         .bottom-pagination-bar .pagination {
-            color: #8391A1;
+            color: var(--font-grey);
         }
-        ul.pagination > li.disabled-page {
+        ul.pagination > li.disabled-page:not(.pagination-ellipsis) {
             display: none;
         }   
         ul.pagination > li > a, ul.pagination > li > span {
             margin: 0 3px;
             background: none;
             border: none;
-            color: #8391A1;
+            color: var(--font-grey);
             border-radius: 20px !important;
             transition: background-color 0.3s, box-shadow 0.3s;
         }
         ul.pagination > .active-page > a, ul.pagination > .active-page > span {
             margin: 0 3px;
             background: none;
-            color: #5C95D9;
+            color: var(--primary-color);
             border-radius: 20px !important;
             transition: background-color 0.3s, box-shadow 0.3s;
-            background-color: #f2f3f4;
+            background-color: var(--light-bg);
         }
         ul.pagination > li > a:hover {
-            background-color: #f2f3f4;
+            background-color: var(--light-bg);
         }
     </style>
     <script src="{{ static('libs/featherlight/featherlight.min.js') }}" type="text/javascript"></script>
@@ -344,6 +344,8 @@
                         // Reset to initial URL by removing all subject_id parameters
                         const url = new URL(window.location.href);
                         url.searchParams.delete('subject_id');
+                        url.searchParams.delete('own_page');
+                        url.searchParams.delete('other_page');
                         window.location.href = url.toString();
                     }
                 });
@@ -394,6 +396,8 @@
 
             const url = new URL(window.location.href);
             url.searchParams.delete('subject_id');
+            url.searchParams.delete('own_page');
+            url.searchParams.delete('other_page');
             selectedSubjects.forEach(function(subjectId) {
                 url.searchParams.append('subject_id', subjectId);
             });
@@ -561,22 +565,22 @@
                             <!-- 이전 페이지 버튼 -->
                             {% if past_own_contests.has_previous() %}
                                 <li>
-                                    <a href="?own_page={{ past_own_contests.previous_page_number() }}&other_page={{ past_other_contests.number }}" class="page-arrow"><i class="fa-solid fa-chevron-left"></i></a>
+                                    <a href="{{ own_pagination.previous_url }}" class="page-arrow"><i class="fa-solid fa-chevron-left"></i></a>
                                 </li>
                             {% else %}
                                 <li class="disabled-page"><i class="fa-solid fa-chevron-left"></i></li>
                             {% endif %}
 
                             <!-- 페이지 범위 -->
-                            {% for page in past_own_contests.paginator.page_range %}
-                                {% if not page %}
-                                    <li class="disabled-page"><span>...</span></li>
+                            {% for link in own_pagination.links %}
+                                {% if link.number is none %}
+                                    <li class="disabled-page pagination-ellipsis"><span>...</span></li>
                                 {% else %}
-                                    {% if page == past_own_contests.number %}
-                                        <li class="active-page"><a>{{ page }}</a></li>
+                                    {% if link.number == past_own_contests.number %}
+                                        <li class="active-page"><a>{{ link.number }}</a></li>
                                     {% else %}
                                         <li>
-                                            <a href="?own_page={{ page }}&other_page={{ past_other_contests.number }}">{{ page }}</a>
+                                            <a href="{{ link.url }}">{{ link.number }}</a>
                                         </li>
                                     {% endif %}
                                 {% endif %}
@@ -585,7 +589,7 @@
                             <!-- 다음 페이지 버튼 -->
                             {% if past_own_contests.has_next() %}
                                 <li>
-                                    <a href="?own_page={{ past_own_contests.next_page_number() }}&other_page={{ past_other_contests.number }}" class="page-arrow"><i class="fa-solid fa-chevron-right"></i></a>
+                                    <a href="{{ own_pagination.next_url }}" class="page-arrow"><i class="fa-solid fa-chevron-right"></i></a>
                                 </li>
                             {% else %}
                                 <li class="disabled-page"><span class="page-arrow"><i class="fa-solid fa-chevron-right"></i></span></li>
@@ -657,27 +661,27 @@
                         <ul class="pagination">
                             {% if past_other_contests.has_previous() %}
                                 <li>
-                                    <a href="?own_page={{ past_own_contests.number }}&other_page={{ past_other_contests.previous_page_number() }}" class="page-arrow"><i class="fa-solid fa-chevron-left"></i></a>
+                                    <a href="{{ other_pagination.previous_url }}" class="page-arrow"><i class="fa-solid fa-chevron-left"></i></a>
                                 </li>
                             {% else %}
                                 <li class="disabled-page"><i class="fa-solid fa-chevron-left"></i></li>
                             {% endif %}
                 
-                            {% for page in past_other_contests.paginator.page_range %}
-                                {% if page is none %}
-                                    <li class="disabled-page"><span>...</span></li>
-                                {% elif page == past_other_contests.number %}
-                                    <li class="active-page"><a>{{ page }}</a></li>
+                            {% for link in other_pagination.links %}
+                                {% if link.number is none %}
+                                    <li class="disabled-page pagination-ellipsis"><span>...</span></li>
+                                {% elif link.number == past_other_contests.number %}
+                                    <li class="active-page"><a>{{ link.number }}</a></li>
                                 {% else %}
                                     <li>
-                                        <a href="?own_page={{ past_own_contests.number }}&other_page={{ page }}">{{ page }}</a>
+                                        <a href="{{ link.url }}">{{ link.number }}</a>
                                     </li>
                                 {% endif %}
                             {% endfor %}
                 
-                            {% if past_other_contests.number < past_other_contests.paginator.num_pages %}
+                            {% if past_other_contests.has_next() %}
                                 <li>
-                                    <a href="?own_page={{ past_own_contests.number }}&other_page={{ past_other_contests.next_page_number() }}" class="page-arrow"><i class="fa-solid fa-chevron-right"></i></a>
+                                    <a href="{{ other_pagination.next_url }}" class="page-arrow"><i class="fa-solid fa-chevron-right"></i></a>
                                 </li>
                             {% endif %}
                         </ul>

@@ -27,6 +27,6 @@ class Command(BaseCommand):
         usr.is_staff = options['staff']
         usr.save()
 
-        profile = Profile(user=usr)
+        profile, _ = Profile.objects.get_or_create(user=usr)
         profile.language = Language.objects.get(key=options['language'])
         profile.save()

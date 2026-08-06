@@ -19,7 +19,7 @@ from judge.views import TitledTemplateView, about, api, blog, comment, practices
 from judge.views.problem_data import ProblemDataView, ProblemSubmissionDiff, TestCasePreView, \
     problem_data_file, problem_init_view
 from judge.views.problem import check_problem_password
-from judge.views.register import ActivationView, RegistrationView, validate_password_method
+from judge.views.register import ActivationView, RegistrationView, validate_password_method, validate_registration_method
 from judge.views.select2 import ClassSelect2View, CommentSelect2View, ContestSelect2View, \
     ContestUserSearchSelect2View, ProblemSelect2View, \
     UserSearchSelect2View, UserSelect2View#, OrganizationSelect2View
@@ -37,6 +37,7 @@ register_patterns = [
     path('activate/<str:activation_key>/', ActivationView.as_view(), name='registration_activate'),
     path('register/', RegistrationView.as_view(), name='registration_register'),
     path('validate_password/', validate_password_method, name='validate_password'),
+    path('validate_registration/', validate_registration_method, name='validate_registration'),
     path('register/complete/',
          TitledTemplateView.as_view(template_name='registration/registration_complete.html',
                                     title=_('회원가입 완료')),
@@ -64,6 +65,17 @@ register_patterns = [
     # 이메일 변경 기능 라우팅
     path('email/change/', user.EmailChangeView.as_view(), name='email_change'),
     path('email/change/complete/', user.EmailChangeCompleteView.as_view(), name='email_change_complete'),
+    path('email/change/domain/', user.email_change_domain_lookup, name='email_change_domain_lookup'),
+
+    # 학번 등록 기능 라우팅
+    path('student-number/register/', user.StudentNumberRegisterView.as_view(), name='student_number_register'),
+    path('student-number/register/complete/', user.StudentNumberRegisterCompleteView.as_view(), name='student_number_register_complete'),
+
+    # 이메일 인증 필요 안내 페이지
+    path('activation/required/',
+         TitledTemplateView.as_view(template_name='registration/activation_required.html',
+                                    title=_('이메일 인증 필요')),
+         name='activation_required'),
 
     # 활성화 메일 재전송 기능 라우팅
     path('activationmail/resend/', user.ResendActivationEmailView.as_view(), name='resend_activation_email'),
@@ -115,9 +127,11 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('i18n/', include('django.conf.urls.i18n')),
     path('accounts/', include(register_patterns)),
+    path('api/set-theme/', user.set_theme, name='set_theme'),
     path('', include('social_django.urls')),
 
     path('problems/', problem.ProblemList.as_view(), name='problem_list'),
+    path('problems/export/', problem.ProblemExportView.as_view(), name='problem_export'),
     path('problems/random/', problem.RandomProblem.as_view(), name='problem_random'),
     path('path-to-your-view/', problem.GroupIdReceiverView.as_view(), name='group_id_receiver'),
     path('problem/<str:problem>', include([

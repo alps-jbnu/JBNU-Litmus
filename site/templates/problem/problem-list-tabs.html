@@ -4,13 +4,14 @@
 {% if perms.judge.view_all_problem or perms.judge.edit_all_problem or perms.judge.edit_public_problem or perms.judge.edit_own_problem %}
     <div class="admin-tab">
         {{ make_tab('admin', 'fa-edit', url('admin:judge_problem_changelist'), _('Admin')) }}
+        {{ make_tab('problem_export', 'fa-download', url('problem_export'), _('문제 다운로드')) }}
     </div>
-{% endif %}  
+{% endif %}
 {% endblock %}
 
 {% block tabs %}
     {% if perms.judge.view_all_problem or perms.judge.edit_all_problem or perms.judge.edit_public_problem or perms.judge.edit_own_problem %}
         {{ make_tab('list', 'fa-list', url('problem_list'), _('List')) }}
     {% endif %}
-    
+
 {% endblock %}

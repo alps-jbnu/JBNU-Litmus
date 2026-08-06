@@ -76,9 +76,11 @@ DMOJ_PP_BONUS_FUNCTION = lambda n: 300 * (1 - 0.997 ** n)  # noqa: E731
 
 NODEJS = '/usr/bin/node'
 EXIFTOOL = '/usr/bin/exiftool'
-ACE_URL = '//cdnjs.cloudflare.com/ajax/libs/ace/1.1.3'
-SELECT2_JS_URL = '//cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js'
-SELECT2_CSS_URL = '//cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css'
+# ACE_URL is no longer read anywhere. Ace is loaded straight from the vendored
+# copy in resources/vendor/ace/ by django_ace/widgets.py and problem/submit.html,
+# so that CSP (`script-src 'self'`) cannot break it via a stale setting.
+SELECT2_JS_URL = '/static/libs/select2/select2.js'
+SELECT2_CSS_URL = '/static/libs/select2/select2.css'
 
 DMOJ_CAMO_URL = None
 DMOJ_CAMO_KEY = None
@@ -172,7 +174,7 @@ SELENIUM_CHROMEDRIVER_PATH = '/usr/bin/chromedriver'
 
 INLINE_JQUERY = True
 INLINE_FONTAWESOME = True
-JQUERY_JS = '//ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js'
+JQUERY_JS = '/static/libs/jquery-3.4.1.min.js'
 FONTAWESOME_CSS = '//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css'
 DMOJ_CANONICAL = ''
 
@@ -438,8 +440,7 @@ BLEACH_USER_SAFE_TAGS = [
     'ul', 'ol', 'li', 'dd', 'dl', 'dt', 'address', 'section', 'details', 'summary',
     'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption', 'colgroup', 'col', 'tfoot',
     'img', 'audio', 'video', 'source',
-    'a',
-    'style', 'noscript', 'center',
+    'a', 'noscript', 'center',
 ]
 
 BLEACH_USER_SAFE_ATTRS = {
@@ -638,7 +639,7 @@ SOCIAL_AUTH_PIPELINE = (
     'social_core.pipeline.user.get_username',
     'social_core.pipeline.social_auth.associate_by_email',
     # 최초 로그인 시 회원가입 하라는 메시지를 띄우는 파이프라인
-    'judge.custom_pipeline.check_existing_user', 
+    'judge.custom_pipeline.assign_school_on_keycloak_login',
     # 기존 파이프라인 - 기존 리트머스 계정이 없고 키클락 로그인 시도한 경우 인증 에러가 뜸
     # 'judge.social_auth.choose_username',
     #'social_core.pipeline.user.create_user',
@@ -669,4 +670,3 @@ except IOError:
 
 # Check settings are consistent
 assert DMOJ_PROBLEM_MIN_USER_POINTS_VOTE >= DMOJ_PROBLEM_MIN_PROBLEM_POINTS
-

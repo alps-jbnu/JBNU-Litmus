@@ -3,6 +3,7 @@ import hmac
 import json
 import secrets
 import struct
+from datetime import timedelta
 from operator import mul
 
 import pyotp
@@ -24,6 +25,12 @@ from pyotp.utils import strings_equal
 from sortedm2m.fields import SortedManyToManyField
 
 from judge.models.choices import ACE_THEMES, MATH_ENGINES_CHOICES, TIMEZONE
+
+SITE_THEME_CHOICES = (
+    ('light', _('Light')),
+    ('dark', _('Dark')),
+    ('auto', _('시스템 기본값')),
+)
 from judge.models.runtime import Language
 from judge.ratings import rating_class
 from judge.utils.two_factor import webauthn_decode
@@ -171,10 +178,10 @@ class School(models.Model):
     ]
     name = models.CharField(max_length=100, verbose_name='학교 이름', unique=True)
     short_name = models.CharField(max_length=20, verbose_name='약칭')
-    school_type = models.CharField(max_length=20, choices=SCHOOL_TYPES)
+    school_type = models.CharField(max_length=20, choices=SCHOOL_TYPES, verbose_name='학교 유형')
     is_jbnu = models.BooleanField(default=False, verbose_name='전북대 여부',
-                                  help_text='True이면 @jbnu.ac.kr 이메일 강제, False이면 @gmail.com 강제')
-    is_active = models.BooleanField(default=True)
+                                  help_text='True이면 @jbnu.ac.kr 이메일 강제, False이면 @g.jbedu.kr 강제')
+    is_active = models.BooleanField(default=True, verbose_name='활성 여부')
 
     def __str__(self):
         return self.name
@@ -184,6 +191,9 @@ class School(models.Model):
         verbose_name_plural = _('학교')
 
 class Profile(models.Model):
+    LOGIN_FAILURE_LIMIT = 5
+    LOGIN_LOCK_DURATION = timedelta(minutes=10)
+
     user = models.OneToOneField(User, verbose_name=_('user associated'), on_delete=models.CASCADE)
     about = models.TextField(verbose_name=_('self-description'), null=True, blank=True)
     timezone = models.CharField(max_length=50, verbose_name=_('time zone'), choices=TIMEZONE,
@@ -194,11 +204,14 @@ class Profile(models.Model):
     performance_points = models.FloatField(default=0, db_index=True)
     problem_count = models.IntegerField(default=0, db_index=True)
     ace_theme = models.CharField(max_length=30, verbose_name=_('Ace theme'), choices=ACE_THEMES, default='github')
+    site_theme = models.CharField(max_length=5, verbose_name=_('site theme'), choices=SITE_THEME_CHOICES,
+                                  default='light')
     last_access = models.DateTimeField(verbose_name=_('last access time'), default=now)
     ip = models.GenericIPAddressField(verbose_name=_('last IP'), blank=True, null=True)
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null = True, blank=True)
     school = models.ForeignKey('School', on_delete=models.SET_NULL,
                                null=True, blank=True, verbose_name='학교')
+    student_number = models.CharField(max_length=20, null=True, blank=True, verbose_name='학번')
     # organizations = SortedManyToManyField(Organization, verbose_name=_('organization'), blank=True,
     #                                       related_name='members', related_query_name='member')
     display_rank = models.CharField(max_length=10, default='user', verbose_name=_('display rank'),
@@ -248,6 +261,8 @@ class Profile(models.Model):
     data_last_downloaded = models.DateTimeField(verbose_name=_('last data download time'), null=True, blank=True)
     username_display_override = models.CharField(max_length=100, blank=True, verbose_name=_('display name override'),
                                                  help_text=_('Name displayed in place of username.'))
+    failed_login_attempts = models.PositiveSmallIntegerField(default=0, verbose_name=_('failed login attempts'))
+    login_locked_until = models.DateTimeField(null=True, blank=True, verbose_name=_('login locked until'))
 
     # @cached_property
     # def organization(self):
@@ -262,7 +277,13 @@ class Profile(models.Model):
     @cached_property
     def display_name(self):
         return self.username_display_override or self.username
-    
+
+    @cached_property
+    def student_number_display(self):
+        if self.school and self.school.school_type in ('highschool', 'middleschool'):
+            return self.student_number or _('미등록')
+        return self.username
+
     def first_name(self):
         return self.user.first_name
 
@@ -324,8 +345,10 @@ class Profile(models.Model):
     remove_contest.alters_data = True
 
     def update_contest(self):
-        contest = self.current_contest
-        if contest is not None and (contest.ended or not contest.contest.is_accessible_by(self.user)):
+        participation = self.current_contest
+        if participation is not None and (
+            participation.is_submission_closed() or not participation.contest.is_accessible_by(self.user)
+        ):
             self.remove_contest()
 
     update_contest.alters_data = True
@@ -342,6 +365,43 @@ class Profile(models.Model):
         return False
 
     check_totp_code.alters_data = True
+
+    ## 계정이 잠겨있는지 확인
+    def is_login_locked(self, now=None):
+        now = now or timezone.now()
+        return self.login_locked_until is not None and self.login_locked_until > now
+
+    ## 5번 실패 했을 시, 초기화 하는 메서드
+    def clear_login_failures(self):
+        if self.failed_login_attempts or self.login_locked_until is not None:
+            self.failed_login_attempts = 0
+            self.login_locked_until = None
+            self.save(update_fields=['failed_login_attempts', 'login_locked_until'])
+
+    clear_login_failures.alters_data = True
+
+    ## 로그인을 5번 이상 틀릴 시 10분 잠금 
+    def register_login_failure(self, now=None):
+        now = now or timezone.now()
+
+        if self.is_login_locked(now=now):
+            return True
+
+        self.failed_login_attempts += 1
+        update_fields = ['failed_login_attempts']
+
+        if self.failed_login_attempts >= self.LOGIN_FAILURE_LIMIT:
+            self.failed_login_attempts = 0
+            self.login_locked_until = now + self.LOGIN_LOCK_DURATION
+            update_fields.append('login_locked_until')
+        elif self.login_locked_until is not None:
+            self.login_locked_until = None
+            update_fields.append('login_locked_until')
+
+        self.save(update_fields=update_fields)
+        return self.is_login_locked(now=now)
+
+    register_login_failure.alters_data = True
 
     def get_absolute_url(self):
         return reverse('user_page', args=(self.user.username,))
@@ -368,6 +428,9 @@ class Profile(models.Model):
             ('test_site', _('Shows in-progress development stuff')),
             ('totp', _('Edit TOTP settings')),
         )
+        constraints = [
+            UniqueConstraint(fields=['school', 'student_number'], name='unique_school_student_number'),
+        ]
         verbose_name = _('user profile')
         verbose_name_plural = _('user profiles')
 

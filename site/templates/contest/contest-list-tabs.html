@@ -19,11 +19,16 @@
 {% endblock %}
 
 {% block admin_tab %}
-{% if perms.judge.edit_all_contest or perms.judge.edit_own_contest %}
+{% if perms.judge.edit_all_contest or perms.judge.edit_own_contest or perms.judge.view_all_problem or perms.judge.edit_all_problem or perms.judge.edit_public_problem or perms.judge.edit_own_problem %}
     <div class="admin-tab">
-        {{ make_tab('admin', 'fa-edit', url('admin:judge_contest_changelist'), _('Admin')) }}
+        {% if perms.judge.edit_all_contest or perms.judge.edit_own_contest %}
+            {{ make_tab('admin', 'fa-edit', url('admin:judge_contest_changelist'), _('Admin')) }}
+        {% endif %}
+        {% if perms.judge.view_all_problem or perms.judge.edit_all_problem or perms.judge.edit_public_problem or perms.judge.edit_own_problem %}
+            {{ make_tab('problem_export', 'fa-download', url('problem_export'), _('문제 다운로드')) }}
+        {% endif %}
     </div>
-{% endif %}  
+{% endif %}
 {% endblock %}
 
 {% block tabs %}

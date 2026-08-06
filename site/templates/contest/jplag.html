@@ -16,15 +16,15 @@
     .button, input[type="submit"].contest-jplag {
         width: auto;
         background: none;
-        background-color: #5C95D9;
+        background-color: var(--primary-color);
         border: none;
         border-radius: 8px;
         transition: background-color 0.3s ease, color 0.3s ease;
     }
     .button, input[type="submit"].contest-jplag:hover {
         background: none;
-        background-color: #5288C8;
-        color: #FAFAFA;
+        background-color: var(--primary-hover-color);
+        color: var(--white-hover-color);
     }
     input[type="submit"].contest-jplag-delete {
         width: auto;
@@ -40,14 +40,14 @@
     .table {
         box-sizing: border-box;
         width: 100%;
-        background: #FFFFFF;
+        background: var(--page-bg);
         border-radius: 10px 10px 0px 0px;
         border: 1px solid var(--border-color);
     }
     .table thead th {
         height: 25px;
-        background-color: white;
-        color: black;
+        background-color: var(--page-bg);
+        color: var(--font-black);
         padding: 7px 10px;
         font-weight: normal;
     }

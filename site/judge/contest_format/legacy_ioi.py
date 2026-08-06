@@ -45,10 +45,11 @@ class LegacyIOIContestFormat(DefaultContestFormat):
         score = 0
         format_data = {}
 
-        queryset = (participation.submissions.values('problem_id')
+        submissions = participation.get_scored_submissions()
+        queryset = (submissions.values('problem_id')
                                              .filter(points=Subquery(
-                                                 participation.submissions.filter(problem_id=OuterRef('problem_id'))
-                                                                          .order_by('-points').values('points')[:1]))
+                                                 submissions.filter(problem_id=OuterRef('problem_id'))
+                                                            .order_by('-points').values('points')[:1]))
                                              .annotate(time=Min('submission__date'))
                                              .values_list('problem_id', 'time', 'points'))
 

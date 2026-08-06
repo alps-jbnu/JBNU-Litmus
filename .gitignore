@@ -56,6 +56,7 @@ logs/
 dmojsite/
 test/
 tmp/
+ex_files/
 
 # Temporary and log files
 nohup.out
@@ -74,6 +75,7 @@ judges.conf.new
 
 # Development environment
 .codeium/
+.copilot/
 .windsurf-server/
 hcpark_log_temp/
 .codex/
@@ -81,6 +83,8 @@ hcpark_log_temp/
 .claude.json
 .claude.json.backup
 
+# Local report files
+/ex_files/
 
 site/resources/icons/problems_images/
 
@@ -91,3 +95,4 @@ site/resources/static/jplag_reports/*
 
 #settings.py (dev/service)
 site/dmoj/settings.py
+site/dmoj/local_settings.py

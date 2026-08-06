@@ -233,7 +233,7 @@ table.table.striped tr:nth-child(odd) {
             $('input#open, input#own').click(function () {
                 ($('<form>').attr('action', window.location.pathname + '?' + $('form#filter-form').serialize())
                     .append($('<input>').attr('type', 'hidden').attr('name', 'csrfmiddlewaretoken')
-                        .attr('value', $.cookie('csrftoken')))
+                        .attr('value', window.getDmojCsrfToken()))
                     .attr('method', 'POST').appendTo($('body')).submit());
             });
 
