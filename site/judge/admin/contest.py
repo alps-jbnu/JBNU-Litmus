@@ -610,7 +610,7 @@ class ContestAdmin(VersionAdmin):
         if 'problem_label_script' in form.base_fields:
             # form.base_fields['problem_label_script'] does not exist when the user has only view permission
             # on the model.
-            form.base_fields['problem_label_script'].widget = AceWidget('lua', request.profile.ace_theme)
+            form.base_fields['problem_label_script'].widget = AceWidget('lua')
 
         #랜덤 접근코드 생성
         if obj == None:

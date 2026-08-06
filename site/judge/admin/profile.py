@@ -30,7 +30,6 @@ class ProfileForm(ModelForm):
         widgets = {
             'timezone': AdminSelect2Widget,
             'language': AdminSelect2Widget,
-            'ace_theme': AdminSelect2Widget,
             'site_theme': AdminSelect2Widget,
             'current_contest': AdminSelect2Widget,
             'about': AdminMartorWidget(attrs={'data-markdownfy-url': reverse_lazy('profile_preview')}),
@@ -181,7 +180,7 @@ class ProfileAdmin(NoBatchDeleteMixin, VersionAdmin):
     # fields = ('user', 'display_rank', 'about', 'organizations', 'timezone', 'language', 'ace_theme',
     #           'math_engine', 'last_access', 'ip', 'mute', 'is_unlisted', 'is_banned_from_problem_voting',
     #           'username_display_override', 'notes', 'is_totp_enabled', 'user_script', 'current_contest')
-    fields = ('user', 'display_rank', 'about', 'timezone', 'language', 'ace_theme', 'department', 'school',
+    fields = ('user', 'display_rank', 'about', 'timezone', 'language', 'department', 'school',
               'student_number', 'math_engine', 'last_access', 'ip', 'mute', 'is_unlisted', 'is_banned_from_problem_voting',
               'username_display_override', 'notes', 'is_totp_enabled', 'user_script', 'current_contest')
     readonly_fields = ('user',)
@@ -309,5 +308,5 @@ class ProfileAdmin(NoBatchDeleteMixin, VersionAdmin):
         form = super(ProfileAdmin, self).get_form(request, obj, **kwargs)
         if 'user_script' in form.base_fields:
             # form.base_fields['user_script'] does not exist when the user has only view permission on the model.
-            form.base_fields['user_script'].widget = AceWidget('javascript', request.profile.ace_theme)
+            form.base_fields['user_script'].widget = AceWidget('javascript')
         return form

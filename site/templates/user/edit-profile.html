@@ -388,10 +388,6 @@
                         <label class="inline-header grayed">언어</label>
                         <span class="fullwidth">{{ form.language }}</span>
                     </div>
-                    <div class="ace-theme" style="margin-bottom: 15px;">
-                        <label class="inline-header grayed">편집기 테마</label>
-                        <span class="fullwidth">{{ form.ace_theme }}</span>
-                    </div>
                     <div class="site-theme" style="margin-bottom: 15px;">
                         <label class="inline-header grayed">사이트 테마</label>
                         <span class="fullwidth">{{ form.site_theme }}</span>
@@ -425,10 +421,6 @@
                             <tr class="time-zone" title="{{ _('Select your closest major city') }}">
                                 <td><label class="inline-header grayed">{{ _('Time zone:') }}</label></td>
                                 <td><span class="fullwidth">{{ form.timezone }}</span></td>
-                            </tr>
-                            <tr class="ace-theme">
-                                <td><label class="inline-header grayed">{{ _('Editor theme:') }}</label></td>
-                                <td><span class="fullwidth">{{ form.ace_theme }}</span></td>
                             </tr>
                             {% if has_math_config %}
                                 <tr class="math-engine">
