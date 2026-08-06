@@ -4,7 +4,6 @@ from django.contrib.auth.admin import UserAdmin as OldUserAdmin
 from django.contrib.admin.filters import FieldListFilter
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
-from judge.models import Profile
 
 class Users(AbstractUser):
     
@@ -121,8 +120,3 @@ class UserAdmin(OldUserAdmin):
     
     date_joined_display.admin_order_field = 'date_joined'
     date_joined_display.short_description = _('가입 시간')
-    
-    def save_model(self, request, obj, form, change):
-        super().save_model(request, obj, form, change)
-        if not change:
-            Profile.objects.create(user=obj)
