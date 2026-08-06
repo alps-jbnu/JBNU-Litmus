@@ -53,7 +53,7 @@
         flex-direction: column;
         align-items: center;
         gap: 6px;
-        margin: 0 0 24px;
+        margin: 0 0 12px;
         padding: 14px 16px;
         border-radius: 10px;
         background-color: rgba(230, 69, 69, 0.08);
@@ -63,10 +63,6 @@
         line-height: 1.5;
         text-align: center;
     }
-    .required-notice .material-symbols-outlined {
-        flex: 0 0 auto;
-        font-size: 22px;
-    }
 
     .form-area {
         display: flex;
@@ -74,11 +70,18 @@
         gap: 12px;
     }
 
-    #form-errors .error {
-        margin: 0 0 4px;
-        font-size: 13px;
-        color: #e64545;
+    .student-number-card #form-errors {
+        margin: 8px 0 0;
+        padding: 0;
+        background: none;
+        border: none;
         text-align: center;
+    }
+    #form-errors .error {
+        margin: 0;
+        font-size: 13px;
+        font-weight: 700;
+        color: #e64545;
     }
 
     .form-area input[type="text"] {
@@ -132,7 +135,6 @@
     <div class="student-number-icon material-symbols-outlined">school</div>
     <h2>학번 등록</h2>
     <div class="required-notice">
-        <span class="material-symbols-outlined">error</span>
         <span>학번이 등록되어 있지 않아 서비스를 이용하실 수 없습니다.<br>학번 등록은 필수입니다.</span>
     </div>
     <form action="" method="post" class="form-area">
