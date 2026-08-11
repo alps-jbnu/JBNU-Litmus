@@ -7,7 +7,6 @@
 502.html
 codecov.yml
 dmoj_bridge_async.py
-dmoj_celery.py
 dmoj_install_pymysql.py
 make_style.sh
 rebuild.sh
