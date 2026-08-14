@@ -108,12 +108,13 @@ Litmus는 [litmus.jbnu.ac.kr](https://litmus.jbnu.ac.kr)에서 이용할 수 있
 ### 2026년
 
 <a href="https://github.com/jeong-gu"><img src="https://github.com/jeong-gu.png" width="50" style="border-radius: 50%;"/></a>
+<a href="https://github.com/hcw889"><img src="https://github.com/hcw889.png" width="50" style="border-radius: 50%;"/></a>
 <a href="https://github.com/jo030304"><img src="https://github.com/jo030304.png" width="50" style="border-radius: 50%;"/></a>
 <a href="https://github.com/Mindungil"><img src="https://github.com/Mindungil.png" width="50" style="border-radius: 50%;"/></a>
-<a href="https://github.com/hcw889"><img src="https://github.com/hcw889.png" width="50" style="border-radius: 50%;"/></a>
 <a href="https://github.com/Eunho-sp"><img src="https://github.com/Eunho-sp.png" width="50" style="border-radius: 50%;"/></a>
 <a href="https://github.com/lia0519"><img src="https://github.com/lia0519.png" width="50" style="border-radius: 50%;"/></a>
 <a href="https://github.com/xilver2918"><img src="https://github.com/xilver2918.png" width="50" style="border-radius: 50%;"/></a>
+<a href="https://github.com/ychan07"><img src="https://github.com/ychan07.png" width="50" style="border-radius: 50%;"/></a>
 
 ## 라이선스 및 오픈소스 고지
 
