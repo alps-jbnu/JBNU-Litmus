@@ -28,4 +28,4 @@ done
 
 echo "채점기 1-6이 모두 시작되었습니다."
 echo "채점기 1-6 세션: tmux attach -t dmoj_judge_1_6"
-echo "상태 확인: https://litmus.jbnu.ac.kr/status/"
+echo "상태 확인: https://litmus.jedutools.io/status/"
