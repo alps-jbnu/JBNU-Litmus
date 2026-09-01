@@ -59,6 +59,11 @@
             vertical-align: middle;
             height: 100%;
         }
+        th.column-ta_permission_targets,
+        td.field-ta_permission_targets{
+            text-align: center;
+            vertical-align: middle;
+        }
         td.field-rejudge_column{
             text-align: center;
             vertical-align: middle;
@@ -196,7 +201,8 @@
             // th 요소에 스타일 적용
             thElements.forEach(function(th) {
                 const text = th.textContent.trim();
-                if (text === '점수' || text === '부분 점수 허용' || text === '삭제') {
+                if (text === '점수' || text === '부분 점수 허용' ||
+                    text === 'TA 권한 허용 대상' || text === '삭제') {
                     th.style.textAlign = "center";
                     th.style.verticalAlign = "middle";
                 }

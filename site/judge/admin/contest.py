@@ -72,6 +72,38 @@ class ContestTagAdmin(admin.ModelAdmin):
 
 
 class ContestProblemInlineForm(ModelForm):
+    ta_permission_targets = forms.ModelMultipleChoiceField(
+        queryset=Profile.objects.none(),
+        label='TA 권한 허용 대상',
+        help_text='이 문제에 접근할 수 있는 TA를 선택하세요. 기본값은 과제에 등록된 TA 전체입니다.',
+        required=False,
+        widget=AdminSelect2MultipleWidget,
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        contest = None
+        if self.instance and self.instance.contest_id:
+            contest = self.instance.contest
+        if contest is not None:
+            curators = contest.curators.select_related('user').order_by('user__username')
+            self.fields['ta_permission_targets'].queryset = curators
+            if not self.instance.pk or not self.instance.ta_access_restricted:
+                self.initial['ta_permission_targets'] = curators
+        else:
+            self.fields['ta_permission_targets'].queryset = Profile.objects.none()
+
+    def save(self, commit=True):
+        selected_ids = set(self.cleaned_data['ta_permission_targets'].values_list('pk', flat=True))
+        available_ids = set(self.fields['ta_permission_targets'].queryset.values_list('pk', flat=True))
+        self.instance.ta_access_restricted = selected_ids != available_ids
+        return super().save(commit=commit)
+
+    def _save_m2m(self):
+        super()._save_m2m()
+        if not self.instance.ta_access_restricted:
+            self.instance.ta_permission_targets.clear()
+
     class Meta:
         widgets = {'problem': AdminHeavySelect2Widget(data_view='problem_select2')}
 
@@ -80,7 +112,7 @@ class ContestProblemInline(SortableInlineAdminMixin, admin.TabularInline):
     model = ContestProblem
     verbose_name = _('Problem')
     verbose_name_plural = _('Problems')
-    fields = ('problem', 'points', 'partial',  'order',
+    fields = ('problem', 'points', 'partial', 'order', 'ta_permission_targets',
               'rejudge_column')
     readonly_fields = ('rejudge_column',)
     form = ContestProblemInlineForm

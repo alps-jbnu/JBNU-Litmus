@@ -1,10 +1,121 @@
 from django.core.exceptions import ValidationError
+from django.forms import modelform_factory
+from django.test import RequestFactory
 from django.test import SimpleTestCase, TestCase
 from django.utils import timezone
 
-from judge.models import Contest, ContestParticipation, ContestTag
+from judge.models import Contest, ContestParticipation, ContestProblem, ContestTag, Language, Problem
 from judge.models.contest import MinValueOrNoneValidator
-from judge.models.tests.util import CommonDataMixin, create_contest, create_contest_participation, create_user
+from judge.models.tests.util import CommonDataMixin, create_contest, create_contest_participation, create_problem, create_user
+
+
+class ContestProblemTaPermissionTestCase(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        Language.objects.create(
+            key='PY3',
+            name='Python 3',
+            common_name='Python',
+            ace='python',
+            pygments='python',
+            extension='py',
+        )
+        cls.allowed_ta = create_user(username='allowed_ta')
+        cls.denied_ta = create_user(username='denied_ta')
+        cls.outsider = create_user(username='outsider_ta')
+        cls.superuser = create_user(username='problem_superuser', is_staff=True, is_superuser=True)
+        cls.contest = Contest(
+            name='TA permission contest',
+            start_time=timezone.now() - timezone.timedelta(days=1),
+            end_time=timezone.now() + timezone.timedelta(days=1),
+        )
+        cls.contest.save()
+        cls.contest.curators.add(cls.allowed_ta.profile, cls.denied_ta.profile)
+        cls.problem = create_problem(code='ta-controlled-problem', is_public=False)
+        cls.contest_problem = ContestProblem.objects.create(
+            contest=cls.contest,
+            problem=cls.problem,
+            points=1,
+            order=0,
+        )
+
+    def test_unrestricted_problem_allows_every_contest_ta(self):
+        self.assertTrue(self.contest_problem.is_ta_accessible_by(self.allowed_ta.profile))
+        self.assertTrue(self.contest_problem.is_ta_accessible_by(self.denied_ta.profile))
+        self.assertFalse(self.contest_problem.is_ta_accessible_by(self.outsider.profile))
+        self.assertTrue(self.problem.is_accessible_by(self.allowed_ta))
+
+    def test_restricted_problem_allows_only_selected_tas(self):
+        self.contest_problem.ta_access_restricted = True
+        self.contest_problem.save(update_fields=['ta_access_restricted'])
+        self.contest_problem.ta_permission_targets.add(self.allowed_ta.profile)
+
+        self.assertTrue(self.contest_problem.is_ta_accessible_by(self.allowed_ta.profile))
+        self.assertFalse(self.contest_problem.is_ta_accessible_by(self.denied_ta.profile))
+        self.assertTrue(self.problem.is_accessible_by(self.allowed_ta))
+        self.assertFalse(self.problem.is_accessible_by(self.denied_ta))
+
+        participation = ContestParticipation.objects.create(
+            contest=self.contest,
+            user=self.denied_ta.profile,
+        )
+        self.denied_ta.profile.current_contest = participation
+        self.denied_ta.profile.save(update_fields=['current_contest'])
+        self.assertFalse(self.problem.is_accessible_by(self.denied_ta))
+
+    def test_admin_form_defaults_to_all_tas_and_saves_a_subset(self):
+        from judge.admin.contest import ContestProblemInlineForm
+
+        form_class = modelform_factory(
+            ContestProblem,
+            form=ContestProblemInlineForm,
+            fields=('problem', 'points', 'partial', 'order', 'ta_permission_targets'),
+        )
+        unbound_form = form_class(instance=self.contest_problem)
+        self.assertQuerysetEqual(
+            unbound_form.fields['ta_permission_targets'].queryset,
+            [self.allowed_ta.profile, self.denied_ta.profile],
+            transform=lambda profile: profile,
+            ordered=False,
+        )
+        self.assertSetEqual(
+            set(unbound_form.initial['ta_permission_targets']),
+            {self.allowed_ta.profile, self.denied_ta.profile},
+        )
+
+        form = form_class(data={
+            'problem': self.problem.pk,
+            'points': self.contest_problem.points,
+            'partial': 'on',
+            'order': self.contest_problem.order,
+            'ta_permission_targets': [self.allowed_ta.profile.pk],
+        }, instance=self.contest_problem)
+        self.assertTrue(form.is_valid(), form.errors)
+        contest_problem = form.save()
+
+        self.assertTrue(contest_problem.ta_access_restricted)
+        self.assertQuerysetEqual(
+            contest_problem.ta_permission_targets.all(),
+            [self.allowed_ta.profile],
+            transform=lambda profile: profile,
+            ordered=False,
+        )
+
+    def test_problem_curators_field_is_only_visible_to_superusers(self):
+        from django.contrib.admin.sites import AdminSite
+        from judge.admin.problem import ProblemAdmin
+
+        problem_admin = ProblemAdmin(Problem, AdminSite())
+        request = RequestFactory().get('/admin/judge/problem/')
+
+        request.user = self.allowed_ta
+        regular_form = problem_admin.get_form(request, obj=self.problem)
+        self.assertNotIn('curators', regular_form.base_fields)
+
+        request.user = self.superuser
+        superuser_form = problem_admin.get_form(request, obj=self.problem)
+        self.assertIn('curators', superuser_form.base_fields)
+        self.assertEqual(superuser_form(instance=self.problem).fields['curators'].label, '문제 공동 관리자')
 
 
 class ContestTestCase(CommonDataMixin, TestCase):
