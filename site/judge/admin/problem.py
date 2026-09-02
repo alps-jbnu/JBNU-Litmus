@@ -58,14 +58,6 @@ class ProblemForm(ModelForm):
     
     def __init__(self, *args, **kwargs):
         super(ProblemForm, self).__init__(*args, **kwargs)
-        # authors는 readonly이므로 fields에 포함되지 않음
-        if 'curators' in self.fields:
-            self.fields['curators'].widget.can_add_related = False
-            self.fields['curators'].label = '문제 공동 관리자'
-            self.fields['curators'].help_text = (
-                '문제 자체를 공동 관리할 사용자를 지정합니다. 과제/대회별 TA 접근 권한은 '
-                '과제/대회 관리자 페이지에서 설정하세요.'
-            )
         self.fields['testers'].widget.can_add_related = False
         self.fields['change_message'].widget.attrs.update({
             'placeholder': gettext('Describe the changes you made (optional)'),
@@ -237,7 +229,6 @@ class ProblemForm(ModelForm):
     class Meta:
         widgets = {
             'authors': AdminHeavySelect2MultipleWidget(data_view='profile_select2', attrs={'style': 'width: 100%; display: none;'}),
-            'curators': AdminHeavySelect2MultipleWidget(data_view='profile_select2', attrs={'style': 'width: 100%'}),
             'testers': AdminHeavySelect2MultipleWidget(data_view='profile_select2', attrs={'style': 'width: 100%'}),
             'banned_users': AdminHeavySelect2MultipleWidget(data_view='profile_select2',
                                                            attrs={'style': 'width: 100%'}),
@@ -536,7 +527,7 @@ class ProblemAdmin(VersionAdmin):
     fieldsets = (
         ('문제 설정', {
             'fields': (
-                'code', 'name', 'date', 'authors', 'curators', 'testers',
+                'code', 'name', 'date', 'authors', 'testers',
                 ('is_encrypted', 'encryption_key'), 
                 'is_public',
                 'is_contest_problem',
@@ -624,7 +615,7 @@ class ProblemAdmin(VersionAdmin):
     def get_fieldsets(self, request, obj=None):
         fieldsets = super(ProblemAdmin, self).get_fieldsets(request, obj)
         can_manage_contest_problem = request.user.has_perm('judge.manage_contest_problem')
-        if can_manage_contest_problem and request.user.is_superuser:
+        if can_manage_contest_problem:
             return fieldsets
 
         filtered = []
@@ -635,13 +626,10 @@ class ProblemAdmin(VersionAdmin):
                 for field in fields:
                     if field == 'is_contest_problem' and not can_manage_contest_problem:
                         continue
-                    if field == 'curators' and not request.user.is_superuser:
-                        continue
                     if isinstance(field, (list, tuple)):
                         new_fields.append(tuple(
                             f for f in field
-                            if (f != 'is_contest_problem' or can_manage_contest_problem) and
-                               (f != 'curators' or request.user.is_superuser)
+                            if f != 'is_contest_problem' or can_manage_contest_problem
                         ))
                     else:
                         new_fields.append(field)
@@ -789,8 +777,6 @@ class ProblemAdmin(VersionAdmin):
         form.base_fields['allowed_languages'].initial = Language.objects.all()
         if not request.user.has_perm('judge.manage_contest_problem'):
             form.base_fields.pop('is_contest_problem', None)
-        if not request.user.is_superuser:
-            form.base_fields.pop('curators', None)
         return form
 
     def save_model(self, request, obj, form, change):
