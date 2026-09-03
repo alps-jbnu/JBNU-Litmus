@@ -58,10 +58,6 @@ class ProblemForm(ModelForm):
     
     def __init__(self, *args, **kwargs):
         super(ProblemForm, self).__init__(*args, **kwargs)
-        # authors는 readonly이므로 fields에 포함되지 않음
-        self.fields['curators'].widget.can_add_related = False
-        self.fields['curators'].label = 'TA'
-        self.fields['curators'].help_text = 'TA나 협업자에게 문제 편집 권한을 부여합니다. 제작자와 동일한 권한을 가지지만, 제작자로 표시되지 않습니다.'
         self.fields['testers'].widget.can_add_related = False
         self.fields['change_message'].widget.attrs.update({
             'placeholder': gettext('Describe the changes you made (optional)'),
@@ -233,7 +229,6 @@ class ProblemForm(ModelForm):
     class Meta:
         widgets = {
             'authors': AdminHeavySelect2MultipleWidget(data_view='profile_select2', attrs={'style': 'width: 100%; display: none;'}),
-            'curators': AdminHeavySelect2MultipleWidget(data_view='profile_select2', attrs={'style': 'width: 100%'}),
             'testers': AdminHeavySelect2MultipleWidget(data_view='profile_select2', attrs={'style': 'width: 100%'}),
             'banned_users': AdminHeavySelect2MultipleWidget(data_view='profile_select2',
                                                            attrs={'style': 'width: 100%'}),
@@ -532,7 +527,7 @@ class ProblemAdmin(VersionAdmin):
     fieldsets = (
         ('문제 설정', {
             'fields': (
-                'code', 'name', 'date', 'authors', 'curators', 'testers',
+                'code', 'name', 'date', 'authors', 'testers',
                 ('is_encrypted', 'encryption_key'), 
                 'is_public',
                 'is_contest_problem',
@@ -619,7 +614,8 @@ class ProblemAdmin(VersionAdmin):
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = super(ProblemAdmin, self).get_fieldsets(request, obj)
-        if request.user.has_perm('judge.manage_contest_problem'):
+        can_manage_contest_problem = request.user.has_perm('judge.manage_contest_problem')
+        if can_manage_contest_problem:
             return fieldsets
 
         filtered = []
@@ -628,10 +624,13 @@ class ProblemAdmin(VersionAdmin):
             if isinstance(fields, (list, tuple)):
                 new_fields = []
                 for field in fields:
-                    if field == 'is_contest_problem':
+                    if field == 'is_contest_problem' and not can_manage_contest_problem:
                         continue
                     if isinstance(field, (list, tuple)):
-                        new_fields.append(tuple(f for f in field if f != 'is_contest_problem'))
+                        new_fields.append(tuple(
+                            f for f in field
+                            if f != 'is_contest_problem' or can_manage_contest_problem
+                        ))
                     else:
                         new_fields.append(field)
                 options = dict(options)
