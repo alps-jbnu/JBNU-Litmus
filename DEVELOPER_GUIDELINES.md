@@ -162,5 +162,5 @@ tmux kill-session -t dmoj_judge_11_20
 
 채점기 상태는 다음 URL에서 확인 가능합니다:
 ```
-https://litmus.jbnu.ac.kr/status/
+https://litmus.jedutools.io/status/
 ```

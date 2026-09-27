@@ -7,6 +7,7 @@ from django.db import connection, transaction
 from django.db.models import Q, TextField
 from django import forms
 from django.forms import ModelForm, ModelMultipleChoiceField
+from django.forms.models import BaseInlineFormSet
 from django.http import Http404, HttpResponseRedirect, HttpResponse
 from django.shortcuts import get_object_or_404
 from django.urls import path, reverse, reverse_lazy
@@ -72,18 +73,57 @@ class ContestTagAdmin(admin.ModelAdmin):
 
 
 class ContestProblemInlineForm(ModelForm):
+    ta_permission_targets = forms.ModelMultipleChoiceField(
+        queryset=Profile.objects.none(),
+        label='TA 권한 허용 대상',
+        help_text='이 문제에 접근할 수 있는 TA를 선택하세요. 기본값은 과제에 등록된 TA 전체입니다.',
+        required=False,
+        widget=AdminSelect2MultipleWidget,
+    )
+
+    def __init__(self, *args, **kwargs):
+        contest = kwargs.pop('contest', None)
+        super().__init__(*args, **kwargs)
+        if contest is None and self.instance and self.instance.contest_id:
+            contest = self.instance.contest
+        if contest is not None:
+            curators = contest.curators.select_related('user').order_by('user__username')
+            self.fields['ta_permission_targets'].queryset = curators
+            if not self.instance.pk or not self.instance.ta_access_restricted:
+                self.initial['ta_permission_targets'] = list(curators)
+        else:
+            self.fields['ta_permission_targets'].queryset = Profile.objects.none()
+
+    def save(self, commit=True):
+        selected_ids = set(self.cleaned_data['ta_permission_targets'].values_list('pk', flat=True))
+        available_ids = set(self.fields['ta_permission_targets'].queryset.values_list('pk', flat=True))
+        self.instance.ta_access_restricted = selected_ids != available_ids
+        return super().save(commit=commit)
+
+    def _save_m2m(self):
+        super()._save_m2m()
+        if not self.instance.ta_access_restricted:
+            self.instance.ta_permission_targets.clear()
+
     class Meta:
         widgets = {'problem': AdminHeavySelect2Widget(data_view='problem_select2')}
+
+
+class ContestProblemInlineFormSet(BaseInlineFormSet):
+    def _construct_form(self, i, **kwargs):
+        kwargs['contest'] = self.instance if self.instance.pk else None
+        return super()._construct_form(i, **kwargs)
 
 
 class ContestProblemInline(SortableInlineAdminMixin, admin.TabularInline):
     model = ContestProblem
     verbose_name = _('Problem')
     verbose_name_plural = _('Problems')
-    fields = ('problem', 'points', 'partial',  'order',
+    fields = ('problem', 'points', 'partial', 'order', 'ta_permission_targets',
               'rejudge_column')
     readonly_fields = ('rejudge_column',)
     form = ContestProblemInlineForm
+    formset = ContestProblemInlineFormSet
     extra = 0
 
     def get_formset(self, request, obj, **kwargs):

@@ -59,6 +59,11 @@
             vertical-align: middle;
             height: 100%;
         }
+        th.column-ta_permission_targets,
+        td.field-ta_permission_targets{
+            text-align: center;
+            vertical-align: middle;
+        }
         td.field-rejudge_column{
             text-align: center;
             vertical-align: middle;
@@ -186,6 +191,67 @@
         });
     </script>
     <script>
+        django.jQuery(function ($) {
+            const taTargetSelector = 'select[name$="-ta_permission_targets"]';
+
+            function getTaTargetSelect(removeButton) {
+                const container = removeButton.closest('.select2-container');
+                const tableCell = removeButton.closest('td.field-ta_permission_targets');
+                const previous = container && container.previousElementSibling;
+                if (previous && previous.matches(taTargetSelector)) {
+                    return previous;
+                }
+                return tableCell ? tableCell.querySelector(taTargetSelector) : null;
+            }
+
+            // Select2 자체의 X 이벤트가 입력 영역까지 전달되면 후보 목록이
+            // 함께 열린다. X의 선택 해제를 직접 처리해 이벤트를 여기서 끝낸다.
+            document.addEventListener('mousedown', function (event) {
+                const removeButton = event.target.closest(
+                    '.select2-selection__choice__remove, .select2-selection__clear'
+                );
+                if (!removeButton) {
+                    return;
+                }
+
+                const select = getTaTargetSelect(removeButton);
+                if (!select) {
+                    return;
+                }
+
+                event.preventDefault();
+                event.stopPropagation();
+                event.stopImmediatePropagation();
+
+                const $select = $(select);
+                if (removeButton.classList.contains('select2-selection__clear')) {
+                    $select.val(null).trigger('change');
+                } else {
+                    const choice = $(removeButton).closest('.select2-selection__choice').data('data');
+                    const removedId = choice && String(choice.id);
+                    const remainingIds = ($select.val() || []).filter(function (id) {
+                        return String(id) !== removedId;
+                    });
+                    $select.val(remainingIds).trigger('change');
+                }
+                $select.select2('close');
+            }, true);
+
+            // mousedown에서 DOM이 갱신된 뒤 이어지는 click도 Select2에
+            // 전달되지 않도록 막는다.
+            document.addEventListener('click', function (event) {
+                const removeButton = event.target.closest(
+                    '.select2-selection__choice__remove, .select2-selection__clear'
+                );
+                if (removeButton && getTaTargetSelect(removeButton)) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    event.stopImmediatePropagation();
+                }
+            }, true);
+        });
+    </script>
+    <script>
         document.addEventListener("DOMContentLoaded", function() {
             // 대상이 되는 모든 th 요소를 선택합니다.
             const thElements = document.querySelectorAll("th");
@@ -196,7 +262,8 @@
             // th 요소에 스타일 적용
             thElements.forEach(function(th) {
                 const text = th.textContent.trim();
-                if (text === '점수' || text === '부분 점수 허용' || text === '삭제') {
+                if (text === '점수' || text === '부분 점수 허용' ||
+                    text === 'TA 권한 허용 대상' || text === '삭제') {
                     th.style.textAlign = "center";
                     th.style.verticalAlign = "middle";
                 }

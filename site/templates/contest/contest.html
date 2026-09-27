@@ -412,9 +412,6 @@
                             <th class="points">{{ _('Points') }}</th>
                             <th class="ac-rate">{{ _('AC Rate') }}</th>
                             <th class="users">맞힌 사람</th>
-                            {% if metadata.has_public_editorials %}
-                                <th>{{ _('Editorials') }}</th>
-                            {% endif %}
                         </tr>
                         </thead>
                         <tbody>
@@ -464,13 +461,6 @@
                                 <td class="points">{{ problem.points|floatformat }}</td>
                                 <td class="ac-rate">{{ problem.correct_rate|floatformat(2) }}%</td>
                                 <td lass="users">{{ problem.correct_users }}</td>
-                                {% if metadata.has_public_editorials %}
-                                    <td>
-                                        {% if problem.is_public and problem.has_public_editorial %}
-                                            <a href="{{ url('problem_editorial', problem.code) }}">{{ _('Editorial') }}</a>
-                                        {% endif %}
-                                    </td>
-                                {% endif %}
                             </tr>
                         {% endfor %}
                         </tbody>

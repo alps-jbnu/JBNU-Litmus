@@ -256,12 +256,30 @@ class Problem(models.Model):
     def is_accessible_by(self, user, skip_contest_problem_check=False):
         # If we don't want to check if the user is in a contest containing that problem.
         if not skip_contest_problem_check and user.is_authenticated:
+            from judge.models import ContestProblem
+
             # If user is currently in a contest containing that problem.
             current = user.profile.current_contest_id
             if current is not None:
-                from judge.models import ContestProblem
-                if ContestProblem.objects.filter(problem_id=self.id, contest__users__id=current).exists():
+                current_contest_problem = ContestProblem.objects.filter(
+                    problem_id=self.id,
+                    contest__users__id=current,
+                ).select_related('contest').first()
+                if current_contest_problem is not None and current_contest_problem.contest.curators.filter(
+                        pk=user.profile.pk).exists():
+                    return current_contest_problem.is_ta_accessible_by(user.profile)
+                if current_contest_problem is not None:
                     return True
+
+            ta_contest_problems = ContestProblem.objects.filter(
+                problem_id=self.id,
+                contest__curators=user.profile,
+            ).filter(
+                Q(ta_access_restricted=False) |
+                Q(ta_permission_targets=user.profile)
+            )
+            if ta_contest_problems.exists():
+                return True
 
         if self.is_contest_problem:
             if user.is_authenticated and user.has_perm('judge.manage_contest_problem'):
