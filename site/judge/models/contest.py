@@ -842,6 +842,21 @@ class ContestProblem(models.Model):
                                           default=None, null=True, blank=True,
                                           validators=[MinValueOrNoneValidator(1, _('Why include a problem you '
                                                                                    "can't submit to?"))])
+    ta_access_restricted = models.BooleanField(default=False, editable=False)
+    ta_permission_targets = models.ManyToManyField(
+        Profile,
+        blank=True,
+        related_name='ta_accessible_contest_problems',
+        verbose_name='TA 권한 허용 대상',
+    )
+
+    def is_ta_accessible_by(self, profile):
+        if not self.contest.curators.filter(pk=profile.pk).exists():
+            return False
+        return (
+            not self.ta_access_restricted or
+            self.ta_permission_targets.filter(pk=profile.pk).exists()
+        )
 
     class Meta:
         unique_together = ('problem', 'contest')
