@@ -96,10 +96,10 @@
             font-size: 14px;
             box-sizing: border-box;
             height: 46px;
-            width: 72%;  /* 이메일 로컬 부분의 너비 조정 */
+            width: 64%;  /* 이메일 로컬 부분의 너비 조정 */
             font-family: "Pretendard";
         }
-        /* 도메인 부분 스타일 정의 */
+        /* 도메인 부분 스타일 정의 (외부 학교: 고정 표시) */
         span.email_domain {
         background: var(--light-bg);
         border: 1px solid var(--border-color);
@@ -110,7 +110,22 @@
         display: flex;
         align-items: center;
         box-sizing: border-box;
-        width: 28%;  /* 도메인 부분의 너비 조정 */
+        width: 36%;  /* 도메인 부분의 너비 조정 */
+        }
+        /* 도메인 선택 드롭다운 (전북대 소속) - 고정 표시와 같은 모양 */
+        select.email_domain_select {
+            color: var(--font-black);
+            background: var(--light-bg);
+            border: 1px solid var(--border-color);
+            border-left: none;
+            border-radius: 0 8px 8px 0;
+            padding: 0 6px;
+            height: 46px;
+            width: 36%;
+            box-sizing: border-box;
+            font-size: 14px;
+            font-family: "Pretendard";
+            cursor: pointer;
         }
 
         .select2-hidden-accessible {
@@ -513,15 +528,60 @@
                 }, 10);
             });
 
+            // 전북대 소속은 도메인을 목록에서 고르거나 직접 입력하고, 외부 학교는 g.jbedu.kr로 고정한다.
+            // 최종 도메인은 숨은 email_domain 필드에 담아 검증/가입 요청에 함께 보낸다.
             var jbnuSchoolId = '{{ jbnu_school_id }}';
-            $('#id_school').on('change', function() {
-                var isJbnu = (String(this.value) === String(jbnuSchoolId));
-                var domain = isJbnu ? '{{ jbnu_email_domain }}' : '{{ external_school_email_domain }}';
-                $('span.email_domain').text(domain);
-                $('input[name=email_domain]').val(domain);
-                document.querySelector('#id_email_local').dispatchEvent(new Event('input', { bubbles: true }));
+            var externalDomain = '{{ external_school_email_domain }}';
+            var emailLocalField = document.querySelector('#id_email_local');
+            var domainField = document.querySelector('input[name=email_domain]');
+            var domainSelect = document.querySelector('#id_email_domain_select');
+            var domainDisplay = document.querySelector('#id_email_domain_display');
+            var customDomainField = document.querySelector('#id_email_domain_custom');
+
+            function normalizeDomain(value) {
+                var domain = value.trim().replace(/^@+/, '').toLowerCase();
+                return domain ? '@' + domain : '';
+            }
+
+            function syncEmailDomain() {
+                var isJbnu = String($('#id_school').val()) === String(jbnuSchoolId);
+                var isCustom = isJbnu && domainSelect.value === 'custom';
+                domainSelect.style.display = isJbnu ? '' : 'none';
+                domainDisplay.style.display = isJbnu ? 'none' : '';
+                customDomainField.style.display = isCustom ? '' : 'none';
+
+                if (!isJbnu) {
+                    domainField.value = externalDomain;
+                } else if (isCustom) {
+                    domainField.value = normalizeDomain(customDomainField.value);
+                } else {
+                    domainField.value = domainSelect.value;
+                }
+                // 도메인이 바뀌었으니 이메일 검증을 다시 요청한다.
+                emailLocalField.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+
+            // 서버가 폼을 다시 그린 경우 직전에 쓰던 도메인을 복원한다.
+            var initialDomain = domainField.value;
+            if (initialDomain && initialDomain !== externalDomain) {
+                var isPreset = Array.prototype.some.call(domainSelect.options, function(option) {
+                    return option.value === initialDomain;
+                });
+                domainSelect.value = isPreset ? initialDomain : 'custom';
+                if (!isPreset) {
+                    customDomainField.value = initialDomain.replace(/^@/, '');
+                }
+            }
+
+            $('#id_school').on('change', syncEmailDomain);
+            domainSelect.addEventListener('change', function() {
+                syncEmailDomain();
+                if (domainSelect.value === 'custom') {
+                    customDomainField.focus();
+                }
             });
-            $('#id_school').trigger('change');
+            customDomainField.addEventListener('input', syncEmailDomain);
+            syncEmailDomain();
         });
     </script>
 {% endblock %}
@@ -556,12 +616,20 @@
             <span class="fullwidth">{{ form.first_name }}</span>
             <!-- 학교 선택 -->
             <span class="fullwidth">{{ form.school }}</span>
-            <!-- 이메일 -->
+            <!-- 이메일 (전북대 소속은 도메인 선택/직접 입력, 외부 학교는 g.jbedu.kr 고정) -->
             <span class="email-input-wrapper">
                 {{ form.email_local }}
                 {{ form.email_domain }}
-                <span class="email_domain">@jbnu.ac.kr</span>
+                <select class="email_domain_select" id="id_email_domain_select" aria-label="이메일 도메인">
+                    {% for domain in jbnu_email_domain_choices %}
+                        <option value="{{ domain }}">{{ domain }}</option>
+                    {% endfor %}
+                    <option value="custom">직접 입력</option>
+                </select>
+                <span class="email_domain" id="id_email_domain_display" style="display:none;">{{ external_school_email_domain }}</span>
             </span>
+            <input type="text" id="id_email_domain_custom" maxlength="49" placeholder="도메인 직접 입력"
+                   aria-label="이메일 도메인 직접 입력" autocomplete="off" style="display:none;">
             <div class="form-field-error" id="email-error-container" style="display:none;"></div>
             <!-- 국가선택 -->
             <!-- 언어선택 -->

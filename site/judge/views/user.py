@@ -28,12 +28,14 @@ from django.views.decorators.http import require_POST
 from django.views.generic import DetailView, FormView, ListView, TemplateView, View
 from reversion import revisions
 
-from judge.forms import CustomAuthenticationForm, DownloadDataForm, ProfileForm, newsletter_id, IdFindForm, CustomPasswordResetForm, EmailChangeForm, ResendActivationEmailForm, StudentNumberRegisterForm, get_email_domain_for_user
+from judge.forms import CustomAuthenticationForm, DownloadDataForm, ProfileForm, newsletter_id, IdFindForm, CustomPasswordResetForm, EmailChangeForm, ResendActivationEmailForm, StudentNumberRegisterForm, get_school_for_user
 from judge.models import Profile, Submission, ContestParticipation
 from judge.performance_points import get_pp_breakdown
 from judge.ratings import rating_class, rating_progress
 from judge.tasks import prepare_user_data
 from judge.utils.celery import task_status_by_id, task_status_url_by_id
+from judge.utils.email_domain import (EXTERNAL_SCHOOL_EMAIL_DOMAIN, JBNU_EMAIL_DOMAIN, JBNU_EMAIL_DOMAIN_CHOICES,
+                                      can_choose_email_domain)
 from judge.utils.problems import contest_completed_ids, user_completed_ids
 from judge.utils.pwned import PwnedPasswordsValidator
 from judge.utils.ranker import ranker
@@ -702,8 +704,9 @@ class AdminOnlyMixin:
         return super().dispatch(request, *args, **kwargs)
 
 
-# 입력한 아이디(username)의 소속 학교에 맞는 이메일 도메인을 조회하는 용도.
-# 이메일 변경 화면에서 아이디 입력 시 표시 도메인을 실시간으로 갱신하기 위해 사용한다.
+# 입력한 아이디(username)의 소속 학교에 맞는 이메일 도메인 규칙을 조회하는 용도.
+# 이메일 변경 화면에서 아이디 입력 시 도메인 선택 목록/고정 도메인을 실시간으로 바꾸기 위해 사용한다.
+# (전북대 소속: selectable=True, domain은 기본 선택값 / 외부 학교: selectable=False, domain은 고정값)
 # EmailChangeView와 동일하게 관리자만 호출 가능(비관리자가 API를 직접 두드려
 # 아이디→소속 학교를 알아내는 것을 막기 위함).
 def email_change_domain_lookup(request):
@@ -714,7 +717,9 @@ def email_change_domain_lookup(request):
         raise Http404
     username = (request.GET.get('username') or '').strip()
     target_user = User.objects.filter(username=username).first() if username else None
-    return JsonResponse({'domain': get_email_domain_for_user(target_user)})
+    if can_choose_email_domain(get_school_for_user(target_user)):
+        return JsonResponse({'selectable': True, 'domain': JBNU_EMAIL_DOMAIN})
+    return JsonResponse({'selectable': False, 'domain': EXTERNAL_SCHOOL_EMAIL_DOMAIN})
 
 
 class EmailChangeView(AdminOnlyMixin, FormView):
@@ -726,6 +731,8 @@ class EmailChangeView(AdminOnlyMixin, FormView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['title'] = self.title
+        context['jbnu_email_domain_choices'] = JBNU_EMAIL_DOMAIN_CHOICES
+        context['external_school_email_domain'] = EXTERNAL_SCHOOL_EMAIL_DOMAIN
         return context
 
     def form_valid(self, form):

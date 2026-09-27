@@ -109,7 +109,8 @@
     }
 
     /* 이메일 입력 전체 영역 스타일 */
-    .email-input-wrapper {
+    .email-input-wrapper,
+    .email-input-wrapper-error {
         display: flex;
         align-items: center;
         width: 100%;
@@ -126,11 +127,11 @@
         font-size: 14px;
         box-sizing: border-box;
         height: 46px;
-        width: 72%;
+        width: 64%;
         font-family: "Pretendard";
     }
 
-    /* 도메인 부분 스타일 정의 */
+    /* 도메인 부분 스타일 정의 (외부 학교: 고정 표시) */
     span.email_domain {
         background: var(--light-bg);
         border: 1px solid var(--border-color);
@@ -141,7 +142,23 @@
         display: flex;
         align-items: center;
         box-sizing: border-box;
-        width: 28%;
+        width: 36%;
+    }
+
+    /* 도메인 선택 드롭다운 (전북대 소속) - 고정 표시와 같은 모양 */
+    select.email_domain_select {
+        color: var(--font-black);
+        background: var(--light-bg);
+        border: 1px solid var(--border-color);
+        border-left: none;
+        border-radius: 0 8px 8px 0;
+        padding: 0 6px;
+        height: 46px;
+        width: 36%;
+        box-sizing: border-box;
+        font-size: 14px;
+        font-family: "Pretendard";
+        cursor: pointer;
     }
 
 </style>
@@ -165,12 +182,20 @@
         {{ form.username }}
         {{ form.password }}
 
-        <!-- 이메일 부분을 회원가입 페이지와 동일하게 -->
+        <!-- 이메일 부분을 회원가입 페이지와 동일하게 (전북대 소속은 도메인 선택/직접 입력, 외부 학교는 고정) -->
         <span class="email-input-wrapper{% if form.email_local.errors %}-error{% endif %}">
             {{ form.email_local }}
             {{ form.email_domain }}
-            <span class="email_domain" id="id_email_domain_display">{{ form.email_domain.value() or '@jbnu.ac.kr' }}</span>
+            <select class="email_domain_select" id="id_email_domain_select" aria-label="이메일 도메인">
+                {% for domain in jbnu_email_domain_choices %}
+                    <option value="{{ domain }}">{{ domain }}</option>
+                {% endfor %}
+                <option value="custom">직접 입력</option>
+            </select>
+            <span class="email_domain" id="id_email_domain_display" style="display:none;">{{ external_school_email_domain }}</span>
         </span>
+        <input type="text" id="id_email_domain_custom" maxlength="49" placeholder="도메인 직접 입력"
+               aria-label="이메일 도메인 직접 입력" autocomplete="off" style="display:none;">
 
         {% if form.email_local.errors %}
             <div class="form-field-error">{{ form.email_local.errors }}</div>
@@ -184,11 +209,37 @@
 {% block js_media %}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // 아이디(username)의 소속 학교에 따라 이메일 도메인(jbnu.ac.kr / g.jbedu.kr)을 자동으로 갱신한다.
+        // 아이디(username)의 소속 학교에 따라 이메일 도메인 입력 방식을 바꾼다.
+        // 전북대 소속은 목록에서 고르거나 직접 입력하고, 외부 학교는 g.jbedu.kr로 고정된다.
+        // 최종 도메인은 숨은 email_domain 필드에 담아 보낸다.
         var usernameField = document.querySelector('#id_username');
-        var domainDisplay = document.querySelector('#id_email_domain_display');
         var domainField = document.querySelector('input[name=email_domain]');
+        var domainSelect = document.querySelector('#id_email_domain_select');
+        var domainDisplay = document.querySelector('#id_email_domain_display');
+        var customDomainField = document.querySelector('#id_email_domain_custom');
+        var externalDomain = '{{ external_school_email_domain }}';
         var lookupUrl = '{{ url('email_change_domain_lookup') }}';
+        var selectable = true;  // 조회 전에는 전북대 규칙(선택 가능)으로 보여준다
+
+        function normalizeDomain(value) {
+            var domain = value.trim().replace(/^@+/, '').toLowerCase();
+            return domain ? '@' + domain : '';
+        }
+
+        function syncEmailDomain() {
+            var isCustom = selectable && domainSelect.value === 'custom';
+            domainSelect.style.display = selectable ? '' : 'none';
+            domainDisplay.style.display = selectable ? 'none' : '';
+            customDomainField.style.display = isCustom ? '' : 'none';
+
+            if (!selectable) {
+                domainField.value = domainDisplay.textContent;
+            } else if (isCustom) {
+                domainField.value = normalizeDomain(customDomainField.value);
+            } else {
+                domainField.value = domainSelect.value;
+            }
+        }
 
         function updateDomain() {
             var username = usernameField.value.trim();
@@ -203,8 +254,11 @@
                 }
                 try {
                     var data = JSON.parse(xhr.responseText);
-                    domainDisplay.textContent = data.domain;
-                    domainField.value = data.domain;
+                    selectable = !!data.selectable;
+                    if (!selectable) {
+                        domainDisplay.textContent = data.domain;
+                    }
+                    syncEmailDomain();
                 } catch (e) {
                     // 무시: 조회 실패 시 기존 표시값 유지
                 }
@@ -212,7 +266,28 @@
             xhr.send();
         }
 
+        // 서버가 폼을 다시 그린 경우 직전에 쓰던 도메인을 복원한다.
+        var initialDomain = domainField.value;
+        if (initialDomain && initialDomain !== externalDomain) {
+            var isPreset = Array.prototype.some.call(domainSelect.options, function (option) {
+                return option.value === initialDomain;
+            });
+            domainSelect.value = isPreset ? initialDomain : 'custom';
+            if (!isPreset) {
+                customDomainField.value = initialDomain.replace(/^@/, '');
+            }
+        }
+
         usernameField.addEventListener('blur', updateDomain);
+        domainSelect.addEventListener('change', function () {
+            syncEmailDomain();
+            if (domainSelect.value === 'custom') {
+                customDomainField.focus();
+            }
+        });
+        customDomainField.addEventListener('input', syncEmailDomain);
+        syncEmailDomain();
+        updateDomain();  // 다시 그려진 폼처럼 아이디가 이미 채워져 있으면 바로 조회
     });
 </script>
 {% endblock %}
