@@ -22,6 +22,7 @@ from django_ace import AceWidget
 #     WebAuthnCredential
 from judge.models import Contest, Department, Language, Problem, ProblemPointsVote, Profile, Submission, \
     WebAuthnCredential
+from judge.utils.email_domain import JBNU_EMAIL_DOMAIN, build_school_email
 from judge.utils.subscription import newsletter_id
 from judge.widgets import HeavyPreviewPageDownWidget, Select2MultipleWidget, Select2Widget
 
@@ -570,15 +571,10 @@ class CustomPasswordResetForm(PasswordResetForm):
         return cleaned_data
 
 # 이메일 변경 관련 폼
-# 도메인은 회원가입 때와 동일한 기준(judge/views/register.py 참고)을 사용:
-# 전북대(is_jbnu=True) 소속이면 jbnu.ac.kr, 그 외(외부 학교)는 g.jbedu.kr
-JBNU_EMAIL_DOMAIN = '@jbnu.ac.kr'
-EXTERNAL_SCHOOL_EMAIL_DOMAIN = '@g.jbedu.kr'
-
-
-def get_email_domain_for_user(user):
-    school = getattr(getattr(user, 'profile', None), 'school', None)
-    return JBNU_EMAIL_DOMAIN if school and school.is_jbnu else EXTERNAL_SCHOOL_EMAIL_DOMAIN
+# 도메인은 회원가입 때와 동일한 기준(judge/utils/email_domain.py 참고)을 사용:
+# 전북대(is_jbnu=True) 소속이면 선택/직접 입력한 도메인, 그 외(외부 학교)는 g.jbedu.kr
+def get_school_for_user(user):
+    return getattr(getattr(user, 'profile', None), 'school', None)
 
 
 class EmailChangeForm(forms.Form):
@@ -595,7 +591,7 @@ class EmailChangeForm(forms.Form):
     )
     email_domain = forms.CharField(
         max_length=50,
-        initial='@jbnu.ac.kr',
+        initial=JBNU_EMAIL_DOMAIN,
         widget=forms.HiddenInput(),
         required=False
     )
@@ -624,14 +620,12 @@ class EmailChangeForm(forms.Form):
         password = self.cleaned_data.get('password')
         email_local = self.cleaned_data.get('email_local')
 
-        # username으로 대상 계정을 찾아 소속 학교에 맞는 도메인을 결정한다.
-        # (전북대 소속이면 jbnu.ac.kr, 외부 학교면 g.jbedu.kr)
+        # username으로 대상 계정을 찾아 소속 학교 규칙으로 이메일을 만든다.
+        # 전북대 소속이면 화면에서 선택/입력한 email_domain을 검증해서 쓰고,
+        # 외부 학교면 전달값과 관계없이 g.jbedu.kr만 허용한다.
         target_user = User.objects.filter(username=username).first() if username else None
-        expected_domain = get_email_domain_for_user(target_user)
-
-        # 이메일 주소 재구성 (프론트에서 전달한 email_domain은 표시용일 뿐,
-        # 실제 도메인은 항상 서버에서 계정 정보 기준으로 재계산한다)
-        email = f"{email_local}{expected_domain}" if email_local else ''
+        email, email_errors = build_school_email(get_school_for_user(target_user), email_local,
+                                                 self.cleaned_data.get('email_domain'))
         cleaned_data['email'] = email
         cleaned_data['target_user'] = target_user
 
@@ -647,6 +641,9 @@ class EmailChangeForm(forms.Form):
                             break
             else:  # 아이디, 비밀번호에 맞는 계정이 존재하지 않는 경우
                 raise forms.ValidationError(_('아이디 또는 비밀번호가 잘못되었습니다.'), code='invalid_login')
+
+        if email_errors:  # 학교 규칙에 맞지 않는 도메인이거나 잘못된 주소인 경우
+            raise forms.ValidationError(email_errors[0], code='invalid_email')
 
         if email and User.objects.filter(email=email).exists():  # 이미 존재하는 이메일의 경우
             raise forms.ValidationError(_('이미 존재하는 이메일입니다.'), code='exists_email')
