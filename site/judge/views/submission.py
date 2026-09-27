@@ -500,6 +500,17 @@ class AllUserSubmissions(ConditionalUserTabMixin, UserMixin, SubmissionsListBase
         if self.request.user.is_authenticated:
             return reverse('all_user_submissions', kwargs={'user': self.request.user.username})
 
+    def get_searchable_problems(self):
+        # 이 페이지는 특정 유저의 제출만 보이므로, 문제 필터도 목록에 실제로
+        # 등장하는 문제(해당 유저가 제출한 문제 중 보이는 문제)로 한정한다.
+        if not self.request.user or not self.request.user.is_authenticated:
+            return Problem.objects.none().values_list('code', 'name')
+        if self.request.user.is_superuser or self.request.user.is_staff:
+            base = Problem.objects.all()
+        else:
+            base = Problem.get_visible_problems(self.request.user)
+        return base.filter(submission__user=self.profile).distinct().values_list('code', 'name')
+
     def get_context_data(self, **kwargs):
         context = super(AllUserSubmissions, self).get_context_data(**kwargs)
         context['dynamic_update'] = context['page_obj'].number == 1
