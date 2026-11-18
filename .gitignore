@@ -92,6 +92,8 @@ site/resources/jplag/*
 !site/resources/jplag/.gitkeep
 site/resources/static/jplag_reports/*
 !site/resources/static/jplag_reports/.gitkeep
+# JPlag 보고서 기본 저장 위치 (JPLAG_REPORT_ROOT)
+site/jplag_reports/
 
 #settings.py (dev/service)
 site/dmoj/settings.py
