@@ -69,6 +69,37 @@
     .table th:last-child {
         border-top-right-radius: 10px !important; /* 테이블의 오른쪽 위 모서리 */
     }
+    .jplag-tooltip {
+        position: relative;
+    }
+    .jplag-tooltip::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        left: 50%;
+        bottom: 100%;
+        transform: translate(-50%, -6px);
+        background: #222;
+        color: #fff;
+        padding: 4px 6px;
+        border-radius: 4px;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.15s ease;
+        z-index: 10;
+        font-size: 12px;
+    }
+    .jplag-tooltip:hover::after {
+        opacity: 1;
+    }
+    .jplag-tooltip.jplag-failed::after {
+        width: 260px;
+        white-space: normal;
+    }
+    .jplag-failed-label {
+        color: var(--form-error-border);
+        font-size: 12px;
+    }
 </style>
 {% endblock %}
 
@@ -102,13 +133,21 @@
                 <a href="{{ url('problem_detail', problem.code) }}">{{ problem.name }}</a>
             </td>
             {% for result in results %}
-            <td>
-                {% if result.submission_count %}
+            {# contest/jplag.html과 같다. 학생이 2명 이상인데 url이 없으면 JPlag가 실패한 칸이다. #}
+            <td{% if result.submission_count == 1 %} class="jplag-tooltip" data-tooltip="제출자가 2명 이상일 때만 표절 검사가 가능합니다."{% elif result.submission_count and not result.url %} class="jplag-tooltip jplag-failed" data-tooltip="코드로 읽을 수 없거나 너무 짧은 제출이 섞여 있는 등의 이유로 표절 검사를 하지 못했습니다."{% endif %}>
+                {% if result.submission_count and result.url %}
                 <a href="{{ result.url }}">{% trans trimmed count=result.submission_count %}
                     {{ count }} submission
                     {% pluralize %}
                     {{ count }} submissions
                     {% endtrans %}</a>
+                {% elif result.submission_count %}
+                {% trans trimmed count=result.submission_count %}
+                    {{ count }} submission
+                    {% pluralize %}
+                    {{ count }} submissions
+                    {% endtrans %}
+                {% if result.submission_count >= 2 %}<span class="jplag-failed-label">(검사 실패)</span>{% endif %}
                 {% else %}
                 {{ _('No submissions') }}
                 {% endif %}

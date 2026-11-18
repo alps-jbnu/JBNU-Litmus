@@ -43,6 +43,7 @@ from judge.utils.ranker import ranker
 from judge.utils.stats import get_bar_chart, get_pie_chart
 from judge.utils.views import DiggPaginatorMixin, QueryStringSortMixin, SingleObjectFormView, TitleMixin, \
     generic_message
+from judge.views.contests import can_use_jplag
 
 __all__ = ['ContestList', 'ContestDetail', 'ContestRanking', 'ContestJoin', 'ContestLeave', 'ContestCalendar',
            'ContestClone', 'ContestStats', 'ContestJplagView', 'ContestJplagDelete', 'contest_ranking_ajax',
@@ -858,14 +859,13 @@ class ContestJplagMixin(ContestMixin, PermissionRequiredMixin):
     permission_required = 'judge.jplag_contest'
 
     def has_permission(self):
-        # Accept legacy permission to keep compatibility during migration.
-        user = self.request.user
-        return user.has_perm('judge.jplag_contest') or user.has_perm('judge.moss_contest')
+        return can_use_jplag(self.request.user)
 
     def get_object(self, queryset=None):
         contest = super().get_object(queryset)
-        # if settings.MOSS_API_KEY is None or not contest.is_editable_by(self.request.user):
-        #     raise Http404()
+        # contests.ContestJplagMixin과 같은 기준: 대회를 편집할 수 있는 사람만 JPlag 결과를 본다.
+        if not contest.is_editable_by(self.request.user):
+            raise Http404()
         return contest
 
 

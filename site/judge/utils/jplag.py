@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 import shutil
@@ -9,6 +10,8 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.urls import reverse
 
+logger = logging.getLogger('judge.jplag')
+
 _SAFE_NAME_RE = re.compile(r'[^A-Za-z0-9_.-]+')
 
 # 예전 코드는 보고서를 정적 폴더에 두고 .../jplag_reports/<대회>/<문제>/<언어>/results.jplag 주소를 저장했다.
@@ -16,6 +19,129 @@ _SAFE_NAME_RE = re.compile(r'[^A-Za-z0-9_.-]+')
 _LEGACY_REPORT_PATH_RE = re.compile(r'/jplag_reports/([^/]+)/([^/]+)/([^/]+)/results\.jplag$')
 
 REPORT_FILE_NAME = 'results.jplag'
+
+# JPlag 한 번(문제 하나 × 언어 하나)에 주는 시간(초). settings.JPLAG_TIMEOUT으로 바꿀 수 있고, None이나 0이면 제한하지 않는다.
+DEFAULT_JPLAG_TIMEOUT = 600
+
+# 실패했을 때 로그에 남기는 JPlag 출력 줄 수
+_LOG_TAIL_LINES = 40
+
+# ```c, ``` 처럼 마크다운 코드 블록을 여닫는 줄 (앞 공백 허용)
+_MARKDOWN_FENCE_LINE_RE = re.compile(r'^[ \t]*```.*$', re.MULTILINE)
+
+# JPlag 6.3.0 출력에서 실패 이유를 찾는 패턴
+_NOT_ENOUGH_RE = re.compile(r'Not enough valid submissions!?\s*\(found (\d+) valid submissions?\)')
+_PARSE_FAILED_RE = re.compile(r'Failed to parse submission (\S+?):')
+_TOO_SHORT_RE = re.compile(r'Submission (\S+) contains \d+ tokens, which is below the minimum match length (\d+)')
+_SKIPPED_RE = re.compile(r'(\d+) submissions? were skipped')
+_ERROR_LINE_RE = re.compile(r'\[ERROR\]\s+\S+\s+-\s+(.+)')
+
+
+class JplagError(Exception):
+    """JPlag가 한 문제·언어 조합을 비교하지 못했다.
+
+    str(e)는 조교가 읽을 수 있는 문장이고, submission_count는 비교하려던 학생 수다.
+    JPlag 출력은 예외에 담지 않고 로그(judge.jplag)에 남긴다.
+    """
+
+    def __init__(self, message, submission_count=0):
+        super().__init__(message)
+        self.submission_count = submission_count
+
+
+def strip_markdown_fences(source):
+    """```로 시작하는 줄(마크다운 코드 블록 표시)을 빈 줄로 바꾼다.
+
+    AI 답변 등을 복사하면서 ```c 같은 줄까지 함께 내는 학생이 있다. JPlag는 이런 제출을 파싱하지 못해
+    비교에서 빼고, 남은 제출이 2개보다 적으면 그 칸 전체가 실패한다. JPlag에 넘기는 사본에만 적용하고
+    DB의 원본은 그대로 둔다. 보고서의 줄 번호가 원본 제출과 같도록 줄 자체는 남긴다.
+
+    컴파일 에러 제출을 비교에서 빼는 방식(A안)으로 바꾸려면 _source_bytes에서 이 함수를 빼고,
+    judge/tasks/contest.py의 run_jplag에서 제출을 고르는 쿼리를 바꾼다.
+    """
+    return _MARKDOWN_FENCE_LINE_RE.sub('', source)
+
+
+def _source_bytes(source):
+    if isinstance(source, bytes):
+        source = source.decode('utf-8', 'surrogateescape')
+    return strip_markdown_fences(source or '').encode('utf-8', 'surrogateescape')
+
+
+def _tail(output, lines=_LOG_TAIL_LINES):
+    """JPlag 출력의 마지막 몇 줄. 진행 표시줄이 쓰는 \\r도 줄바꿈으로 본다."""
+    if isinstance(output, bytes):  # TimeoutExpired는 text 모드여도 bytes를 담는다.
+        output = output.decode('utf-8', 'replace')
+    rows = [row.rstrip() for row in re.split(r'\r\n|\r|\n', output or '')]
+    return '\n'.join([row for row in rows if row][-lines:])
+
+
+def _skip_reasons(output):
+    """JPlag가 비교에서 뺀 제출과 그 이유 (이름은 임시 폴더 이름, 즉 정리된 아이디)"""
+    reasons = []
+    parse_failed = sorted(set(_PARSE_FAILED_RE.findall(output)))
+    if parse_failed:
+        reasons.append('코드로 읽지 못한 제출: %s' % ', '.join(parse_failed))
+    too_short = _TOO_SHORT_RE.findall(output)
+    if too_short:
+        names = sorted({name for name, _ in too_short})
+        reasons.append('너무 짧은 제출(토큰 %s개 미만): %s' % (too_short[0][1], ', '.join(names)))
+    return reasons
+
+
+def _describe_failure(output, returncode):
+    """JPlag가 0이 아닌 종료 코드로 끝났을 때 조교에게 보여줄 문장"""
+    match = _NOT_ENOUGH_RE.search(output)
+    if match:
+        found = int(match.group(1))
+        if found:
+            message = 'JPlag가 비교할 수 있는 제출이 %d개뿐이라 표절 검사를 하지 못했습니다(2개 이상 필요).' % found
+        else:
+            message = 'JPlag가 비교할 수 있는 제출이 없어 표절 검사를 하지 못했습니다.'
+        reasons = _skip_reasons(output)
+        if reasons:
+            message += ' ' + ' / '.join(reasons)
+        return message
+
+    message = 'JPlag가 실패했습니다(종료 코드 %d).' % returncode
+    errors = _ERROR_LINE_RE.findall(output)
+    if errors:
+        message += ' ' + errors[-1].strip()
+    return message
+
+
+def _log_failure(where, submission_count, message, cmd, stdout, stderr):
+    logger.warning('JPlag failed for %s (%d submissions): %s\ncommand: %s\n'
+                   '--- JPlag stdout (last lines) ---\n%s\n--- JPlag stderr (last lines) ---\n%s',
+                   where, submission_count, message, ' '.join(cmd), _tail(stdout), _tail(stderr, 10))
+
+
+def _run_jplag(cmd, report_dir, where, submission_count):
+    """JPlag를 실행한다. 보고서를 만들지 못하면 이유를 로그에 남기고 JplagError를 낸다."""
+    timeout = getattr(settings, 'JPLAG_TIMEOUT', DEFAULT_JPLAG_TIMEOUT) or None
+    try:
+        completed = subprocess.run(cmd, capture_output=True, timeout=timeout, encoding='utf-8', errors='replace')
+    except subprocess.TimeoutExpired as e:
+        message = 'JPlag가 %s초 안에 끝나지 않아 중단했습니다.' % timeout
+        _log_failure(where, submission_count, message, cmd, e.stdout, e.stderr)
+        raise JplagError(message, submission_count)
+
+    if completed.returncode != 0:
+        message = _describe_failure(completed.stdout or '', completed.returncode)
+        _log_failure(where, submission_count, message, cmd, completed.stdout, completed.stderr)
+        raise JplagError(message, submission_count)
+
+    if not os.path.isfile(os.path.join(report_dir, REPORT_FILE_NAME)):
+        message = 'JPlag가 끝났지만 보고서 파일을 만들지 않았습니다.'
+        _log_failure(where, submission_count, message, cmd, completed.stdout, completed.stderr)
+        raise JplagError(message, submission_count)
+
+    # 보고서는 만들었지만 일부 제출을 조용히 뺀 경우도 기록한다.
+    skipped = _SKIPPED_RE.search(completed.stdout or '')
+    if skipped:
+        logger.warning('JPlag skipped %s of %d submissions for %s. %s\n--- JPlag stdout (last lines) ---\n%s',
+                       skipped.group(1), submission_count, where, ' / '.join(_skip_reasons(completed.stdout)),
+                       _tail(completed.stdout))
 
 
 def _safe_name(name):
@@ -98,6 +224,12 @@ def _get_jplag_config():
 
 
 def run_jplag_for_submissions(contest_key, problem_code, dmoj_lang, submissions):
+    """한 문제·언어 조합의 제출을 JPlag로 비교하고 (보고서 주소, 학생 수)를 돌려준다.
+
+    submissions는 (아이디, 코드) 목록이고 같은 아이디는 처음 것만 쓴다. 학생이 2명보다 적으면 JPlag를
+    돌리지 않고 (None, 학생 수)를 돌려준다. JPlag가 보고서를 만들지 못하면 JplagError를, 설정이 잘못됐으면
+    ImproperlyConfigured를 낸다.
+    """
     config = _get_jplag_config()
     jar_path = config['jar_path']
     java_path = config['java_path']
@@ -119,8 +251,8 @@ def run_jplag_for_submissions(contest_key, problem_code, dmoj_lang, submissions)
 
     ext = extension_map.get(dmoj_lang, 'txt')
     report_dir = os.path.join(report_root, contest_key, problem_code, dmoj_lang)
+    # 예전 보고서는 이번 결과로 바뀌므로 먼저 지운다.
     shutil.rmtree(report_dir, ignore_errors=True)
-    os.makedirs(report_dir, exist_ok=True)
     result_file = os.path.join(report_dir, 'results')
 
     users = set()
@@ -135,19 +267,14 @@ def run_jplag_for_submissions(contest_key, problem_code, dmoj_lang, submissions)
             user_dir = os.path.join(tmp_dir, _safe_name(username))
             os.makedirs(user_dir, exist_ok=True)
             file_path = os.path.join(user_dir, 'solution.%s' % ext)
-
-            if isinstance(source, bytes):
-                data = source
-            else:
-                data = (source or '').encode('utf-8')
             with open(file_path, 'wb') as handle:
-                handle.write(data)
+                handle.write(_source_bytes(source))
 
-        if not users:
-            return None, 0
         if len(users) < 2:
             return None, len(users)
 
+        # JPlag는 보고서 폴더가 없으면 실패한다.
+        os.makedirs(report_dir, exist_ok=True)
         cmd = [
             java_path or 'java',
             '-jar',
@@ -159,7 +286,12 @@ def run_jplag_for_submissions(contest_key, problem_code, dmoj_lang, submissions)
         ]
         cmd.extend(extra_args)
         cmd.append(tmp_dir)
-        subprocess.run(cmd, check=True, capture_output=True, text=True)
+        try:
+            _run_jplag(cmd, report_dir, '%s/%s/%s' % (contest_key, problem_code, dmoj_lang), len(users))
+        except JplagError:
+            # 실패한 칸의 보고서 폴더는 남기지 않는다.
+            shutil.rmtree(report_dir, ignore_errors=True)
+            raise
 
     result_file_url = _get_report_url(contest_key, problem_code, dmoj_lang)
     if viewer_url_prefix:
