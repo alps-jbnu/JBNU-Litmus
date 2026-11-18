@@ -328,6 +328,10 @@ urlpatterns = [
 
         path('/', lambda _, contest: HttpResponsePermanentRedirect(reverse('contest_view', args=[contest]))),
     ])),
+    # JPlag 보고서는 정적 파일이 아니라 권한을 확인하는 뷰로 내려준다.
+    # 뷰어가 경로 끝의 *.jplag를 보고서 파일 이름으로 쓰므로 results.jplag로 끝나게 둔다.
+    path('jplag-report/<str:contest>/<str:problem>/<str:language>/results.jplag',
+         contests.ContestJplagReport.as_view(), name='contest_jplag_report'),
 
     # path('organizations/', organization.OrganizationList.as_view(), name='organization_list'),
     # path('organization/<int:pk>-<slug:slug>', include([

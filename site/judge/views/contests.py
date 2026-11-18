@@ -1,4 +1,5 @@
 import json
+import os
 from calendar import Calendar, SUNDAY
 from collections import defaultdict, namedtuple
 from datetime import date, datetime, time, timedelta
@@ -14,7 +15,8 @@ from django.db import IntegrityError
 from django.db.models import BooleanField, Case, Count, F, FloatField, IntegerField, Max, Min, Q, Sum, Value, When
 from django.db.models.expressions import CombinedExpression
 from django.db.models.functions import Coalesce
-from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseRedirect, JsonResponse, HttpResponseForbidden, HttpResponseServerError
+from django.http import FileResponse, Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, \
+    HttpResponseRedirect, HttpResponseServerError, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.template.defaultfilters import date as date_filter
 from django.urls import reverse
@@ -38,7 +40,7 @@ from judge.forms import ContestCloneForm
 from judge.models import Contest, ContestJplag, ContestParticipation, ContestProblem, ContestTag, ContestSubmission, \
     Problem, Profile, Submission, Subject
 from judge.tasks import run_jplag
-from judge.utils.jplag import build_jplag_viewer_url
+from judge.utils.jplag import build_jplag_viewer_url, get_jplag_report_path
 from judge.utils.celery import redirect_to_task_status
 from judge.utils.opengraph import generate_opengraph
 from judge.utils.problems import _get_result_data
@@ -53,7 +55,8 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 
 __all__ = ['ContestList', 'ContestDetail', 'ContestRanking', 'ContestJoin', 'ContestLeave', 'ContestCalendar',
-           'ContestClone', 'ContestStats', 'ContestJplagView', 'ContestJplagDelete', 'contest_ranking_ajax',
+           'ContestClone', 'ContestStats', 'ContestJplagView', 'ContestJplagDelete', 'ContestJplagReport',
+           'contest_ranking_ajax',
            'ContestParticipationList', 'ContestParticipationDisqualify', 'get_contest_ranking_list',
            'base_contest_ranking_list']
 
@@ -1532,18 +1535,22 @@ class ContestParticipationDisqualify(ContestMixin, SingleObjectMixin, View):
         return HttpResponseRedirect(reverse('contest_ranking', args=(self.object.key,)))
 
 
+def can_use_jplag(user):
+    # Accept legacy permission to keep compatibility during migration.
+    return user.has_perm('judge.jplag_contest') or user.has_perm('judge.moss_contest')
+
+
 class ContestJplagMixin(ContestMixin, PermissionRequiredMixin):
     permission_required = 'judge.jplag_contest'
 
     def has_permission(self):
-        # Accept legacy permission to keep compatibility during migration.
-        user = self.request.user
-        return user.has_perm('judge.jplag_contest') or user.has_perm('judge.moss_contest')
+        return can_use_jplag(self.request.user)
 
     def get_object(self, queryset=None):
         contest = super().get_object(queryset)
-        # if settings.MOSS_API_KEY is None or not contest.is_editable_by(self.request.user):
-        #     raise Http404()
+        # JPlag 탭이 보이는 조건(can_edit)과 같은 기준
+        if not contest.is_editable_by(self.request.user):
+            raise Http404()
         return contest
 
 
@@ -1589,6 +1596,35 @@ class ContestJplagDelete(ContestJplagMixin, SingleObjectMixin, View):
         self.object = self.get_object()
         ContestJplag.objects.filter(contest=self.object).delete()
         return HttpResponseRedirect(reverse('contest_jplag', args=(self.object.key,)))
+
+
+class ContestJplagReport(LoginRequiredMixin, View):
+    """JPlag 보고서(results.jplag)를 권한을 확인한 뒤에만 내려준다.
+
+    뷰어(/static/jplag-viewer/)가 같은 사이트 주소로 fetch하므로 로그인 쿠키가 같이 온다.
+    ContestMixin.get_object는 쓰지 않는다. DB에 쓰고(update_user_count) Http404를 200 안내 페이지로 바꾸기 때문이다.
+    """
+
+    def get(self, request, contest, problem, language):
+        if not can_use_jplag(request.user):
+            raise PermissionDenied()
+        contest = get_object_or_404(Contest, key=contest)
+        if not contest.is_editable_by(request.user):
+            raise PermissionDenied()
+
+        result = ContestJplag.objects.filter(contest=contest, problem__code=problem, language=language) \
+            .exclude(url__isnull=True).exclude(url='').select_related('problem').first()
+        if result is None:
+            raise Http404()
+
+        # 경로는 주소가 아니라 DB 값으로 만든다.
+        path = get_jplag_report_path(contest.key, result.problem.code, result.language)
+        if path is None or not os.path.isfile(path):
+            raise Http404()
+
+        response = FileResponse(open(path, 'rb'), content_type='application/octet-stream')
+        response['Cache-Control'] = 'private, no-store'
+        return response
 
 
 class ContestTagDetailAjax(DetailView):
