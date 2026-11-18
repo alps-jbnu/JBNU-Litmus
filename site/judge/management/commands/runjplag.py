@@ -2,7 +2,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from judge.models import Contest, ContestJplag, ContestParticipation, Submission
-from judge.utils.jplag import run_jplag_for_submissions
+from judge.utils.jplag import JplagError, run_jplag_for_submissions
 
 
 class Command(BaseCommand):
@@ -28,10 +28,15 @@ class Command(BaseCommand):
                     self.stdout.write('<no submissions>')
                     continue
 
-                report_url, submission_count = run_jplag_for_submissions(
-                    contest,
-                    problem.code,
-                    dmoj_lang,
-                    subs,
-                )
+                try:
+                    report_url, submission_count = run_jplag_for_submissions(
+                        contest,
+                        problem.code,
+                        dmoj_lang,
+                        subs,
+                    )
+                except JplagError as e:
+                    # 이 조합만 건너뛰고 다음으로 넘어간다. JPlag 출력은 judge.jplag 로그에 있다.
+                    self.stdout.write(self.style.WARNING('(%d): 실패 - %s' % (e.submission_count, e)))
+                    continue
                 self.stdout.write('(%d): %s' % (submission_count, report_url))
